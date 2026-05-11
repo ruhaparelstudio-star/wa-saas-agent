@@ -1,0 +1,66 @@
+[
+  {"id": "INT-001", "message": "halo kak", "expected_intent": "greeting", "context": ""},
+  {"id": "INT-002", "message": "selamat pagi kak", "expected_intent": "greeting", "context": ""},
+  {"id": "INT-003", "message": "hei", "expected_intent": "greeting", "context": ""},
+  {"id": "INT-004", "message": "permisi kak", "expected_intent": "greeting", "context": ""},
+
+  {"id": "INT-005", "message": "boleh minta pricelist kak?", "expected_intent": "ask_pricelist", "context": ""},
+  {"id": "INT-006", "message": "ada brosur ga kak?", "expected_intent": "ask_pricelist", "context": ""},
+  {"id": "INT-007", "message": "kirim daftar harga dong", "expected_intent": "ask_pricelist", "context": ""},
+  {"id": "INT-008", "message": "pricelist kak", "expected_intent": "ask_pricelist", "context": ""},
+
+  {"id": "INT-009", "message": "paket silver harganya berapa?", "expected_intent": "ask_price", "context": ""},
+  {"id": "INT-010", "message": "harga paket gold?", "expected_intent": "ask_price", "context": ""},
+  {"id": "INT-011", "message": "biaya paket platinum berapa kak", "expected_intent": "ask_price", "context": ""},
+  {"id": "INT-012", "message": "brp jt paket silver kak", "expected_intent": "ask_price", "context": ""},
+
+  {"id": "INT-013", "message": "ada paket apa aja kak?", "expected_intent": "ask_package_list", "context": ""},
+  {"id": "INT-014", "message": "mau tanya soal foto nikah", "expected_intent": "ask_package_list", "context": ""},
+  {"id": "INT-015", "message": "list paketnya dong", "expected_intent": "ask_package_list", "context": ""},
+  {"id": "INT-016", "message": "paketnya ada apa nih kak", "expected_intent": "ask_package_list", "context": ""},
+
+  {"id": "INT-017", "message": "paket silver isinya apa aja?", "expected_intent": "ask_package_detail", "context": ""},
+  {"id": "INT-018", "message": "yg dapat apa di paket gold kak?", "expected_intent": "ask_package_detail", "context": ""},
+  {"id": "INT-019", "message": "detail paket platinum dong", "expected_intent": "ask_package_detail", "context": ""},
+  {"id": "INT-020", "message": "paket silver termasuk apa aja kak", "expected_intent": "ask_package_detail", "context": ""},
+
+  {"id": "INT-021", "message": "nama saya Rina", "expected_intent": "provide_name", "context": ""},
+  {"id": "INT-022", "message": "panggil saya Budi kak", "expected_intent": "provide_name", "context": ""},
+  {"id": "INT-023", "message": "saya Dewi kak", "expected_intent": "provide_name", "context": ""},
+
+  {"id": "INT-024", "message": "tanggalnya 20 april 2025", "expected_intent": "provide_date", "context": ""},
+  {"id": "INT-025", "message": "rencananya 5 feb kak", "expected_intent": "provide_date", "context": ""},
+  {"id": "INT-026", "message": "nikahnya bulan juni kak", "expected_intent": "provide_date", "context": ""},
+
+  {"id": "INT-027", "message": "budgetnya sekitar 30 juta", "expected_intent": "provide_budget", "context": ""},
+  {"id": "INT-028", "message": "punya budget 35-40jt kak", "expected_intent": "provide_budget", "context": ""},
+  {"id": "INT-029", "message": "max 30jt kak", "expected_intent": "provide_budget", "context": ""},
+
+  {"id": "INT-030", "message": "tanggal 20 april available ga?", "expected_intent": "ask_availability", "context": ""},
+  {"id": "INT-031", "message": "bulan juni ada ga kak?", "expected_intent": "ask_availability", "context": ""},
+  {"id": "INT-032", "message": "masih ada slot desember?", "expected_intent": "ask_availability", "context": ""},
+
+  {"id": "INT-033", "message": "oke saya mau booking", "expected_intent": "booking_intent", "context": ""},
+  {"id": "INT-034", "message": "gimana cara bookingnya kak?", "expected_intent": "booking_intent", "context": ""},
+  {"id": "INT-035", "message": "mau fix tanggalnya dong", "expected_intent": "booking_intent", "context": ""},
+
+  {"id": "INT-036", "message": "bisa ngobrol sama orangnya langsung?", "expected_intent": "request_handoff", "context": ""},
+  {"id": "INT-037", "message": "mau chat sama adminnya kak", "expected_intent": "request_handoff", "context": ""},
+  {"id": "INT-038", "message": "hub tim lo dong", "expected_intent": "request_handoff", "context": ""},
+
+  {"id": "INT-039", "message": "ini gimana sih lambat banget!", "expected_intent": "complaint", "context": ""},
+  {"id": "INT-040", "message": "ga ada kabar dari kemarin!", "expected_intent": "complaint", "context": ""},
+  {"id": "INT-041", "message": "pelayanannya kecewain saya kak", "expected_intent": "complaint", "context": ""},
+
+  {"id": "INT-042", "message": "eh maaf, bukan april, juni maksud saya", "expected_intent": "correction", "context": "Customer: tanggalnya 20 april 2025\nAI: Baik Kak, sudah kami catat tanggal 20 April 2025."},
+  {"id": "INT-043", "message": "salah tadi, namaku Sari bukan Rina", "expected_intent": "correction", "context": "Customer: nama saya Rina\nAI: Baik Kak Rina, senang berkenalan!"},
+  {"id": "INT-044", "message": "ralat kak, budgetnya 40jt bukan 30", "expected_intent": "correction", "context": "Customer: budgetnya 30 juta\nAI: Baik Kak, budget 30 juta sudah kami catat."},
+
+  {"id": "INT-045", "message": "hmm", "expected_intent": "unclear_message", "context": ""},
+  {"id": "INT-046", "message": "iya kak", "expected_intent": "unclear_message", "context": ""},
+  {"id": "INT-047", "message": "🙏", "expected_intent": "unclear_message", "context": ""},
+
+  {"id": "INT-048", "message": "kak rekomendasi restoran di Jakarta dong", "expected_intent": "off_topic", "context": ""},
+  {"id": "INT-049", "message": "makasih ya kak", "expected_intent": "thanks", "context": ""},
+  {"id": "INT-050", "message": "oke udah cukup kak, bye", "expected_intent": "end_conversation", "context": ""}
+]

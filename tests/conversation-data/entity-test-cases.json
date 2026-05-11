@@ -1,0 +1,79 @@
+[
+  {"id": "ENT-001", "message": "nama saya Rina", "existing_entities": {}, "expected_entities": {"customer_name": "Rina"}},
+  {"id": "ENT-002", "message": "panggil aja Budi kak", "existing_entities": {}, "expected_entities": {"customer_name": "Budi"}},
+  {"id": "ENT-003", "message": "ini Dewi kak", "existing_entities": {}, "expected_entities": {"customer_name": "Dewi"}},
+  {"id": "ENT-004", "message": "saya Ahmad", "existing_entities": {}, "expected_entities": {"customer_name": "Ahmad"}},
+  {"id": "ENT-005", "message": "namanya Sari kak", "existing_entities": {}, "expected_entities": {"customer_name": "Sari"}},
+
+  {"id": "ENT-006", "message": "tanggalnya 20 april 2025", "existing_entities": {}, "expected_entities": {"event_date": "2025-04-20"}},
+  {"id": "ENT-007", "message": "rencananya 5 februari", "existing_entities": {}, "expected_entities": {"event_date": "2026-02-05"}},
+  {"id": "ENT-008", "message": "nikahnya 5/2", "existing_entities": {}, "expected_entities": {"event_date": "2026-02-05"}},
+  {"id": "ENT-009", "message": "bulan juni kak", "existing_entities": {}, "expected_entities": {"event_date": null}, "expected_needs_clarification": ["event_date"]},
+  {"id": "ENT-010", "message": "minggu depan kak", "existing_entities": {}, "expected_entities": {"event_date": null}, "expected_needs_clarification": ["event_date"]},
+  {"id": "ENT-011", "message": "desember 2025 kak", "existing_entities": {}, "expected_entities": {"event_date": null}, "expected_needs_clarification": ["event_date"]},
+
+  {"id": "ENT-012", "message": "budgetnya sekitar 30an juta", "existing_entities": {}, "expected_entities": {"budget_min": 27000000, "budget_max": 33000000}},
+  {"id": "ENT-013", "message": "punya budget 30 jt kak", "existing_entities": {}, "expected_entities": {"budget_min": 27000000, "budget_max": 33000000}},
+  {"id": "ENT-014", "message": "max 30 jt kak", "existing_entities": {}, "expected_entities": {"budget_min": null, "budget_max": 30000000}},
+  {"id": "ENT-015", "message": "budget 30-40 juta kak", "existing_entities": {}, "expected_entities": {"budget_min": 30000000, "budget_max": 40000000}},
+  {"id": "ENT-016", "message": "sekitar 35 juta kak", "existing_entities": {}, "expected_entities": {"budget_min": 31500000, "budget_max": 38500000}},
+  {"id": "ENT-017", "message": "mepet kak budgetnya", "existing_entities": {}, "expected_entities": {}, "expected_needs_clarification": ["budget_min", "budget_max"]},
+
+  {"id": "ENT-018", "message": "tamu sekitar 200an orang", "existing_entities": {}, "expected_entities": {"guest_count": 200}},
+  {"id": "ENT-019", "message": "sekitar 150 tamu", "existing_entities": {}, "expected_entities": {"guest_count": 150}},
+  {"id": "ENT-020", "message": "kurang lebih 300 tamu kak", "existing_entities": {}, "expected_entities": {"guest_count": 300}},
+
+  {"id": "ENT-021", "message": "tertarik paket silver kak", "existing_entities": {}, "expected_entities": {"package_interest": "Paket Silver"}},
+  {"id": "ENT-022", "message": "mau paket gold kak", "existing_entities": {}, "expected_entities": {"package_interest": "Paket Gold"}},
+  {"id": "ENT-023", "message": "gimana paket platinum kak?", "existing_entities": {}, "expected_entities": {"package_interest": "Paket Platinum"}},
+
+  {
+    "id": "ENT-024",
+    "message": "eh bukan april, juni kak",
+    "existing_entities": {"customer_name": "Rina", "event_date": "2025-04-20"},
+    "expected_entities": {"customer_name": "Rina"},
+    "expected_corrections": ["event_date"],
+    "expected_needs_clarification": ["event_date"]
+  },
+  {
+    "id": "ENT-025",
+    "message": "maaf namanya Sari bukan Rina",
+    "existing_entities": {"customer_name": "Rina", "event_date": "2025-04-20"},
+    "expected_entities": {"customer_name": "Sari", "event_date": "2025-04-20"},
+    "expected_corrections": ["customer_name"]
+  },
+  {
+    "id": "ENT-026",
+    "message": "ralat kak, budgetnya 40jt bukan 30",
+    "existing_entities": {"customer_name": "Budi", "event_date": "2025-06-15", "budget_min": 27000000, "budget_max": 33000000},
+    "expected_entities": {"customer_name": "Budi", "event_date": "2025-06-15", "budget_min": 36000000, "budget_max": 44000000},
+    "expected_corrections": ["budget_min", "budget_max"]
+  },
+  {
+    "id": "ENT-027",
+    "message": "eh tanggalnya ganti jadi 15 desember 2025 ya kak",
+    "existing_entities": {"customer_name": "Dewi", "event_date": "2025-11-20", "package_interest": "Paket Gold"},
+    "expected_entities": {"customer_name": "Dewi", "event_date": "2025-12-15", "package_interest": "Paket Gold"},
+    "expected_corrections": ["event_date"]
+  },
+
+  {
+    "id": "ENT-028",
+    "message": "oke kak noted",
+    "existing_entities": {"customer_name": "Rina", "event_date": "2025-04-20", "budget_min": 27000000, "budget_max": 33000000},
+    "expected_entities": {"customer_name": "Rina", "event_date": "2025-04-20", "budget_min": 27000000, "budget_max": 33000000}
+  },
+  {
+    "id": "ENT-029",
+    "message": "iya kak",
+    "existing_entities": {"customer_name": "Ahmad", "package_interest": "Paket Platinum"},
+    "expected_entities": {"customer_name": "Ahmad", "package_interest": "Paket Platinum"}
+  },
+
+  {
+    "id": "ENT-030",
+    "message": "nama saya Rina, nikahnya 20 april 2025, budgetnya 30an juta",
+    "existing_entities": {},
+    "expected_entities": {"customer_name": "Rina", "event_date": "2025-04-20", "budget_min": 27000000, "budget_max": 33000000}
+  }
+]

@@ -1,0 +1,133 @@
+========================================
+ENTITY ACCURACY TEST — Run #1
+Date: 2026-05-11 08:03:01
+Total cases: 30
+========================================
+
+[FULL PASS] ENT-001: "nama saya Rina" (100% match)
+  ✅ customer_name: "Rina" == "Rina"
+
+[FULL PASS] ENT-002: "panggil aja Budi kak" (100% match)
+  ✅ customer_name: "Budi" == "Budi"
+
+[FULL PASS] ENT-003: "ini Dewi kak" (100% match)
+  ✅ customer_name: "Dewi" == "Dewi"
+
+[FULL PASS] ENT-004: "saya Ahmad" (100% match)
+  ✅ customer_name: "Ahmad" == "Ahmad"
+
+[FULL PASS] ENT-005: "namanya Sari kak" (100% match)
+  ✅ customer_name: "Sari" == "Sari"
+
+[FULL PASS] ENT-006: "tanggalnya 20 april 2025" (100% match)
+  ✅ event_date: "2025-04-20" == "2025-04-20"
+
+[FULL PASS] ENT-007: "rencananya 5 februari" (100% match)
+  ✅ event_date: "2026-02-05" == "2026-02-05"
+
+[FULL PASS] ENT-008: "nikahnya 5/2" (100% match)
+  ✅ event_date: "2026-02-05" == "2026-02-05"
+
+[FULL PASS] ENT-009: "bulan juni kak" (100% match)
+  ✅ event_date: null == null
+  ✅ needs_clarification: event_date flagged
+
+[FULL PASS] ENT-010: "minggu depan kak" (100% match)
+  ✅ event_date: null == null
+  ✅ needs_clarification: event_date flagged
+
+[FULL PASS] ENT-011: "desember 2025 kak" (100% match)
+  ✅ event_date: null == null
+  ✅ needs_clarification: event_date flagged
+
+[FULL PASS] ENT-012: "budgetnya sekitar 30an juta" (100% match)
+  ✅ budget_min: 27000000 == 27000000
+  ✅ budget_max: 33000000 == 33000000
+
+[FAIL     ] ENT-013: "punya budget 30 jt kak" (0% match)
+  ❌ budget_min: expected=27000000 | actual=null
+  ❌ budget_max: expected=33000000 | actual=30000000
+
+[FULL PASS] ENT-014: "max 30 jt kak" (100% match)
+  ✅ budget_min: null == null
+  ✅ budget_max: 30000000 == 30000000
+
+[FULL PASS] ENT-015: "budget 30-40 juta kak" (100% match)
+  ✅ budget_min: 30000000 == 30000000
+  ✅ budget_max: 40000000 == 40000000
+
+[FULL PASS] ENT-016: "sekitar 35 juta kak" (100% match)
+  ✅ budget_min: 31500000 == 31500000
+  ✅ budget_max: 38500000 == 38500000
+
+[FULL PASS] ENT-017: "mepet kak budgetnya" (100% match)
+  ✅ needs_clarification: budget_min, budget_max flagged
+
+[FULL PASS] ENT-018: "tamu sekitar 200an orang" (100% match)
+  ✅ guest_count: 200 == 200
+
+[FULL PASS] ENT-019: "sekitar 150 tamu" (100% match)
+  ✅ guest_count: 150 == 150
+
+[FULL PASS] ENT-020: "kurang lebih 300 tamu kak" (100% match)
+  ✅ guest_count: 300 == 300
+
+[FULL PASS] ENT-021: "tertarik paket silver kak" (100% match)
+  ✅ package_interest: "Paket Silver" == "Paket Silver"
+
+[FULL PASS] ENT-022: "mau paket gold kak" (100% match)
+  ✅ package_interest: "Paket Gold" == "Paket Gold"
+
+[FULL PASS] ENT-023: "gimana paket platinum kak?" (100% match)
+  ✅ package_interest: "Paket Platinum" == "Paket Platinum"
+
+[PARTIAL  ] ENT-024: "eh bukan april, juni kak" (67% match)
+  ✅ customer_name: "Rina" == "Rina"
+  ✅ corrections: event_date detected
+  ❌ needs_clarification: expected [event_date] | got []
+
+[FULL PASS] ENT-025: "maaf namanya Sari bukan Rina" (100% match)
+  ✅ customer_name: "Sari" == "Sari"
+  ✅ event_date: "2025-04-20" == "2025-04-20"
+  ✅ corrections: customer_name detected
+
+[FULL PASS] ENT-026: "ralat kak, budgetnya 40jt bukan 30" (100% match)
+  ✅ customer_name: "Budi" == "Budi"
+  ✅ event_date: "2025-06-15" == "2025-06-15"
+  ✅ budget_min: 36000000 == 36000000
+  ✅ budget_max: 44000000 == 44000000
+  ✅ corrections: budget_min, budget_max detected
+
+[FULL PASS] ENT-027: "eh tanggalnya ganti jadi 15 desember 2025 ya kak" (100% match)
+  ✅ customer_name: "Dewi" == "Dewi"
+  ✅ event_date: "2025-12-15" == "2025-12-15"
+  ✅ package_interest: "Paket Gold" == "Paket Gold"
+  ✅ corrections: event_date detected
+
+[FULL PASS] ENT-028: "oke kak noted" (100% match)
+  ✅ customer_name: "Rina" == "Rina"
+  ✅ event_date: "2025-04-20" == "2025-04-20"
+  ✅ budget_min: 27000000 == 27000000
+  ✅ budget_max: 33000000 == 33000000
+
+[FULL PASS] ENT-029: "iya kak" (100% match)
+  ✅ customer_name: "Ahmad" == "Ahmad"
+  ✅ package_interest: "Paket Platinum" == "Paket Platinum"
+
+[FULL PASS] ENT-030: "nama saya Rina, nikahnya 20 april 2025, budgetnya 30an juta" (100% match)
+  ✅ customer_name: "Rina" == "Rina"
+  ✅ event_date: "2025-04-20" == "2025-04-20"
+  ✅ budget_min: 27000000 == 27000000
+  ✅ budget_max: 33000000 == 33000000
+
+========================================
+SUMMARY — Run #1
+========================================
+Overall Accuracy : 95.0%  →  Gate: PASS ✅
+Full Pass        : 28 / 30
+Partial          : 1 / 30
+Fail             : 1 / 30
+
+Scoring: Full Pass=1.0 | Partial=0.5 | Fail=0.0
+Output saved to: /home/arsdev/projects/wa-saas-agent/poc/../results/entity-run1.txt
+========================================

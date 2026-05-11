@@ -215,7 +215,7 @@ Konfirmasi semua file sudah diupdate.
 ---
 
 ### SUB-TASK 0.2 — Prompt Engineering Intent Classifier
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** Sub-task 0.1 selesai
 **Estimated Time:** 2-3 jam (iterasi)
 
@@ -337,7 +337,7 @@ Update:
 ---
 
 ### SUB-TASK 0.3 — Prompt Engineering Entity Extractor + Composer
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 0.2 selesai, accuracy >= 85%
 **Estimated Time:** 2-3 jam
 
@@ -435,7 +435,7 @@ Git commit: "test: entity extractor dan composer test suite"
 ---
 
 ### SUB-TASK 0.4 — Input Sanitizer & Injection Protection
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 0.3 selesai
 **Estimated Time:** 1 jam
 
@@ -514,7 +514,7 @@ Git commit: "security: tambah input sanitizer dan injection protection ke POC"
 ---
 
 ### SUB-TASK 0.5 — POC Full Conversation Test (10 Skenario)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 0.4 selesai
 **Estimated Time:** 2 jam
 
@@ -624,7 +624,7 @@ git add . && git commit -m "test: POC e2e conversation test selesai, X/10 skenar
 ---
 
 ### INTEGRATION CHECKPOINT — PHASE 0
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11 | Gate: OPEN ✅
 
 **PROMPT:**
 ```

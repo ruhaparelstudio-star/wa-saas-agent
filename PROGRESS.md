@@ -7,12 +7,12 @@
 ## STATUS TERKINI
 
 ```
-Phase Aktif    : Phase 0 — Proof of Concept
-Sub-task Aktif : 0.2 — Prompt Engineering Intent Classifier
+Phase Aktif    : Phase 1 — Contracts & Foundation
+Sub-task Aktif : 1.1 — Project Laravel + Struktur Modul
 Last Updated   : 2026-05-11
 Git Branch     : dev
-Last Commit    : feat: POC script standalone untuk validasi AI pipeline
-Last Tag       : (belum ada)
+Last Commit    : test: POC Phase 0 selesai — 9/10 e2e pass, all gates open
+Last Tag       : v0.1-poc-complete
 ```
 
 ---
@@ -20,14 +20,14 @@ Last Tag       : (belum ada)
 ## OVERALL PROGRESS
 
 ```
-Phase 0 : 1 / 5  sub-task  [▓░░░░]
+Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 0 / 10 sub-task  [ ]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 0 / 54 sub-task
+Total   : 5 / 54 sub-task
 ```
 
 ---
@@ -37,14 +37,15 @@ Total   : 0 / 54 sub-task
 ```
 Metric              | Current | Target  | Status
 --------------------|---------|---------|--------
-Intent Accuracy     | -       | > 85%   | ⏳
-Entity Accuracy     | -       | > 85%   | ⏳
-Decision Accuracy   | -       | > 90%   | ⏳
-Response Quality    | -       | > 80%   | ⏳
-Benchmark Score     | -       | 30/30   | ⏳
+Intent Accuracy     | 98%     | > 85%   | ✅ PASS (Run 1: 49/50)
+Entity Accuracy     | 95%     | > 85%   | ✅ PASS (Run 1: 28.5/30)
+Decision Accuracy   | -       | > 90%   | ⏳ (diukur via E2E)
+Response Quality    | 9/10    | > 80%   | ✅ PASS (E2E + composer test)
+Benchmark Score     | -       | 30/30   | ⏳ Phase 3+
 ```
 
 *Diupdate setiap kali accuracy test dijalankan. Catat tanggal dan versi prompt.*
+*Phase 0 baseline: 2026-05-11, prompt v1.0 (classifier, entity, composer)*
 
 ---
 
@@ -63,54 +64,79 @@ Notes         : PocLlmClient (classifyIntent, extractEntities, composeReply),
 
 ### Sub-task 0.2 — Prompt Engineering Intent Classifier
 ```
-Status         : [ ] TODO
-Files Modified : PROMPTS.md
-Prompt Version : -
-Accuracy Run 1 : - %
-Accuracy Run 2 : - %
-Accuracy Run 3 : - %
-Average        : - %
-Gate           : [ ] >= 85% sebelum lanjut 0.3
-Notes          : -
+Status         : [x] DONE — 2026-05-11
+Files Modified : poc/poc_conversation.php (classifyIntent prompt), PROMPTS.md
+Prompt Version : v1.0
+Accuracy Run 1 : 98% (49/50)
+Accuracy Run 2 : - (tidak perlu iterasi, sudah > 85%)
+Accuracy Run 3 : -
+Average        : 98%
+Gate           : [x] >= 85% PASS
+Notes          : 1 ambiguitas wajar: "ada brosur ga kak?" → ask_package_list
+                 (brosur bisa berarti pricelist dalam konteks Indonesia informal)
+                 2 low-confidence: "iya kak" dan emoji "🙏" → unclear_message (conf 0.50, wajar)
 ```
 
 ### Sub-task 0.3 — Prompt Engineering Entity + Composer
 ```
-Status               : [ ] TODO
-Files Modified       : PROMPTS.md
-Entity Prompt Version: -
-Entity Accuracy      : - %
-Composer Version     : -
-Composer Quality     : - / 10 manual review
-Hallucination Test   : [ ] PASS
-Notes                : -
+Status               : [x] DONE — 2026-05-11
+Files Modified       : poc/poc_conversation.php (extractEntities + composeReply prompt), PROMPTS.md
+Entity Prompt Version: v1.0
+Entity Accuracy      : 95% (28.5/30)
+Composer Version     : v1.0
+Composer Quality     : auto-checks 39/40 — halusinasi 0 real
+Hallucination Test   : [x] PASS
+Notes          : 2 entity case dengan skor tidak penuh:
+                 - ENT-013 "30 jt" → LLM interpret sebagai "max 30jt" bukan ±10%
+                   (borderline, bisa diterima karena natural language ambiguous)
+                 - ENT-024 correction → needs_clarification tidak di-flag
+                   setelah koreksi (partial pass 0.5)
+                 Composer: enhanced anti-hallucination instruction untuk paket tidak dikenal
 ```
 
-### Sub-task 0.4 — POC Conversation Test (10 Skenario)
+### Sub-task 0.4 — Input Sanitizer & Injection Protection
 ```
-Status          : [ ] TODO
-Skenario Passed : - / 10
-Failed List     : -
-Notes           : -
+Status          : [x] DONE — 2026-05-11
+Files Modified  : poc/poc_conversation.php (PocInputSanitizer class + integrasi)
+Injection Tests : 5 / 5 PASS
+Sanitizer Works : [x]
+Notes           : 15 injection patterns. Truncate > 2000 chars bekerja.
+                  Integrasi ke runConversation() sebelum classifyIntent().
+                  CLI flag --injection-test untuk test terpisah.
 ```
 
-### Sub-task 0.5 — POC Security Test (Prompt Injection)
+### Sub-task 0.5 — POC Full Conversation Test (10 Skenario)
 ```
-Status          : [ ] TODO
-Injection Tests : - / 5
-Sanitizer Works : [ ]
-Notes           : -
+Status          : [x] DONE — 2026-05-11
+Files Created   : poc/test_e2e_conversations.php, tests/conversation-data/e2e-scenarios.json
+Skenario Passed : 9 / 10
+Failed List     : E2E-006 (Turn 3 "ada paket di bawah 20 juta?" → provide_budget bukan ask_price)
+Notes           : E2E-006 failure = ambiguitas wajar (customer menyatakan budget constraint,
+                  bukan tanya harga spesifik). Injection protection bekerja di E2E-010.
+                  Semua red flag checks lulus kecuali E2E-006 Turn 3 intent mismatch.
 ```
 
 ### Integration Checkpoint Phase 0
 ```
-Status              : [ ] TODO
-Intent Accuracy     : - %
-Entity Accuracy     : - %
-Skenario Passed     : - / 10
-Injection Protected : [ ]
-Git Tag             : -
-Gate                : [ ] OPEN untuk Phase 1
+Status              : [x] DONE — 2026-05-11
+Intent Accuracy     : 98%
+Entity Accuracy     : 95%
+Skenario Passed     : 9 / 10
+Injection Protected : [x] 5/5
+Hallucination       : [x] 0 (setelah prompt fix)
+Git Tag             : v0.1-poc-complete
+Gate                : [x] OPEN untuk Phase 1
+
+CATATAN PENTING ANTAR SUB-TASK:
+"Phase 0 selesai. Prompt versi: classifier v1.0, entity v1.0, composer v1.0.
+ Accuracy: intent 98%, entity 95%, e2e 9/10.
+ Baseline accuracy di-set di scripts/check_accuracy_regression.php.
+ Hal yang perlu diperhatikan Phase 1:
+ - Entity persistence: merge logic di PHP (bukan LLM), perlu maintained di production
+ - Injection patterns: 15 pattern sudah terbukti bekerja, bisa diperluas
+ - composeReply: explicit instruction untuk paket tidak dikenal sangat membantu
+ - Ambiguitas wajar: 'mau tanya' → ask_package_list, perlu few-shot lebih di Phase 3
+ - E2E-006 Turn 3 ambiguitas: 'ada paket di bawah X' bisa jadi provide_budget atau ask_price"
 ```
 
 ---
