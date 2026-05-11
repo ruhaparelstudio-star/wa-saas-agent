@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.10 — Filament Admin Panel Dasar
+Sub-task Aktif : Integration Checkpoint Phase 1
 Last Updated   : 2026-05-11
 Git Branch     : dev
-Last Commit    : feat: plan system, feature gating, FeatureGateService
+Last Commit    : feat: Filament superadmin dan tenant panel dengan resources dasar
 Last Tag       : v0.1-poc-complete
 ```
 
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 9 / 10 sub-task  [▓▓▓▓▓▓▓▓▓]
+Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE (pending checkpoint)
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -333,12 +333,30 @@ Commit        : feat: plan system, feature gating, FeatureGateService
 
 ### Sub-task 1.10 — Filament Admin Panel Dasar
 ```
-Status                  : [ ] TODO
-Files Created           : -
-Superadmin Panel        : [ ] /superadmin accessible
-Tenant Panel            : [ ] /app accessible
-Panel Isolation         : [ ] cross-access blocked
-Commit                  : -
+Status                  : [x] DONE — 2026-05-11
+Files Created           : app/Providers/Filament/SuperadminPanelProvider.php
+                          app/Providers/Filament/TenantPanelProvider.php
+                          app/Filament/Superadmin/Resources/TenantResource.php
+                          app/Filament/Superadmin/Resources/TenantResource/Pages/ListTenants.php
+                          app/Filament/Superadmin/Resources/TenantResource/Pages/CreateTenant.php
+                          app/Filament/Superadmin/Resources/PlanResource.php
+                          app/Filament/Superadmin/Resources/PlanResource/Pages/ListPlans.php
+                          app/Filament/Superadmin/Widgets/TenantStatsWidget.php
+                          app/Filament/Tenant/Pages/Dashboard.php
+                          app/Modules/Filament/Tests/FilamentPanelTest.php
+                          database/factories/Modules/Auth/Models/UserFactory.php
+Superadmin Panel        : [x] /superadmin accessible (login page + canAccessPanel)
+Tenant Panel            : [x] /app accessible
+Panel Isolation         : [x] cross-access blocked (403 Forbidden)
+Tests Added             : 10 (FilamentPanelTest)
+Tests Pass              : 46 / 46 (full suite, 0 regresi)
+Notes                   : Filament 5.x — form() uses Schema tidak Form
+                          Actions pindah ke Filament\Actions\* (bukan Tables\Actions\*)
+                          User model butuh Illuminate\Foundation\Auth\Access\Authorizable (bukan Auth\Access)
+                          SuperadminPanel: TenantResource, PlanResource, TenantStatsWidget
+                          TenantPanel: Custom Dashboard dengan welcome message
+                          canAccessPanel: superadmin → /superadmin, tenant_admin → /app
+Commit                  : feat: Filament superadmin dan tenant panel dengan resources dasar
 ```
 
 ### Integration Checkpoint Phase 1

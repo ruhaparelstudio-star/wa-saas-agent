@@ -4,15 +4,19 @@ namespace App\Modules\Auth\Models;
 
 use App\Modules\Shared\Enums\UserRole;
 use App\Modules\Shared\Models\BaseModel;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Foundation\Auth\Access\Authorizable;
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends BaseModel implements AuthenticatableContract
+class User extends BaseModel implements AuthenticatableContract, AuthorizableContract, FilamentUser
 {
-    use HasFactory, Notifiable, HasApiTokens, Authenticatable;
+    use HasFactory, Notifiable, HasApiTokens, Authenticatable, Authorizable;
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -37,6 +41,19 @@ class User extends BaseModel implements AuthenticatableContract
             'updated_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if (!$this->is_active) {
+            return false;
+        }
+
+        return match ($panel->getId()) {
+            'superadmin' => $this->isSuperadmin(),
+            'tenant' => $this->isTenantAdmin(),
+            default => false,
+        };
     }
 
     public function scopeActive($query)

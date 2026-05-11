@@ -64,4 +64,9 @@ class TenantService
 
         return $tenant;
     }
+
+    public function resendActivation(Tenant $tenant): \App\Modules\Tenancy\Models\ActivationToken
+    {
+        return $this->activationService->resendActivation($tenant);
+    }
 }
