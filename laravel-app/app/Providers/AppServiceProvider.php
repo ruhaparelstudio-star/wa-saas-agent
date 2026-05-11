@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         foreach (glob("{$modulesPath}/*/routes.php") as $routeFile) {
-            Route::middleware('api')->group($routeFile);
+            require $routeFile;
         }
     }
 }

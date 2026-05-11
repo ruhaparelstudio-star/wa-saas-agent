@@ -517,7 +517,7 @@ Git commit: "feat: buat semua shared contracts/interfaces (9 interface)"
 ---
 
 ### SUB-TASK 1.5 — Base Classes + TenantScope + Health Endpoints
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.4 selesai
 **Estimated Time:** 1 jam
 

@@ -8,7 +8,7 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.5 — Base Classes + TenantScope + Health Endpoints
+Sub-task Aktif : 1.6 — Docker Compose + Environment
 Last Updated   : 2026-05-11
 Git Branch     : dev
 Last Commit    : chore: inisialisasi Laravel 13, struktur modul, artisan module:make command
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 4 / 10 sub-task  [▓▓▓▓]
+Phase 1 : 5 / 10 sub-task  [▓▓▓▓▓]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -209,12 +209,23 @@ di Phase 3 WAJIB implements interface ini:
 - DecisionEngineInterface: LLM TIDAK BOLEH dipanggil di sini
 ```
 
-### Sub-task 1.5 — Base Classes + TenantScope
+### Sub-task 1.5 — Base Classes + TenantScope + Health Endpoints
 ```
-Status        : [ ] TODO
-Files Created : -
-Tests Added   : -
-Commit        : -
+Status        : [x] DONE — 2026-05-11
+Files Created : app/Modules/Shared/Models/Traits/HasUuid.php
+                app/Modules/Shared/Models/BaseModel.php
+                app/Modules/Shared/Models/TenantBaseModel.php
+                app/Modules/Shared/Scopes/TenantScope.php
+                app/Modules/Shared/Http/Controllers/HealthController.php
+                app/Modules/Shared/routes.php
+                app/Modules/Shared/Tests/BaseModelTest.php
+Tests Added   : 6 / 6 PASS (tanpa DB — SQLite tidak tersedia di host)
+                DB integration tests dijalankan saat Docker up (Sub-task 1.6)
+Notes         : AppServiceProvider scan module routes.php otomatis
+                Health endpoints: /health, /health/db, /health/redis, /health/queue, /health/wa-gateway
+                TenantScope: superadmin bypass, tenant_admin filter by tenant_id
+                phpunit.xml: tambahkan testsuites Modules (app/Modules/**/Tests)
+Commit        : feat: base classes, TenantScope, health endpoints
 ```
 
 ### Sub-task 1.6 — Docker Compose + Environment

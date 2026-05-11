@@ -11,6 +11,10 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Modules">
+            <directory>app/Modules</directory>
+            <exclude>app/Modules/Shared/Tests/Stubs</exclude>
+        </testsuite>
     </testsuites>
     <source>
         <include>
