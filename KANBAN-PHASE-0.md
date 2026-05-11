@@ -22,7 +22,7 @@ Jika stuck: baca RECOVERY.md
 ---
 
 ### SUB-TASK 0.1 — POC Script PHP Standalone
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** Tidak ada
 **Estimated Time:** 1-2 jam
 

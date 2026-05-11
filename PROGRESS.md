@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 0 — Proof of Concept
-Sub-task Aktif : 0.1 — POC Script
-Last Updated   : Initial setup
+Sub-task Aktif : 0.2 — Prompt Engineering Intent Classifier
+Last Updated   : 2026-05-11
 Git Branch     : dev
-Last Commit    : (belum ada)
+Last Commit    : feat: POC script standalone untuk validasi AI pipeline
 Last Tag       : (belum ada)
 ```
 
@@ -20,7 +20,7 @@ Last Tag       : (belum ada)
 ## OVERALL PROGRESS
 
 ```
-Phase 0 : 0 / 5  sub-task  [ ]
+Phase 0 : 1 / 5  sub-task  [▓░░░░]
 Phase 1 : 0 / 10 sub-task  [ ]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
@@ -52,10 +52,13 @@ Benchmark Score     | -       | 30/30   | ⏳
 
 ### Sub-task 0.1 — POC Script PHP Standalone
 ```
-Status        : [ ] TODO
-Files Created : -
-Commit        : -
-Notes         : -
+Status        : [x] DONE — 2026-05-11
+Files Created : poc/poc_conversation.php
+Commit        : feat: POC script standalone untuk validasi AI pipeline
+Notes         : PocLlmClient (classifyIntent, extractEntities, composeReply),
+                PocDecisionEngine (PHP rules only, NO LLM), mock knowledge 3 paket,
+                test runner 8 pesan dengan entity persistence antar turn.
+                Jalankan: OPENAI_API_KEY=sk-xxx php poc/poc_conversation.php
 ```
 
 ### Sub-task 0.2 — Prompt Engineering Intent Classifier
