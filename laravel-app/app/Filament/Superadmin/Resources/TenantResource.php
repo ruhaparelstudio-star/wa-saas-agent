@@ -54,10 +54,11 @@ class TenantResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        TenantStatus::TRIAL->value => 'warning',
-                        TenantStatus::ACTIVE->value => 'success',
-                        TenantStatus::EXPIRED->value, TenantStatus::SUSPENDED->value => 'danger',
+                    ->color(fn ($state): string => match (true) {
+                        $state === TenantStatus::TRIAL || $state === TenantStatus::TRIAL->value => 'warning',
+                        $state === TenantStatus::ACTIVE || $state === TenantStatus::ACTIVE->value => 'success',
+                        $state === TenantStatus::EXPIRED || $state === TenantStatus::EXPIRED->value => 'danger',
+                        $state === TenantStatus::SUSPENDED || $state === TenantStatus::SUSPENDED->value => 'danger',
                         default => 'gray',
                     })
                     ->sortable(),
