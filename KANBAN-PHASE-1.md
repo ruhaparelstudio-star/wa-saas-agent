@@ -810,7 +810,7 @@ Git commit: "chore: Docker Compose setup lengkap, wa-gateway skeleton"
 ---
 
 ### SUB-TASK 1.7 — Auth & Role System
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.6 selesai (Docker running)
 **Estimated Time:** 1.5 jam
 

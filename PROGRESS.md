@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.7 — Auth & Role System
+Sub-task Aktif : 1.8 — Tenant + Activation System
 Last Updated   : 2026-05-11
 Git Branch     : dev
-Last Commit    : chore: inisialisasi Laravel 13, struktur modul, artisan module:make command
+Last Commit    : feat: auth system dengan role, Sanctum token, middleware
 Last Tag       : v0.1-poc-complete
 ```
 
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 6 / 10 sub-task  [▓▓▓▓▓▓]
+Phase 1 : 7 / 10 sub-task  [▓▓▓▓▓▓▓]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -251,11 +251,28 @@ Commit              : chore: Docker Compose setup lengkap, wa-gateway skeleton
 
 ### Sub-task 1.7 — Auth & Role System
 ```
-Status        : [ ] TODO
-Files Created : -
-Tests Added   : -
-Tests Pass    : - / -
-Commit        : -
+Status        : [x] DONE — 2026-05-11
+Files Created : database/migrations/0001_01_01_000000_create_users_table.php (UUID pk, role, is_active, tenant_id, last_login_at)
+                database/migrations/2026_05_11_084659_create_personal_access_tokens_table.php (uuidMorphs fix)
+                app/Modules/Auth/Models/User.php
+                app/Modules/Auth/DTOs/UserDTO.php
+                app/Modules/Auth/Services/AuthService.php
+                app/Modules/Auth/Http/Requests/LoginRequest.php
+                app/Modules/Auth/Http/Controllers/AuthController.php
+                app/Modules/Auth/Http/Middleware/SuperadminOnly.php
+                app/Modules/Auth/Http/Middleware/TenantAdminOnly.php
+                app/Modules/Auth/Http/Middleware/ActiveUserOnly.php
+                app/Modules/Auth/routes.php
+                app/Modules/Auth/Tests/AuthServiceTest.php
+                database/seeders/SuperadminSeeder.php
+                database/seeders/DatabaseSeeder.php
+                config/auth.php (changed to App\Modules\Auth\Models\User)
+Tests Added   : 8 (AuthServiceTest)
+Tests Pass    : 14 / 14 (incl. 6 BaseModelTest)
+Notes         : personal_access_tokens uuidMorphs (bukan morphs) karena User UUID pk
+                manual curl OK: login, /me (JSON), logout, /me after logout (401)
+                Remember: pakai Accept: application/json header
+Commit        : feat: auth system dengan role, Sanctum token, middleware
 ```
 
 ### Sub-task 1.8 — Tenant + Activation
