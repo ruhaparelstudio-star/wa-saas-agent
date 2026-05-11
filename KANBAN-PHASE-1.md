@@ -286,7 +286,7 @@ git commit -m "feat: buat semua shared enums (15 enum)"
 ---
 
 ### SUB-TASK 1.3 — Semua DTO
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.2 selesai (semua enum ada)
 **Estimated Time:** 1.5 jam
 
