@@ -25,7 +25,12 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
 
-        foreach (glob("{$modulesPath}/*/Providers/*ServiceProvider.php") as $file) {
+        $files = array_merge(
+            glob("{$modulesPath}/*/Providers/*ServiceProvider.php") ?: [],
+            glob("{$modulesPath}/*/*ServiceProvider.php") ?: []
+        );
+
+        foreach (array_unique($files) as $file) {
             $relativePath = str_replace([app_path() . '/', '.php'], ['', ''], $file);
             $className = 'App\\' . str_replace('/', '\\', $relativePath);
 

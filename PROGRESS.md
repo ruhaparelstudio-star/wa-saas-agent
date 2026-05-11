@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.8 — Tenant + Activation System
+Sub-task Aktif : 1.9 — Plan & Feature Gating
 Last Updated   : 2026-05-11
 Git Branch     : dev
-Last Commit    : feat: auth system dengan role, Sanctum token, middleware
+Last Commit    : feat: tenant management dan activation system
 Last Tag       : v0.1-poc-complete
 ```
 
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 7 / 10 sub-task  [▓▓▓▓▓▓▓]
+Phase 1 : 8 / 10 sub-task  [▓▓▓▓▓▓▓▓]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -277,11 +277,32 @@ Commit        : feat: auth system dengan role, Sanctum token, middleware
 
 ### Sub-task 1.8 — Tenant + Activation
 ```
-Status        : [ ] TODO
-Files Created : -
-Tests Added   : -
-Tests Pass    : - / -
-Commit        : -
+Status        : [x] DONE — 2026-05-11
+Files Created : database/migrations/2026_05_11_094006_create_tenants_table.php
+                database/migrations/2026_05_11_094008_create_tenant_users_table.php
+                database/migrations/2026_05_11_094009_create_activation_tokens_table.php
+                app/Modules/Tenancy/Models/Tenant.php
+                app/Modules/Tenancy/Models/TenantUser.php
+                app/Modules/Tenancy/Models/ActivationToken.php
+                app/Modules/Tenancy/Services/TenantService.php
+                app/Modules/Tenancy/Services/ActivationService.php
+                app/Modules/Tenancy/Mail/ActivationEmail.php
+                app/Modules/Tenancy/Http/Controllers/SuperadminTenantController.php
+                app/Modules/Tenancy/Http/Controllers/ActivationController.php
+                app/Modules/Tenancy/Http/Requests/CreateTenantRequest.php
+                app/Modules/Tenancy/Http/Requests/ActivateRequest.php
+                app/Modules/Tenancy/routes.php
+                app/Modules/Tenancy/TenancyServiceProvider.php
+                app/Modules/Tenancy/Tests/TenancyServiceTest.php
+                app/Providers/AppServiceProvider.php (fix: scan root-level module providers)
+Tests Added   : 7 (TenancyServiceTest)
+Tests Pass    : 23 / 23 (full suite, 0 regresi)
+Notes         : Token hashing: SHA-256, raw token tidak disimpan (transient property)
+                Migration order fix: tenant_users(094008) dan activation_tokens(094009) setelah tenants(094006)
+                TenantService::create() di dalam DB::transaction — atomic
+                ActivationEmail: inline HTML, link ke APP_URL/activate/{rawToken}
+                AppServiceProvider diperluas: scan root-level *ServiceProvider.php juga
+Commit        : feat: tenant management dan activation system
 ```
 
 ### Sub-task 1.9 — Plan & Feature Gating

@@ -942,7 +942,7 @@ Git commit: "feat: auth system dengan role, Sanctum token, middleware"
 ---
 
 ### SUB-TASK 1.8 — Tenant + Activation System
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.7 selesai
 **Estimated Time:** 2 jam
 
