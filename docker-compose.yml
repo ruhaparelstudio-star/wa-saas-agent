@@ -1,0 +1,140 @@
+services:
+  app:
+    build: ./docker/php
+    volumes:
+      - ./laravel-app:/var/www/html
+    networks:
+      - saas_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./laravel-app/.env
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./laravel-app:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - saas_network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wa_agent
+      POSTGRES_USER: wa_agent
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wa_agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas_network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --appendfsync everysec
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas_network
+
+  queue:
+    build: ./docker/php
+    command: php artisan queue:work --tries=3 --timeout=120 --sleep=3
+    volumes:
+      - ./laravel-app:/var/www/html
+    depends_on:
+      - app
+      - redis
+      - postgres
+    env_file:
+      - ./laravel-app/.env
+    networks:
+      - saas_network
+
+  scheduler:
+    build: ./docker/php
+    command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    volumes:
+      - ./laravel-app:/var/www/html
+    depends_on:
+      - app
+    env_file:
+      - ./laravel-app/.env
+    networks:
+      - saas_network
+
+  horizon:
+    build: ./docker/php
+    command: php artisan horizon
+    volumes:
+      - ./laravel-app:/var/www/html
+    depends_on:
+      - app
+      - redis
+    env_file:
+      - ./laravel-app/.env
+    networks:
+      - saas_network
+
+  wa-gateway:
+    build: ./wa-gateway
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./wa-gateway:/app
+      - wa_gateway_modules:/app/node_modules
+      - wa_sessions:/app/sessions
+    environment:
+      LARAVEL_URL: http://app
+      INTERNAL_SECRET: "${WA_INTERNAL_SECRET:-change_this_to_random_32_chars}"
+      PORT: 3001
+    depends_on:
+      - app
+    networks:
+      - saas_network
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - saas_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - saas_network
+
+networks:
+  saas_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  wa_sessions:
+  wa_gateway_modules:

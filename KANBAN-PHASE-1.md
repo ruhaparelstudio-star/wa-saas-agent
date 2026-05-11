@@ -624,7 +624,7 @@ Git commit: "feat: base classes, TenantScope, health endpoints"
 ---
 
 ### SUB-TASK 1.6 — Docker Compose + Environment
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.5 selesai
 **Estimated Time:** 1.5 jam
 

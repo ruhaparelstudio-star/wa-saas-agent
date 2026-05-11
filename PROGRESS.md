@@ -8,7 +8,7 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.6 — Docker Compose + Environment
+Sub-task Aktif : 1.7 — Auth & Role System
 Last Updated   : 2026-05-11
 Git Branch     : dev
 Last Commit    : chore: inisialisasi Laravel 13, struktur modul, artisan module:make command
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 5 / 10 sub-task  [▓▓▓▓▓]
+Phase 1 : 6 / 10 sub-task  [▓▓▓▓▓▓]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -230,13 +230,23 @@ Commit        : feat: base classes, TenantScope, health endpoints
 
 ### Sub-task 1.6 — Docker Compose + Environment
 ```
-Status              : [ ] TODO
-Files Created       : -
-Docker Up           : [ ]
-Health /db          : [ ]
-Health /redis       : [ ]
-Health /wa-gateway  : [ ]
-Commit              : -
+Status              : [x] DONE — 2026-05-11
+Files Created       : docker-compose.yml (10 services)
+                      docker/php/Dockerfile (PHP 8.3 FPM Alpine + redis pecl)
+                      docker/php/entrypoint.sh
+                      docker/nginx/default.conf
+                      wa-gateway/index.js, wa-gateway/package.json, wa-gateway/Dockerfile
+                      Makefile
+Docker Up           : [x] — semua 10 container running
+Health /health      : [x] {status: ok, service: app}
+Health /db          : [x] {status: ok, driver: pgsql}
+Health /redis       : [x] {status: ok, driver: redis}
+Health /queue       : [x] {status: ok, driver: redis}
+Health /wa-gateway  : [x] {status: ok, gateway_status: {...}}
+Tests               : 8 / 8 PASS (make test di Docker)
+Notes               : wa-gateway node_modules: named volume (wa_gateway_modules)
+                      untuk menghindari override dari bind mount
+Commit              : chore: Docker Compose setup lengkap, wa-gateway skeleton
 ```
 
 ### Sub-task 1.7 — Auth & Role System
