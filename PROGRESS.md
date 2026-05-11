@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE (pending checkpoint)
+Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -361,15 +361,29 @@ Commit                  : feat: Filament superadmin dan tenant panel dengan reso
 
 ### Integration Checkpoint Phase 1
 ```
-Status              : [ ] TODO
-Tests               : - / - pass
-Docker Up           : [ ]
-Full Activation Flow: [ ]
-Feature Gating      : [ ]
-Tenant Isolation    : [ ]
-Filament Panels     : [ ]
+Status              : [x] DONE — 2026-05-11
+Tests               : 66 / 66 pass (109 assertions, 0 regresi)
+Docker Up           : [x] 10 containers running (app, nginx, postgres, redis, queue, scheduler, horizon, wa-gateway, mailpit, pgadmin)
+Full Activation Flow: [x] Superadmin create → email Mailpit → activate token → tenant login OK
+Feature Gating      : [x] Starter: calendar disabled, lead_limit=100 | Growth: calendar enabled
+Tenant Isolation    : [x] Tenant A cannot access superadmin API (403 Forbidden)
+Filament Panels     : [x] /superadmin (302 redirect unauthenticated) | /app (302 redirect unauthenticated)
+WA Gateway Contract : [x] POST /webhook/inbound (Laravel) → format accepted, X-Internal-Secret enforced
+                         [x] POST /dispatch (WA Gateway) → {success: true, provider_message_id: uuid}
+                         [x] GET /status/:id (WA Gateway) → {status, phone, connected_at}
+                         [x] Unauthorized request → 403 (both sides)
+MockLlmAdapter      : [x] 10 unit tests pass, no real OpenAI call
+Health Checks       : [x] /health /health/db /health/redis /health/queue /health/wa-gateway
 Git Tag             : v0.2-foundation-complete
-Gate                : [ ] OPEN untuk Phase 2
+Gate                : [x] OPEN untuk Phase 2
+
+Files Added (Checkpoint):
+  wa-gateway/index.js                                           | 1.10/CP | POST /dispatch, GET /status/:id (PRINSIP 13)
+  app/Modules/Shared/Http/Controllers/WebhookController.php     | CP      | inbound() — POST /webhook/inbound stub
+  app/Modules/Shared/routes.php                                 | CP      | added POST /webhook/inbound route
+  tests/Feature/Contracts/WaGatewayContractTest.php             | CP      | 10 contract tests (PRINSIP 13)
+  app/Modules/AgentCore/LLM/Adapters/MockLlmAdapter.php         | CP      | MockLlmAdapter implements LlmClientInterface (PRINSIP 9)
+  app/Modules/AgentCore/Tests/MockLlmAdapterTest.php            | CP      | 10 unit tests, no real API
 ```
 
 ---
@@ -883,10 +897,18 @@ ID    | Sub-task | Shortcut | Fix Deadline
 - Accuracy yang dicapai: -
 - Hal penting yang perlu diperhatikan Phase 1: -
 
-[Phase 1 selesai]:
-- DTO fields yang sudah frozen: -
-- Interface contract yang exposed: -
-- Hal penting Phase 2: -
+[Phase 1 selesai — 2026-05-11]:
+- DTO fields yang sudah frozen: 19 DTO di app/Modules/Shared/DTOs/ — field TIDAK BOLEH diubah tanpa update CLAUDE.md
+- Interface contract final: 9 interface di app/Modules/Shared/Contracts/ — semua impl Phase 3 wajib implements
+- WA Gateway contract v1.0: POST /webhook/inbound | POST /dispatch | GET /status/:wa_account_id
+- MockLlmAdapter: app/Modules/AgentCore/LLM/Adapters/MockLlmAdapter.php — WAJIB untuk semua unit test LLM
+- Filament 5.x (bukan 3.x) — form() pakai Schema, Actions di Filament\Actions\*
+- SUPERADMIN_PASSWORD di .env = 'change_this_password' (ganti di production)
+- Hal penting Phase 2:
+  * Tables: packages, package_prices, faqs, knowledge_items, assets (semua extend TenantBaseModel)
+  * Full-text search: PostgreSQL tsvector (skip Elasticsearch)
+  * pgvector: Phase 3+, skip di Phase 2
+  * TenantConfigResolver harus support default fallback per PolicyKey
 
 [Phase 2 selesai]:
 - Knowledge schema yang dipakai: -

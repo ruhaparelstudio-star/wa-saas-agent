@@ -50,6 +50,27 @@ app.post('/messages/send', verifySecret, (req, res) => {
     });
 });
 
+// PRINSIP 13 — Contract: POST /dispatch (Laravel → WA)
+app.post('/dispatch', verifySecret, (req, res) => {
+    const { wa_account_id, to_phone, message_type, body } = req.body;
+    if (!wa_account_id || !to_phone || !message_type || body === undefined) {
+        return res.status(422).json({ error: 'Missing required fields: wa_account_id, to_phone, message_type, body' });
+    }
+    res.json({
+        success: true,
+        provider_message_id: uuidv4(),
+    });
+});
+
+// PRINSIP 13 — Contract: GET /status/:wa_account_id (Laravel → WA)
+app.get('/status/:wa_account_id', verifySecret, (req, res) => {
+    res.json({
+        status: 'disconnected',
+        phone: null,
+        connected_at: null,
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`WA Gateway running on port ${PORT}`);
 });
