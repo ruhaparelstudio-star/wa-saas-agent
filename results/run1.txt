@@ -1,0 +1,73 @@
+========================================
+INTENT ACCURACY TEST — Run #1
+Date: 2026-05-11 08:00:16
+Total cases: 50
+========================================
+
+[PASS] INT-001: "halo kak" → greeting (conf: 1.00)
+[PASS] INT-002: "selamat pagi kak" → greeting (conf: 1.00)
+[PASS] INT-003: "hei" → greeting (conf: 0.90)
+[PASS] INT-004: "permisi kak" → greeting (conf: 0.90)
+[PASS] INT-005: "boleh minta pricelist kak?" → ask_pricelist (conf: 1.00)
+[FAIL] INT-006: "ada brosur ga kak?" → got: ask_package_list | expected: ask_pricelist (conf: 0.90)
+[PASS] INT-007: "kirim daftar harga dong" → ask_pricelist (conf: 1.00)
+[PASS] INT-008: "pricelist kak" → ask_pricelist (conf: 1.00)
+[PASS] INT-009: "paket silver harganya berapa?" → ask_price (conf: 1.00)
+[PASS] INT-010: "harga paket gold?" → ask_price (conf: 0.90)
+[PASS] INT-011: "biaya paket platinum berapa kak" → ask_price (conf: 0.90)
+[PASS] INT-012: "brp jt paket silver kak" → ask_price (conf: 0.90)
+[PASS] INT-013: "ada paket apa aja kak?" → ask_package_list (conf: 0.90)
+[PASS] INT-014: "mau tanya soal foto nikah" → ask_package_list (conf: 0.90)
+[PASS] INT-015: "list paketnya dong" → ask_package_list (conf: 0.90)
+[PASS] INT-016: "paketnya ada apa nih kak" → ask_package_list (conf: 0.90)
+[PASS] INT-017: "paket silver isinya apa aja?" → ask_package_detail (conf: 1.00)
+[PASS] INT-018: "yg dapat apa di paket gold kak?" → ask_package_detail (conf: 0.90)
+[PASS] INT-019: "detail paket platinum dong" → ask_package_detail (conf: 1.00)
+[PASS] INT-020: "paket silver termasuk apa aja kak" → ask_package_detail (conf: 1.00)
+[PASS] INT-021: "nama saya Rina" → provide_name (conf: 1.00)
+[PASS] INT-022: "panggil saya Budi kak" → provide_name (conf: 1.00)
+[PASS] INT-023: "saya Dewi kak" → provide_name (conf: 1.00)
+[PASS] INT-024: "tanggalnya 20 april 2025" → provide_date (conf: 1.00)
+[PASS] INT-025: "rencananya 5 feb kak" → provide_date (conf: 0.90)
+[PASS] INT-026: "nikahnya bulan juni kak" → provide_date (conf: 0.90)
+[PASS] INT-027: "budgetnya sekitar 30 juta" → provide_budget (conf: 1.00)
+[PASS] INT-028: "punya budget 35-40jt kak" → provide_budget (conf: 0.90)
+[PASS] INT-029: "max 30jt kak" → provide_budget (conf: 0.90)
+[PASS] INT-030: "tanggal 20 april available ga?" → ask_availability (conf: 1.00)
+[PASS] INT-031: "bulan juni ada ga kak?" → ask_availability (conf: 0.90)
+[PASS] INT-032: "masih ada slot desember?" → ask_availability (conf: 0.90)
+[PASS] INT-033: "oke saya mau booking" → booking_intent (conf: 1.00)
+[PASS] INT-034: "gimana cara bookingnya kak?" → booking_intent (conf: 0.90)
+[PASS] INT-035: "mau fix tanggalnya dong" → booking_intent (conf: 0.90)
+[PASS] INT-036: "bisa ngobrol sama orangnya langsung?" → request_handoff (conf: 1.00)
+[PASS] INT-037: "mau chat sama adminnya kak" → request_handoff (conf: 0.90)
+[PASS] INT-038: "hub tim lo dong" → request_handoff (conf: 1.00)
+[PASS] INT-039: "ini gimana sih lambat banget!" → complaint (conf: 1.00)
+[PASS] INT-040: "ga ada kabar dari kemarin!" → complaint (conf: 0.90)
+[PASS] INT-041: "pelayanannya kecewain saya kak" → complaint (conf: 1.00)
+[PASS] INT-042: "eh maaf, bukan april, juni maksud saya" → correction (conf: 1.00)
+[PASS] INT-043: "salah tadi, namaku Sari bukan Rina" → correction (conf: 1.00)
+[PASS] INT-044: "ralat kak, budgetnya 40jt bukan 30" → correction (conf: 1.00)
+[PASS] INT-045: "hmm" → unclear_message (conf: 0.90)
+[PASS] INT-046: "iya kak" → unclear_message (conf: 0.50)
+[PASS] INT-047: "🙏" → unclear_message (conf: 0.50)
+[PASS] INT-048: "kak rekomendasi restoran di Jakarta dong" → off_topic (conf: 1.00)
+[PASS] INT-049: "makasih ya kak" → thanks (conf: 1.00)
+[PASS] INT-050: "oke udah cukup kak, bye" → end_conversation (conf: 1.00)
+
+========================================
+SUMMARY — Run #1
+========================================
+Accuracy : 49 / 50 = 98.0%  →  Gate: PASS ✅
+Passed   : 49
+Failed   : 1
+
+--- FAILED CASES ---
+  [INT-006] "ada brosur ga kak?" → got: ask_package_list | expected: ask_pricelist (conf: 0.90)
+
+--- LOW CONFIDENCE (< 70%) ---
+  [INT-046] "iya kak" → unclear_message (conf: 0.50)
+  [INT-047] "🙏" → unclear_message (conf: 0.50)
+
+Output saved to: /home/arsdev/projects/wa-saas-agent/poc/../results/run1.txt
+========================================
