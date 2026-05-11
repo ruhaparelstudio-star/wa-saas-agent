@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.9 — Plan & Feature Gating
+Sub-task Aktif : 1.10 — Filament Admin Panel Dasar
 Last Updated   : 2026-05-11
 Git Branch     : dev
-Last Commit    : feat: tenant management dan activation system
+Last Commit    : feat: plan system, feature gating, FeatureGateService
 Last Tag       : v0.1-poc-complete
 ```
 
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 8 / 10 sub-task  [▓▓▓▓▓▓▓▓]
+Phase 1 : 9 / 10 sub-task  [▓▓▓▓▓▓▓▓▓]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -307,11 +307,28 @@ Commit        : feat: tenant management dan activation system
 
 ### Sub-task 1.9 — Plan & Feature Gating
 ```
-Status        : [ ] TODO
-Files Created : -
-Plans Seeded  : [ ] Starter [ ] Growth [ ] Pro
-Tests Pass    : - / -
-Commit        : -
+Status        : [x] DONE — 2026-05-11
+Files Created : database/migrations/2026_05_11_100000_create_plans_table.php
+                database/migrations/2026_05_11_100001_create_plan_features_table.php
+                database/migrations/2026_05_11_100002_create_tenant_subscriptions_table.php
+                app/Modules/Plans/Models/Plan.php
+                app/Modules/Plans/Models/PlanFeature.php
+                app/Modules/Plans/Models/TenantSubscription.php
+                app/Modules/Plans/Services/FeatureGateService.php
+                app/Modules/Plans/Http/Middleware/CheckFeatureEnabled.php
+                app/Modules/Plans/Http/Controllers/PlanController.php
+                app/Modules/Plans/PlansServiceProvider.php
+                app/Modules/Plans/routes.php
+                app/Modules/Plans/Tests/FeatureGateServiceTest.php
+                database/seeders/PlanSeeder.php
+Plans Seeded  : [x] Starter [x] Growth [x] Pro
+Tests Added   : 13 (FeatureGateServiceTest)
+Tests Pass    : 36 / 36 (full suite, 0 regresi)
+Notes         : FeatureGateService cache 5 menit di Redis per tenant_id
+                Cache invalidate otomatis saat assign-plan
+                POST /api/superadmin/tenants/{id}/assign-plan [superadmin only]
+                CheckFeatureEnabled middleware: 403 jika feature disabled
+Commit        : feat: plan system, feature gating, FeatureGateService
 ```
 
 ### Sub-task 1.10 — Filament Admin Panel Dasar

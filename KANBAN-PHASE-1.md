@@ -1086,7 +1086,7 @@ Git commit: "feat: tenant management dan activation system"
 ---
 
 ### SUB-TASK 1.9 — Plan & Feature Gating
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.8 selesai
 **Estimated Time:** 1.5 jam
 
