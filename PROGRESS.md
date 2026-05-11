@@ -8,7 +8,7 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.4 — Semua Interface
+Sub-task Aktif : 1.5 — Base Classes + TenantScope + Health Endpoints
 Last Updated   : 2026-05-11
 Git Branch     : dev
 Last Commit    : chore: inisialisasi Laravel 13, struktur modul, artisan module:make command
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 3 / 10 sub-task  [▓▓▓]
+Phase 1 : 4 / 10 sub-task  [▓▓▓▓]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -191,11 +191,22 @@ Jika perlu ubah: update CLAUDE.md terlebih dahulu dan diskusikan.
 
 ### Sub-task 1.4 — Semua Interface
 ```
-Status            : [ ] TODO
-Files Created     : -
-Interface Count   : - / 9
-Commit            : -
-CATATAN PENTING   : [diisi setelah selesai — interface contract yang di-expose]
+Status            : [x] DONE — 2026-05-11
+Files Created     : app/Modules/Shared/Contracts/ — 9 file:
+                    LlmClientInterface, ChannelGatewayInterface, CalendarProviderInterface,
+                    StorageProviderInterface, IntentClassifierInterface, EntityExtractorInterface,
+                    KnowledgeRetrieverInterface, DecisionEngineInterface, ResponseComposerInterface
+Interface Count   : 9 / 9
+Verified          : 0 syntax errors, dummy implements test OK
+Commit            : feat: buat semua shared contracts/interfaces (9 interface)
+
+CATATAN PENTING: Interface contract final. Semua implementasi
+di Phase 3 WAJIB implements interface ini:
+- LlmClientInterface → OpenAiAdapter + MockLlmAdapter
+- ChannelGatewayInterface → WhatsAppGatewayAdapter
+- CalendarProviderInterface → GoogleCalendarAdapter
+- StorageProviderInterface → R2StorageAdapter
+- DecisionEngineInterface: LLM TIDAK BOLEH dipanggil di sini
 ```
 
 ### Sub-task 1.5 — Base Classes + TenantScope

@@ -419,7 +419,7 @@ git commit -m "feat: buat semua shared DTOs (19 DTO) — fields frozen"
 ---
 
 ### SUB-TASK 1.4 — Semua Interface
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.3 selesai (semua DTO ada)
 **Estimated Time:** 1 jam
 
