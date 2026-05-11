@@ -175,7 +175,7 @@ git commit -m "chore: inisialisasi Laravel 11, struktur modul, artisan module:ma
 ---
 
 ### SUB-TASK 1.2 — Semua Enum
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-11
 **Depends On:** 1.1 selesai
 **Estimated Time:** 45 menit
 

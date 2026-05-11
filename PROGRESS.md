@@ -8,7 +8,7 @@
 
 ```
 Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : 1.2 — Semua Enum
+Sub-task Aktif : 1.3 — Semua DTO
 Last Updated   : 2026-05-11
 Git Branch     : dev
 Last Commit    : chore: inisialisasi Laravel 13, struktur modul, artisan module:make command
@@ -21,7 +21,7 @@ Last Tag       : v0.1-poc-complete
 
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
-Phase 1 : 1 / 10 sub-task  [▓]
+Phase 1 : 2 / 10 sub-task  [▓▓]
 Phase 2 : 0 / 7  sub-task  [ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
@@ -160,10 +160,14 @@ Commit        : chore: inisialisasi Laravel 11, struktur modul, artisan module:m
 
 ### Sub-task 1.2 — Semua Enum
 ```
-Status        : [ ] TODO
-Files Created : -
-Enum Count    : - / 15
-Commit        : -
+Status        : [x] DONE — 2026-05-11
+Files Created : app/Modules/Shared/Enums/ — 15 file:
+                UserRole, TenantStatus, FeatureKey, WaAccountStatus, ConversationStage (12 cases),
+                AgentMode, MemoryMode, LeadTemperature, HandoffPriority, HandoffStatus,
+                TenantTone, PolicyKey, AssetType, NotificationType, MessageType
+Enum Count    : 15 / 15
+Verified      : php -l *.php — 0 syntax errors, tinker UserRole::SUPERADMIN->value OK
+Commit        : feat: buat semua shared enums (15 enum)
 ```
 
 ### Sub-task 1.3 — Semua DTO
