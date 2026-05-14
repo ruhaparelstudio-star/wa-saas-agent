@@ -304,7 +304,7 @@ Git commit: "feat: InputSanitizerService — 15 injection patterns, PII masking,
 ---
 
 ### SUB-TASK 3.3 — IntentClassifierService + Prompt Template
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 3.2 selesai
 **Estimated Time:** 2 jam
 

@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.3 — IntentClassifierService
+Sub-task Aktif : 3.4 — EntityExtractionService
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: OpenAiAdapter, JsonRepairGuard, TokenUsageLogger — LLM infrastructure
+Last Commit    : feat: IntentClassifierService — LLM intent classifier, MockLlmAdapter test, 20 valid intents
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,11 +23,11 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 2 / 15 sub-task  [▓▓             ]
+Phase 3 : 3 / 15 sub-task  [▓▓▓            ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 10 / 54 sub-task
+Total   : 11 / 54 sub-task
 ```
 
 ---
@@ -711,14 +711,27 @@ Tests Pass             : - / -
 Commit                 : -
 ```
 
-### Sub-task 3.4 — IntentClassifierService
+### Sub-task 3.4 — IntentClassifierService (KANBAN 3.3)
 ```
-Status         : [ ] TODO
-Files Created  : -
-Interface Impl : IntentClassifierInterface
-Prompt Version : - (dari PROMPTS.md)
-Tests Pass     : - / -
-Commit         : -
+Status         : [x] DONE — 2026-05-14
+Files Created  : app/Modules/AgentCore/Classification/Services/IntentClassifierService.php
+                 app/Modules/AgentCore/Tests/IntentClassifierServiceTest.php
+Methods        : classify(message, tenantId, context): IntentResultDTO
+                 buildPrompt(message, context): string
+Interface Impl : IntentClassifierInterface → IntentClassifierService
+Prompt Version : v1.0 (PROMPT_TEMPLATE const, fallback sebelum 3.12 PromptVersioningService)
+Valid Intents  : 20 (VALID_INTENTS const)
+Tests Pass     : 13 / 13
+Commit         : feat: IntentClassifierService — LLM intent classifier, MockLlmAdapter test, 20 valid intents
+
+CATATAN PENTING:
+- PRINSIP 9: semua test pakai MockLlmAdapter, 0 real OpenAI calls
+- classify() call complete() bukan completeJson() — parse JSON secara manual dengan repair fallback
+- Fallback: unknown intent → unclear_message (confidence 0.0)
+- TokenUsageLogger dipanggil per classify()
+- Context injection: max 5 pesan terakhir di-inject ke prompt
+- Anti-injection instruction sudah ada di PROMPT_TEMPLATE
+- Binding: IntentClassifierInterface → IntentClassifierService di AgentCoreServiceProvider
 ```
 
 ### Sub-task 3.5 — Intent Accuracy Test Suite
