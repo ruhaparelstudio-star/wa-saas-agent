@@ -4,6 +4,8 @@ namespace App\Filament\Tenant\Resources;
 
 use App\Filament\Tenant\Resources\KnowledgeItemResource\Pages;
 use App\Modules\Knowledge\Models\KnowledgeItem;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -68,12 +70,15 @@ class KnowledgeItemResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('tags')
                     ->label('Tags')
-                    ->badge()
-                    ->separator(','),
+                    ->badge(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->label('Aktif')
                     ->sortable(),
+            ])
+            ->actions([
+                EditAction::make(),
+                DeleteAction::make(),
             ]);
     }
 

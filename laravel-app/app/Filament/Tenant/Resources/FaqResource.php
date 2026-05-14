@@ -4,6 +4,8 @@ namespace App\Filament\Tenant\Resources;
 
 use App\Filament\Tenant\Resources\FaqResource\Pages;
 use App\Modules\Knowledge\Models\Faq;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -73,7 +75,11 @@ class FaqResource extends Resource
                     ->label('Urutan')
                     ->sortable(),
             ])
-            ->defaultSort('sort_order');
+            ->defaultSort('sort_order')
+            ->actions([
+                EditAction::make(),
+                DeleteAction::make(),
+            ]);
     }
 
     public static function getEloquentQuery(): Builder

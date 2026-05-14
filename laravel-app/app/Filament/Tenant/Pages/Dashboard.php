@@ -16,11 +16,15 @@ class Dashboard extends BaseDashboard
 
     public function getWidgets(): array
     {
-        return [];
+        return [
+            \App\Filament\Tenant\Widgets\TenantOverviewWidget::class,
+        ];
     }
 
     public function getHeaderWidgets(): array
     {
-        return [];
+        return [
+            \App\Filament\Tenant\Widgets\TenantOverviewWidget::class,
+        ];
     }
 }

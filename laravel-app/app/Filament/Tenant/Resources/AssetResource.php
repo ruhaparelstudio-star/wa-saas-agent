@@ -5,6 +5,8 @@ namespace App\Filament\Tenant\Resources;
 use App\Filament\Tenant\Resources\AssetResource\Pages;
 use App\Modules\Knowledge\Models\Asset;
 use App\Modules\Shared\Enums\AssetType;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -89,7 +91,11 @@ class AssetResource extends Resource
                     ->sortable()
                     ->label('Dibuat'),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->actions([
+                EditAction::make(),
+                DeleteAction::make(),
+            ]);
     }
 
     public static function getEloquentQuery(): Builder

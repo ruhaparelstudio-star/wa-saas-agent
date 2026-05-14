@@ -3,6 +3,7 @@
 namespace App\Modules\Tenancy\Models;
 
 use App\Modules\Auth\Models\User;
+use App\Modules\Plans\Models\TenantSubscription;
 use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Models\BaseModel;
 use App\Modules\TenantConfig\Models\TenantPolicy;
@@ -54,6 +55,11 @@ class Tenant extends BaseModel
     public function policies()
     {
         return $this->hasMany(TenantPolicy::class);
+    }
+
+    public function subscription(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TenantSubscription::class, 'tenant_id');
     }
 
     public function scopeActive($query)

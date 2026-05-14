@@ -3,17 +3,17 @@
 namespace App\Filament\Superadmin\Resources\PlanResource\Pages;
 
 use App\Filament\Superadmin\Resources\PlanResource;
-use Filament\Actions\CreateAction;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Actions;
+use Filament\Resources\Pages\EditRecord;
 
-class ListPlans extends ListRecords
+class EditPlan extends EditRecord
 {
     protected static string $resource = PlanResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            Actions\DeleteAction::make(),
         ];
     }
 }

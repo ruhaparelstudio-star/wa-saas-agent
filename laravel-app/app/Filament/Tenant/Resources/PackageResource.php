@@ -4,6 +4,8 @@ namespace App\Filament\Tenant\Resources;
 
 use App\Filament\Tenant\Resources\PackageResource\Pages;
 use App\Modules\Knowledge\Models\Package;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -154,7 +156,11 @@ class PackageResource extends Resource
                     ->sortable()
                     ->label('Diupdate'),
             ])
-            ->defaultSort('sort_order');
+            ->defaultSort('sort_order')
+            ->actions([
+                EditAction::make(),
+                DeleteAction::make(),
+            ]);
     }
 
     public static function getEloquentQuery(): Builder
