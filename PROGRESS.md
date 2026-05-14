@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.4 — EntityExtractionService
+Sub-task Aktif : 3.5 — Conversation + ConversationState + Lead Models + Migrations
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: IntentClassifierService — LLM intent classifier, MockLlmAdapter test, 20 valid intents
+Last Commit    : feat: EntityExtractionService — wedding entity extraction, normalization, entity merge
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,11 +23,11 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 3 / 15 sub-task  [▓▓▓            ]
+Phase 3 : 4 / 15 sub-task  [▓▓▓▓           ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 11 / 54 sub-task
+Total   : 12 / 54 sub-task
 ```
 
 ---
@@ -748,12 +748,16 @@ Baseline Saved : [ ] di PROGRESS.md
 
 ### Sub-task 3.6 — EntityExtractionService
 ```
-Status         : [ ] TODO
-Files Created  : -
+Status         : [x] DONE — 2026-05-14
+Files Created  : app/Modules/AgentCore/Extraction/Services/EntityExtractionService.php
+                 app/Modules/AgentCore/Tests/EntityExtractionServiceTest.php
 Interface Impl : EntityExtractorInterface
-Prompt Version : -
-Tests Pass     : - / -
-Commit         : -
+Methods Exposed: extract(message, tenantId, existingEntities, context): EntityResultDTO
+                 normalizeDate(rawDate, timezone): ?string
+                 normalizeBudget(rawBudget): ?int
+Prompt Version : v1.0 (hardcoded, DB override in sub-task 3.12)
+Tests Pass     : 23 / 23
+Commit         : feat: EntityExtractionService — wedding entity extraction, normalization, entity merge
 ```
 
 ### Sub-task 3.7 — EntityMatcherService

@@ -421,7 +421,7 @@ Git commit: "feat: IntentClassifierService — LLM intent classifier, MockLlmAda
 ---
 
 ### SUB-TASK 3.4 — EntityExtractionService
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 3.3 selesai
 **Estimated Time:** 2 jam
 
