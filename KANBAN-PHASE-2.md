@@ -19,7 +19,7 @@ Jika belum: selesaikan Phase 1 dulu.
 ---
 
 ### SUB-TASK 2.1 — Migration Knowledge Tables
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** Phase 1 gate OPEN
 **Estimated Time:** 1 jam
 

@@ -7,12 +7,12 @@
 ## STATUS TERKINI
 
 ```
-Phase Aktif    : Phase 1 — Contracts & Foundation
-Sub-task Aktif : Integration Checkpoint Phase 1
-Last Updated   : 2026-05-11
+Phase Aktif    : Phase 2 — Knowledge & Settings
+Sub-task Aktif : 2.2 — Models + PackageResolver + PriceResolver
+Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: Filament superadmin dan tenant panel dengan resources dasar
-Last Tag       : v0.1-poc-complete
+Last Commit    : feat: migration knowledge & settings tables (7 tabel)
+Last Tag       : v0.2-foundation-complete
 ```
 
 ---
@@ -22,7 +22,7 @@ Last Tag       : v0.1-poc-complete
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 2 : 0 / 7  sub-task  [ ]
+Phase 2 : 1 / 7  sub-task  [▓      ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
@@ -392,9 +392,21 @@ Files Added (Checkpoint):
 
 ### Sub-task 2.1 — Migration Knowledge Tables
 ```
-Status         : [ ] TODO
-Tables Created : -
-Commit         : -
+Status         : [x] DONE — 2026-05-14
+Tables Created : packages, package_prices, faqs, knowledge_items,
+                 assets, tenant_settings, tenant_policies
+Migration Count: 7
+Files Created  : database/migrations/2026_05_12_000001_create_packages_table.php
+                 database/migrations/2026_05_12_000002_create_package_prices_table.php
+                 database/migrations/2026_05_12_000003_create_faqs_table.php
+                 database/migrations/2026_05_12_000004_create_knowledge_items_table.php
+                 database/migrations/2026_05_12_000005_create_assets_table.php
+                 database/migrations/2026_05_12_000006_create_tenant_settings_table.php
+                 database/migrations/2026_05_12_000007_create_tenant_policies_table.php
+Notes          : tsvector columns (search_vector) added via raw SQL for faqs dan knowledge_items.
+                 GIN indexes for full-text search. Cascade delete verified.
+                 tenant_settings adalah 1-to-1 (UNIQUE tenant_id FK).
+Commit         : feat: migration knowledge & settings tables (7 tabel)
 ```
 
 ### Sub-task 2.2 — PackageResolver + PriceResolver
