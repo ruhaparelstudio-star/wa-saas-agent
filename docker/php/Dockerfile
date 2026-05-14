@@ -7,6 +7,7 @@ RUN apk add --no-cache \
     libzip-dev \
     icu-dev \
     oniguruma-dev \
+    sqlite-dev \
     curl \
     unzip \
     git
@@ -14,6 +15,7 @@ RUN apk add --no-cache \
 RUN docker-php-ext-install \
     pdo_pgsql \
     pgsql \
+    pdo_sqlite \
     bcmath \
     gd \
     zip \

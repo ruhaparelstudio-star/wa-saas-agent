@@ -29,6 +29,17 @@ class WaGatewayContractTest extends TestCase
         $this->internalSecret = env('WA_INTERNAL_SECRET', '');
     }
 
+    private function requireGateway(): void
+    {
+        $host = parse_url($this->waGatewayUrl, PHP_URL_HOST);
+        $port = parse_url($this->waGatewayUrl, PHP_URL_PORT) ?? 80;
+        $sock = @fsockopen($host, $port, $errno, $errstr, 2);
+        if (!$sock) {
+            $this->markTestSkipped("WA Gateway not reachable at {$this->waGatewayUrl} — run inside Docker network.");
+        }
+        fclose($sock);
+    }
+
     // ── Laravel side: POST /webhook/inbound ──────────────────────────────────
 
     public function test_webhook_inbound_accepts_valid_payload_with_secret(): void
@@ -107,6 +118,7 @@ class WaGatewayContractTest extends TestCase
 
     public function test_wa_gateway_dispatch_accepts_valid_payload(): void
     {
+        $this->requireGateway();
         $response = Http::withHeaders(['X-Internal-Secret' => $this->internalSecret])
             ->post("{$this->waGatewayUrl}/dispatch", [
                 'wa_account_id' => 'acc-001',
@@ -122,6 +134,7 @@ class WaGatewayContractTest extends TestCase
 
     public function test_wa_gateway_dispatch_rejects_unauthorized_request(): void
     {
+        $this->requireGateway();
         $response = Http::withHeaders(['X-Internal-Secret' => 'wrong_secret_12345'])
             ->post("{$this->waGatewayUrl}/dispatch", [
                 'wa_account_id' => 'acc-001',
@@ -135,6 +148,7 @@ class WaGatewayContractTest extends TestCase
 
     public function test_wa_gateway_dispatch_rejects_missing_fields(): void
     {
+        $this->requireGateway();
         $response = Http::withHeaders(['X-Internal-Secret' => $this->internalSecret])
             ->post("{$this->waGatewayUrl}/dispatch", [
                 'wa_account_id' => 'acc-001',
@@ -148,6 +162,7 @@ class WaGatewayContractTest extends TestCase
 
     public function test_wa_gateway_status_returns_correct_format(): void
     {
+        $this->requireGateway();
         $response = Http::withHeaders(['X-Internal-Secret' => $this->internalSecret])
             ->get("{$this->waGatewayUrl}/status/acc-001");
 
@@ -159,6 +174,7 @@ class WaGatewayContractTest extends TestCase
 
     public function test_wa_gateway_status_rejects_unauthorized_request(): void
     {
+        $this->requireGateway();
         $response = Http::withHeaders(['X-Internal-Secret' => 'wrong_secret_12345'])
             ->get("{$this->waGatewayUrl}/status/acc-001");
 
