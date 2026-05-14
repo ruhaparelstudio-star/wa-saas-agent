@@ -183,7 +183,7 @@ Git commit: "feat: OpenAiAdapter, JsonRepairGuard, TokenUsageLogger — LLM infr
 ---
 
 ### SUB-TASK 3.2 — InputSanitizerService (Full Implementation)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 3.1 selesai
 **Estimated Time:** 1 jam
 

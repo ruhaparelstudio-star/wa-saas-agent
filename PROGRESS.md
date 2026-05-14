@@ -8,7 +8,7 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.2 — InputSanitizerService
+Sub-task Aktif : 3.3 — IntentClassifierService
 Last Updated   : 2026-05-14
 Git Branch     : dev
 Last Commit    : feat: OpenAiAdapter, JsonRepairGuard, TokenUsageLogger — LLM infrastructure
@@ -23,11 +23,11 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 1 / 15 sub-task  [▓              ]
+Phase 3 : 2 / 15 sub-task  [▓▓             ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 9 / 54 sub-task
+Total   : 10 / 54 sub-task
 ```
 
 ---
@@ -691,10 +691,15 @@ CATATAN PENTING:
 
 ### Sub-task 3.2 — InputSanitizerService (KANBAN 3.2)
 ```
-Status        : [ ] TODO
-Files Created : -
-Tests Pass    : - / -
-Commit        : -
+Status        : [x] DONE — 2026-05-14
+Files Created : app/Modules/Shared/DTOs/SanitizedInputDTO.php
+                app/Modules/AgentCore/Security/Services/InputSanitizerService.php
+                app/Modules/AgentCore/Tests/InputSanitizerServiceTest.php
+Methods       : sanitize(input, tenantId, conversationId): SanitizedInputDTO
+                maskPhone(phone): string
+Patterns      : 15 injection patterns (CLAUDE.md PRINSIP 12)
+Tests Pass    : 14 / 14
+Commit        : feat: InputSanitizerService — 15 injection patterns, PII masking, SanitizedInputDTO
 ```
 
 ### Sub-task 3.3 — InputSanitizerService (Security)
