@@ -784,7 +784,7 @@ Git commit: "feat: TenantConfig, BusinessHoursService, TenantPolicyService, Poli
 ---
 
 ### SUB-TASK 2.6 — Filament Knowledge Panel (Tenant)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 2.5 selesai
 **Estimated Time:** 2 jam
 

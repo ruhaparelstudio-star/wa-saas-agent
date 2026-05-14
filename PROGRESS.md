@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 2 — Knowledge & Settings
-Sub-task Aktif : 2.6 — Filament Knowledge Panel
+Sub-task Aktif : 2.7 — WeddingDemoSeeder
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: TenantConfig, BusinessHoursService, TenantPolicyService, PolicyDefaults
+Last Commit    : feat: Filament tenant panel — package, faq, knowledge, asset, settings resources
 Last Tag       : v0.2-foundation-complete
 ```
 
@@ -22,7 +22,7 @@ Last Tag       : v0.2-foundation-complete
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 2 : 5 / 7  sub-task  [▓▓▓▓▓  ]
+Phase 2 : 6 / 7  sub-task  [▓▓▓▓▓▓ ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
@@ -518,10 +518,46 @@ Commit          : feat: TenantConfig, BusinessHoursService, TenantPolicyService,
 
 ### Sub-task 2.6 — Filament Knowledge Panel
 ```
-Status        : [ ] TODO
-Files Created : -
-Verified      : [ ] Tenant bisa input paket, harga, FAQ, pricelist
-Commit        : -
+Status        : [x] DONE — 2026-05-14
+Files Created :
+  app/Filament/Tenant/Resources/PackageResource.php
+  app/Filament/Tenant/Resources/PackageResource/Pages/ListPackages.php
+  app/Filament/Tenant/Resources/PackageResource/Pages/CreatePackage.php
+  app/Filament/Tenant/Resources/PackageResource/Pages/EditPackage.php
+  app/Filament/Tenant/Resources/PackageResource/RelationManagers/PricesRelationManager.php
+  app/Filament/Tenant/Resources/FaqResource.php
+  app/Filament/Tenant/Resources/FaqResource/Pages/ListFaqs.php
+  app/Filament/Tenant/Resources/FaqResource/Pages/CreateFaq.php
+  app/Filament/Tenant/Resources/FaqResource/Pages/EditFaq.php
+  app/Filament/Tenant/Resources/KnowledgeItemResource.php
+  app/Filament/Tenant/Resources/KnowledgeItemResource/Pages/ListKnowledgeItems.php
+  app/Filament/Tenant/Resources/KnowledgeItemResource/Pages/CreateKnowledgeItem.php
+  app/Filament/Tenant/Resources/KnowledgeItemResource/Pages/EditKnowledgeItem.php
+  app/Filament/Tenant/Resources/AssetResource.php
+  app/Filament/Tenant/Resources/AssetResource/Pages/ListAssets.php
+  app/Filament/Tenant/Resources/AssetResource/Pages/CreateAsset.php
+  app/Filament/Tenant/Resources/AssetResource/Pages/EditAsset.php
+  app/Filament/Tenant/Pages/TenantSettings.php
+  app/Filament/Tenant/Pages/PolicySettings.php
+  resources/views/filament/tenant/pages/tenant-settings.blade.php
+  resources/views/filament/tenant/pages/policy-settings.blade.php
+  tests/Feature/Filament/FilamentKnowledgePanelTest.php
+Verified      : [x] Tenant bisa input paket, harga, FAQ, pricelist, settings, policies
+Tenant Isolation: [x] getEloquentQuery() scoped ke tenant_id di semua resources
+                  [x] CreateXxx->mutateFormDataBeforeCreate inject tenant_id dari auth user
+                  [x] Other tenant package edit → 404
+Tests Added   : 10 (FilamentKnowledgePanelTest)
+Tests Pass    : 128 / 128 total suite PASS
+Navigation    : Group "Pengetahuan": Paket, FAQ, Pengetahuan, Aset
+                Group "Pengaturan": Pengaturan Bisnis, Kebijakan
+Notes         : Filament 5.x — $navigationGroup property type conflict (UnitEnum|string|null)
+                → fixed via getNavigationGroup() method override.
+                Filament 5.x — Page::$view is non-static → fixed via getView() method.
+                Page::$navigationIcon type differs (BackedEnum|string|null) in Page vs Resource
+                → fixed via getNavigationIcon() method.
+                Blade view uses simple <form wire:submit.prevent="save"> (no filament-panels::form.actions).
+                Save triggered via header Action::make('save')->action('save').
+Commit        : feat: Filament tenant panel — package, faq, knowledge, asset, settings resources
 ```
 
 ### Sub-task 2.7 — Seed Data Wedding Realistis
