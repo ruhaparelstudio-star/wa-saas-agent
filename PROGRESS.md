@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 2 — Knowledge & Settings
-Sub-task Aktif : 2.7 — WeddingDemoSeeder
+Sub-task Aktif : Integration Checkpoint Phase 2
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: Filament tenant panel — package, faq, knowledge, asset, settings resources
+Last Commit    : feat: WeddingDemoSeeder — 1 tenant demo, 3 paket, 10 FAQ, data realistis
 Last Tag       : v0.2-foundation-complete
 ```
 
@@ -22,7 +22,7 @@ Last Tag       : v0.2-foundation-complete
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 2 : 6 / 7  sub-task  [▓▓▓▓▓▓ ]
+Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] + Checkpoint TODO
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
@@ -562,13 +562,28 @@ Commit        : feat: Filament tenant panel — package, faq, knowledge, asset, 
 
 ### Sub-task 2.7 — Seed Data Wedding Realistis
 ```
-Status       : [ ] TODO
+Status       : [x] DONE — 2026-05-14
+Files Created:
+  database/seeders/WeddingDemoSeeder.php
+  database/seeders/DatabaseSeeder.php (updated: add WeddingDemoSeeder)
 Data Seeded  :
-  Packages   : - (target: 3 paket)
-  Prices     : - (target: 3 harga)
-  FAQs       : - (target: 10 FAQ)
-  Assets     : - (target: 1 pricelist PDF)
-Commit       : -
+  Tenant     : Capture Moment Photography (slug: capture-moment-photography)
+  User       : demo@capturemoment.id / Demo123! (TENANT_ADMIN)
+  Subscription: Growth plan, 1 tahun aktif
+  Settings   : timezone Asia/Jakarta, 09:00-20:00, Senin-Sabtu, semi_formal
+  Packages   : 3 paket (Intimate, Standard, Premium)
+  Prices     : 8 harga total (2 Intimate, 3 Standard, 3 Premium, incl. peak season)
+  FAQs       : 10 FAQ realistis (harga, paket, proses, booking, pembayaran, lokasi)
+  KnowledgeItems: 3 item (terms, process, policy)
+Idempotent   : [x] updateOrCreate — bisa dijalankan berulang
+search_vector: [x] auto-filled via DB trigger (tidak null setelah insert)
+QA Passed    :
+  PackageResolver::getActivePackages  → 3 paket
+  PriceResolver::getLowestCurrentPrice → Rp 8.000.000
+  KnowledgeService::searchFaqs('harga') → 2 FAQ
+  TenantConfigResolver::resolve → timezone Asia/Jakarta, tone semi_formal
+Tests Pass   : 128 / 128 PASS (0 regresi)
+Commit       : feat: WeddingDemoSeeder — 1 tenant demo, 3 paket, 10 FAQ, data realistis
 ```
 
 ### Integration Checkpoint Phase 2

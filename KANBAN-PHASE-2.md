@@ -940,7 +940,7 @@ Git commit: "feat: Filament tenant panel — package, faq, knowledge, asset, set
 ---
 
 ### SUB-TASK 2.7 — WeddingDemoSeeder (Seed Data Realistis)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 2.6 selesai
 **Estimated Time:** 1 jam
 
