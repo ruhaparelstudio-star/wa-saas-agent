@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 2 — Knowledge & Settings
-Sub-task Aktif : 2.4 — Full-text Search Setup (tsvector)
+Sub-task Aktif : 2.5 — Tenant Settings + Policy + Business Hours
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: KnowledgeService, AssetResolver, KnowledgeRetrieverService stub
+Last Commit    : feat: tsvector full-text search setup, trigger, RebuildSearchVectorsCommand
 Last Tag       : v0.2-foundation-complete
 ```
 
@@ -403,6 +403,7 @@ Files Created  : database/migrations/2026_05_12_000001_create_packages_table.php
                  database/migrations/2026_05_12_000005_create_assets_table.php
                  database/migrations/2026_05_12_000006_create_tenant_settings_table.php
                  database/migrations/2026_05_12_000007_create_tenant_policies_table.php
+                 database/migrations/2026_05_12_000008_create_tsvector_triggers.php
 Notes          : tsvector columns (search_vector) added via raw SQL for faqs dan knowledge_items.
                  GIN indexes for full-text search. Cascade delete verified.
                  tenant_settings adalah 1-to-1 (UNIQUE tenant_id FK).
@@ -469,14 +470,20 @@ Notes           : KnowledgeRetrieverService adalah STUB untuk Phase 2.
 Commit          : feat: KnowledgeService, AssetResolver, KnowledgeRetrieverService stub
 ```
 
-### Sub-task 2.4 — Full-text Search + EmbeddingService
+### Sub-task 2.4 — Full-text Search Setup (tsvector)
 ```
-Status              : [ ] TODO
-Files Created       : -
-tsvector Works      : [ ]
-pgvector Setup      : [ ] (Phase 3+, skip jika belum perlu)
-Tests Pass          : - / -
-Commit              : -
+Status              : [x] DONE — 2026-05-14
+Files Created       :
+  - database/migrations/2026_05_12_000008_create_tsvector_triggers.php
+  - app/Modules/Knowledge/Tests/TsvectorSearchTest.php
+  - app/Console/Commands/RebuildSearchVectorsCommand.php
+tsvector Works      : [x] — DB function + trigger auto-fill search_vector on INSERT/UPDATE
+pgvector Setup      : [ ] (Phase 3+)
+Tests Pass          : 9 / 9 (TsvectorSearchTest) — 101 total pass
+Notes               : tsvector pakai 'simple' config (bukan 'indonesian') karena
+                      PostgreSQL Alpine tidak include Indonesian stemming dict.
+                      Trigger tests berjalan di PostgreSQL (docker), skip di SQLite.
+Commit              : feat: tsvector full-text search setup, trigger, RebuildSearchVectorsCommand
 ```
 
 ### Sub-task 2.5 — Tenant Settings + Policy + Business Hours

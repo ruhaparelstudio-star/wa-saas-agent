@@ -501,7 +501,7 @@ Git commit: "feat: KnowledgeService, AssetResolver, KnowledgeRetrieverService st
 ---
 
 ### SUB-TASK 2.4 — Full-text Search Setup (tsvector)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 2.3 selesai
 **Estimated Time:** 1 jam
 
