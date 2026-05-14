@@ -7,12 +7,12 @@
 ## STATUS TERKINI
 
 ```
-Phase Aktif    : Phase 2 — Knowledge & Settings
-Sub-task Aktif : Integration Checkpoint Phase 2
+Phase Aktif    : Phase 3 — AI Pipeline & Logging
+Sub-task Aktif : 3.1 — LLM Adapter + MockLlmAdapter + JsonRepairGuard
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: WeddingDemoSeeder — 1 tenant demo, 3 paket, 10 FAQ, data realistis
-Last Tag       : v0.2-foundation-complete
+Last Commit    : chore: Integration Checkpoint Phase 2 — Gate OPEN
+Last Tag       : v0.3-knowledge-complete
 ```
 
 ---
@@ -22,7 +22,7 @@ Last Tag       : v0.2-foundation-complete
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] + Checkpoint TODO
+Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
@@ -588,13 +588,73 @@ Commit       : feat: WeddingDemoSeeder — 1 tenant demo, 3 paket, 10 FAQ, data 
 
 ### Integration Checkpoint Phase 2
 ```
-Status              : [ ] TODO
-Tests               : - / - pass
-Knowledge Retrieval : [ ]
-Tenant Isolation    : [ ]
-Expired Price       : [ ] tidak muncul
+Status              : [x] DONE — 2026-05-14
+Tests               : 128 / 128 pass (217 assertions, 0 regresi)
+Docker Containers   : [x] 10 containers running
+
+Knowledge Retrieval:
+  [x] PackageResolver::getActivePackages → 3 paket demo
+  [x] PriceResolver::getActivePrice peak season (Jul) → Rp 20.000.000
+  [x] PriceResolver::getActivePrice expired → null (tidak muncul)
+  [x] KnowledgeService::searchFaqs('harga') → 2 FAQ
+  [x] KnowledgeRetrieverService::retrieve → GroundedKnowledgeDTO valid
+
+tsvector Search:
+  [x] Insert FAQ baru → search_vector auto-filled via trigger
+  [x] Search 'booking' → 2 FAQ muncul
+  [x] Search nonexistent word → Collection kosong (tidak error)
+
+Tenant Settings:
+  [x] TenantConfigDTO timezone Asia/Jakarta, tone semi_formal, hours 09:00
+  [x] BusinessHoursService::isOpen Mon 10:00 WIB → true
+  [x] BusinessHoursService::isOpen Mon 22:00 WIB → false
+  [x] TenantPolicyService INVOICE_MAX_RESEND default → '3'
+
+Tenant Isolation:
+  [x] Package tenant B tidak muncul di PackageResolver tenant A
+  [x] FAQ tenant B tidak muncul di KnowledgeService tenant A
+
+Full Pipeline:
+  [x] retrieve search_method = 'tsvector'
+  [x] grounding_refs count = 7 (> 0)
+  [x] structured_data['price_range'] ada
+  [x] structured_data['matched_package'] ada
+  [x] KnowledgeRetrieverInterface::class bound → KnowledgeRetrieverService
+
+Expired Price:
+  [x] Price valid_until = yesterday → getActivePrice(today) null
+  [x] Harga expired tidak muncul di hasil
+
+WeddingDemoSeeder:
+  [x] Idempotent: bisa dijalankan berulang
+  [x] search_vector auto-filled setelah seed
+
 Git Tag             : v0.3-knowledge-complete
-Gate                : [ ] OPEN untuk Phase 3
+Gate                : [x] OPEN untuk Phase 3
+
+CATATAN PENTING ANTAR SUB-TASK Phase 2:
+"Phase 2 selesai. Knowledge schema: packages, package_prices, faqs,
+ knowledge_items, assets, tenant_settings, tenant_policies (7 tabel).
+
+ KnowledgeRetrieverService adalah STUB — hanya tsvector + structured data.
+ Full implementation (pgvector ranking, hybrid search) ada di Phase 3.
+
+ Demo tenant:
+   slug: capture-moment-photography
+   login: demo@capturemoment.id / Demo123!
+   3 paket: intimate/standard/premium dengan harga weekday/weekend/peak
+   10 FAQ realistis + 3 knowledge items
+
+ Hal penting untuk Phase 3:
+ - LLM adapter: OpenAiAdapter implements LlmClientInterface
+ - MockLlmAdapter sudah ada di Phase 1 Checkpoint
+ - IntentClassifierService, EntityExtractionService perlu dibuat
+ - DecisionEngineService: PHP ONLY, no LLM (PRINSIP 1)
+ - TurnPipelineService: urutan pipeline wajib sesuai PRINSIP 2
+ - Cache Redis conflict: jika multiple calls ke PackageResolver dalam
+   1 tinker session, clear cache dulu (serialize issue Eloquent Collection)
+ - tsvector pakai 'simple' config (bukan 'indonesian')
+ - Filament 5.x notes: Schema bukan Form, getNavigationGroup() method, getView() method"
 ```
 
 ---
