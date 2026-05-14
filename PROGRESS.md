@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.7 (KANBAN) — ValidatorChain
+Sub-task Aktif : 3.8 (KANBAN) — ResponseComposerService
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: DecisionEngineService — PHP-only rule engine, stage machine, handoff triggers
+Last Commit    : feat: ValidatorChain — PolicyValidator, GroundingValidator, ActionPermissionValidator, ModeValidator
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,11 +23,11 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 6 / 15 sub-task  [▓▓▓▓▓▓         ]
+Phase 3 : 7 / 15 sub-task  [▓▓▓▓▓▓▓        ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 13 / 54 sub-task
+Total   : 14 / 54 sub-task
 ```
 
 ---
@@ -851,14 +851,25 @@ Commit        : -
 
 ### Sub-task 3.11 — ValidatorChain (4 Validators)
 ```
-Status     : [ ] TODO
+Status     : [x] DONE — 2026-05-14
 Validators :
-  Policy   : [ ]
-  Grounding: [ ]
-  Permission: [ ]
-  Mode     : [ ]
-Tests Pass : - / -
-Commit     : -
+  Policy   : [x] PolicyValidator — pricelist_mode, lead_limit, concurrent_booking_lock
+  Grounding: [x] GroundingValidator — passed|partial|failed per action
+  Permission: [x] ActionPermissionValidator — stage whitelist per action
+  Mode     : [x] ModeValidator — HANDOFF|PAUSED|LIMITED|ACTIVE
+Chain      : [x] ValidatorChainService — orchestrate 4 validators, ValidatorResultDTO
+Files      : app/Modules/AgentCore/Validators/PolicyValidator.php
+             app/Modules/AgentCore/Validators/GroundingValidator.php
+             app/Modules/AgentCore/Validators/ActionPermissionValidator.php
+             app/Modules/AgentCore/Validators/ModeValidator.php
+             app/Modules/AgentCore/Validators/ValidatorChainService.php
+             app/Modules/AgentCore/Tests/ValidatorChainTest.php
+Methods    : PolicyValidator::validate(), GroundingValidator::validate(),
+             ActionPermissionValidator::validate(), ModeValidator::validate(),
+             ValidatorChainService::runAll()
+Tests Pass : 19 / 19
+Total Tests: 243 pass (was 224)
+Commit     : feat: ValidatorChain — PolicyValidator, GroundingValidator, ActionPermissionValidator, ModeValidator
 ```
 
 ### Sub-task 3.12 — Decision Accuracy Test Suite

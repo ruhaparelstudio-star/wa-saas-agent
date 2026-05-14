@@ -832,7 +832,7 @@ Git commit: "feat: DecisionEngineService — PHP-only rule engine, stage machine
 ---
 
 ### SUB-TASK 3.7 — ValidatorChain (4 Validators)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 3.6 selesai
 **Estimated Time:** 1.5 jam
 
