@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.1 — LLM Adapter + MockLlmAdapter + JsonRepairGuard
+Sub-task Aktif : 3.2 — InputSanitizerService
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : chore: Integration Checkpoint Phase 2 — Gate OPEN
+Last Commit    : feat: OpenAiAdapter, JsonRepairGuard, TokenUsageLogger — LLM infrastructure
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,7 +23,7 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 0 / 15 sub-task  [ ]
+Phase 3 : 1 / 15 sub-task  [▓              ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
@@ -661,22 +661,38 @@ CATATAN PENTING ANTAR SUB-TASK Phase 2:
 
 ## PHASE 3 — AI PIPELINE + LOGGING
 
-### Sub-task 3.1 — LLM Adapter + MockLlmAdapter + JsonRepairGuard
+### Sub-task 3.1 — OpenAiAdapter + JsonRepairGuard + TokenUsageLogger (KANBAN 3.1)
 ```
-Status                   : [ ] TODO
-Files Created            : -
-Interface Implemented    : LlmClientInterface
-MockLlmAdapter           : [ ] dibuat untuk unit test
-JsonRepairGuard          : [ ] dibuat
-Tests Pass               : - / -
-Commit                   : -
+Status                   : [x] DONE — 2026-05-14
+Files Created            : config/llm.php
+                           app/Modules/AgentCore/LLM/Adapters/OpenAiAdapter.php
+                           app/Modules/AgentCore/LLM/Exceptions/LlmException.php
+                           app/Modules/AgentCore/LLM/Exceptions/LlmJsonParseException.php
+                           app/Modules/AgentCore/LLM/JsonRepairGuard.php
+                           app/Modules/AgentCore/LLM/Services/TokenUsageLogger.php
+                           app/Modules/AgentCore/Providers/AgentCoreServiceProvider.php
+                           app/Modules/AgentCore/Tests/OpenAiAdapterTest.php
+Methods Exposed          : OpenAiAdapter::complete(), completeJson(), embed()
+                           JsonRepairGuard::repair(), isValidJson()
+                           TokenUsageLogger::log(), getMonthlyUsage()
+Interface Implemented    : LlmClientInterface (OpenAiAdapter)
+LLM_PROVIDER binding     : 'mock' → MockLlmAdapter | 'openai' → OpenAiAdapter
+.env.testing             : LLM_PROVIDER=mock, LOG_CHANNEL=null
+Tests Pass               : 17 / 17 (OpenAiAdapterTest)
+Commit                   : feat: OpenAiAdapter, JsonRepairGuard, TokenUsageLogger — LLM infrastructure
+
+CATATAN PENTING:
+- OpenAiAdapter: retry max 2x, exponential backoff 1s/2s pada timeout/rate-limit
+- JsonRepairGuard: 3-step repair (plain → strip markdown → substring extraction)
+- TokenUsageLogger: Redis dengan TTL 90 hari, per-purpose breakdown
+- AgentCoreServiceProvider auto-discovered oleh AppServiceProvider (glob pattern)
+- .env.testing: LLM_PROVIDER=mock → semua unit test pakai MockLlmAdapter (PRINSIP 9)
 ```
 
-### Sub-task 3.2 — Token Usage Logger
+### Sub-task 3.2 — InputSanitizerService (KANBAN 3.2)
 ```
 Status        : [ ] TODO
 Files Created : -
-Table Created : llm_usage_logs
 Tests Pass    : - / -
 Commit        : -
 ```

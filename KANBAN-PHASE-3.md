@@ -19,7 +19,7 @@ Jika belum: selesaikan Phase 2 dulu.
 ---
 
 ### SUB-TASK 3.1 — OpenAiAdapter + JsonRepairGuard + TokenUsageLogger
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** Phase 2 gate OPEN
 **Estimated Time:** 1.5 jam
 
