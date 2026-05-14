@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 2 — Knowledge & Settings
-Sub-task Aktif : 2.3 — KnowledgeService + AssetResolver
+Sub-task Aktif : 2.4 — Full-text Search Setup (tsvector)
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: Knowledge models, PackageResolver, PriceResolver
+Last Commit    : feat: KnowledgeService, AssetResolver, KnowledgeRetrieverService stub
 Last Tag       : v0.2-foundation-complete
 ```
 
@@ -22,12 +22,12 @@ Last Tag       : v0.2-foundation-complete
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 2 : 2 / 7  sub-task  [▓▓     ]
+Phase 2 : 3 / 7  sub-task  [▓▓▓    ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 6 / 54 sub-task
+Total   : 7 / 54 sub-task
 ```
 
 ---
@@ -444,11 +444,29 @@ Commit          : feat: Knowledge models, PackageResolver, PriceResolver
 
 ### Sub-task 2.3 — KnowledgeService + AssetResolver
 ```
-Status          : [ ] TODO
-Files Created   : -
-Methods Exposed : -
-Tests Pass      : - / -
-Commit          : -
+Status          : [x] DONE — 2026-05-14
+Files Created   : app/Modules/Knowledge/Services/KnowledgeService.php
+                  app/Modules/Knowledge/Services/AssetResolver.php
+                  app/Modules/Knowledge/Services/KnowledgeRetrieverService.php
+                  app/Modules/Knowledge/KnowledgeServiceProvider.php (updated — bind interface)
+                  app/Modules/Knowledge/Tests/KnowledgeServiceTest.php
+Methods Exposed :
+  - KnowledgeService::getFaqsByCategory(tenantId, category): Collection
+  - KnowledgeService::searchFaqs(tenantId, query, limit): Collection [tsvector + LIKE fallback]
+  - KnowledgeService::searchKnowledgeItems(tenantId, query, limit): Collection [tsvector + LIKE fallback]
+  - KnowledgeService::getFaqAsGroundingRefs(faqs): GroundingRefDTO[]
+  - AssetResolver::getActivePricelist(tenantId): ?Asset
+  - AssetResolver::getAssetsByType(tenantId, type): Collection
+  - AssetResolver::getPricelistUrl(tenantId): ?string
+  - KnowledgeRetrieverService::retrieve(intent, entities, tenantId): GroundedKnowledgeDTO [STUB]
+  - KnowledgeRetrieverInterface → KnowledgeRetrieverService (bound in container)
+Tests Pass      : 14 / 14 PASS (KnowledgeServiceTest)
+                  92 / 92 total suite PASS (naik dari 78)
+Notes           : KnowledgeRetrieverService adalah STUB untuk Phase 2.
+                  Full implementation dengan tsvector ranking dan pgvector ada di Phase 3.
+                  tsvector path guarded with DB::getDriverName() === 'pgsql' for SQLite compat.
+                  Semua unit test Phase 2 pakai STUB, tidak call real DB for vector search.
+Commit          : feat: KnowledgeService, AssetResolver, KnowledgeRetrieverService stub
 ```
 
 ### Sub-task 2.4 — Full-text Search + EmbeddingService

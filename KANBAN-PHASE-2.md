@@ -350,7 +350,7 @@ Git commit: "feat: Knowledge models, PackageResolver, PriceResolver"
 ---
 
 ### SUB-TASK 2.3 — KnowledgeService + AssetResolver
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 2.2 selesai
 **Estimated Time:** 1.5 jam
 
