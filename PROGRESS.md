@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.5 — Conversation + ConversationState + Lead Models + Migrations
+Sub-task Aktif : 3.6 (KANBAN) — DecisionEngineService
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: EntityExtractionService — wedding entity extraction, normalization, entity merge
+Last Commit    : feat: Conversation, ConversationMessage, Lead models + migrations + ConversationRepository
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,11 +23,11 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 4 / 15 sub-task  [▓▓▓▓           ]
+Phase 3 : 5 / 15 sub-task  [▓▓▓▓▓          ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 12 / 54 sub-task
+Total   : 13 / 54 sub-task
 ```
 
 ---
@@ -758,6 +758,34 @@ Methods Exposed: extract(message, tenantId, existingEntities, context): EntityRe
 Prompt Version : v1.0 (hardcoded, DB override in sub-task 3.12)
 Tests Pass     : 23 / 23
 Commit         : feat: EntityExtractionService — wedding entity extraction, normalization, entity merge
+```
+
+### Sub-task KANBAN 3.5 — Conversation + ConversationMessage + Lead Models + Migrations
+```
+Status         : [x] DONE — 2026-05-14
+Migrations     : database/migrations/2026_05_12_100001_create_conversations_table.php
+                 database/migrations/2026_05_12_100002_create_conversation_messages_table.php
+                 database/migrations/2026_05_12_100003_create_leads_table.php
+Models         : app/Modules/Conversation/Models/Conversation.php
+                 app/Modules/Conversation/Models/ConversationMessage.php
+                 app/Modules/Lead/Models/Lead.php
+Repository     : app/Modules/Conversation/Repositories/ConversationRepository.php
+Tests          : app/Modules/Conversation/Tests/ConversationTest.php
+Methods        : Conversation::isActive(), isHandoff(), isPaused(), isDormant()
+                 Conversation::addMessage(), updateEntityCache(), getRecentMessages()
+                 Lead::updateFromEntities(), calculateLeadScore(), toLeadProfileDTO()
+                 ConversationRepository::findOrCreateByPhone(), findById(), updateState(), getRecentForTenant()
+Tests Pass     : 11 / 11 (ConversationTest) — total suite 206/206
+Commit         : feat: Conversation, ConversationMessage, Lead models + migrations + ConversationRepository
+
+CATATAN PENTING:
+- conversations: UNIQUE (tenant_id, customer_phone) — 1 conversation aktif per nomor per tenant
+- conversation_messages: partial UNIQUE index untuk provider_message_id (WHERE NOT NULL)
+- leads: 1-to-1 dengan conversations (UNIQUE conversation_id)
+- Lead::lead_score: 0-100, +20 per entity (name, date, budget, package_slug, guest_count)
+- updateEntityCache() hanya merge field non-null (tidak menghapus entity lama)
+- findOrCreateByPhone() auto-create Lead record saat buat Conversation baru
+- TenantScope dibypass di Repository (withoutGlobalScope) karena tidak ada auth user di pipeline
 ```
 
 ### Sub-task 3.7 — EntityMatcherService
