@@ -193,7 +193,7 @@ git commit -m "feat: migration knowledge & settings tables (7 tabel)"
 ---
 
 ### SUB-TASK 2.2 — Models + PackageResolver + PriceResolver
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 2.1 selesai
 **Estimated Time:** 1.5 jam
 

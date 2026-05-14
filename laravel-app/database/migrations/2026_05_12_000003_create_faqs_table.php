@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,9 +23,10 @@ return new class extends Migration
             $table->index(['tenant_id', 'is_active']);
         });
 
-        // Add tsvector column for full-text search
-        \DB::statement('ALTER TABLE faqs ADD COLUMN search_vector tsvector');
-        \DB::statement('CREATE INDEX faqs_search_vector_idx ON faqs USING GIN (search_vector)');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE faqs ADD COLUMN search_vector tsvector');
+            DB::statement('CREATE INDEX faqs_search_vector_idx ON faqs USING GIN (search_vector)');
+        }
     }
 
     public function down(): void

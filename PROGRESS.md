@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 2 — Knowledge & Settings
-Sub-task Aktif : 2.2 — Models + PackageResolver + PriceResolver
+Sub-task Aktif : 2.3 — KnowledgeService + AssetResolver
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: migration knowledge & settings tables (7 tabel)
+Last Commit    : feat: Knowledge models, PackageResolver, PriceResolver
 Last Tag       : v0.2-foundation-complete
 ```
 
@@ -22,12 +22,12 @@ Last Tag       : v0.2-foundation-complete
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 2 : 1 / 7  sub-task  [▓      ]
+Phase 2 : 2 / 7  sub-task  [▓▓     ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 5 / 54 sub-task
+Total   : 6 / 54 sub-task
 ```
 
 ---
@@ -409,16 +409,37 @@ Notes          : tsvector columns (search_vector) added via raw SQL for faqs dan
 Commit         : feat: migration knowledge & settings tables (7 tabel)
 ```
 
-### Sub-task 2.2 — PackageResolver + PriceResolver
+### Sub-task 2.2 — Models + PackageResolver + PriceResolver
 ```
-Status          : [ ] TODO
-Files Created   : -
+Status          : [x] DONE — 2026-05-14
+Files Created   : app/Modules/Knowledge/KnowledgeServiceProvider.php (generated)
+                  app/Modules/Knowledge/routes.php (generated)
+                  app/Modules/Knowledge/Models/Package.php
+                  app/Modules/Knowledge/Models/PackagePrice.php
+                  app/Modules/Knowledge/Models/Faq.php
+                  app/Modules/Knowledge/Models/KnowledgeItem.php
+                  app/Modules/Knowledge/Models/Asset.php
+                  app/Modules/Knowledge/Services/PackageResolver.php
+                  app/Modules/Knowledge/Services/PriceResolver.php
+                  app/Modules/Knowledge/Tests/PackageResolverTest.php
+Migration Fixes : 2026_05_12_000003_create_faqs_table.php — tsvector conditioned on pgsql driver
+                  2026_05_12_000004_create_knowledge_items_table.php — tsvector conditioned + jsonb→json
+                  2026_05_12_000006_create_tenant_settings_table.php — jsonb→json for SQLite compat
+Other Created   : .env.testing (override CACHE_STORE ke array untuk tests)
 Methods Exposed :
-  - PackageResolver::getActivePackages(tenantId)
-  - PackageResolver::getPackageDetail(tenantId, slug)
-  - PriceResolver::getActivePrice(packageId, date)
-Tests Pass      : - / -
-Commit          : -
+  - PackageResolver::getActivePackages(tenantId): Collection [cached 10m Redis]
+  - PackageResolver::getPackageDetail(tenantId, slug): ?Package
+  - PackageResolver::matchByName(tenantId, rawName): ?Package [ILIKE fallback, cached 5m]
+  - PackageResolver::invalidateCache(tenantId): void
+  - PriceResolver::getActivePrice(packageId, date): ?PackagePrice [cached 30m]
+  - PriceResolver::getLowestCurrentPrice(tenantId): ?PackagePrice
+  - PriceResolver::getPriceRange(tenantId): array [min, max, date]
+Tests Pass      : 12 / 12 PASS (PackageResolverTest)
+                  78 / 78 total suite PASS (naik dari 66 di Phase 1)
+Notes           : Tests pakai config(['cache.default' => 'array']) di setUp()
+                  untuk menghindari Redis serialization issues dgn Eloquent Collection.
+                  Migration tsvector conditioned on pgsql untuk SQLite compat di tests.
+Commit          : feat: Knowledge models, PackageResolver, PriceResolver
 ```
 
 ### Sub-task 2.3 — KnowledgeService + AssetResolver
