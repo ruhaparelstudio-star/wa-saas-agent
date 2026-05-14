@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 2 — Knowledge & Settings
-Sub-task Aktif : 2.5 — Tenant Settings + Policy + Business Hours
+Sub-task Aktif : 2.6 — Filament Knowledge Panel
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: tsvector full-text search setup, trigger, RebuildSearchVectorsCommand
+Last Commit    : feat: TenantConfig, BusinessHoursService, TenantPolicyService, PolicyDefaults
 Last Tag       : v0.2-foundation-complete
 ```
 
@@ -22,12 +22,12 @@ Last Tag       : v0.2-foundation-complete
 ```
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 2 : 3 / 7  sub-task  [▓▓▓    ]
+Phase 2 : 5 / 7  sub-task  [▓▓▓▓▓  ]
 Phase 3 : 0 / 15 sub-task  [ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 7 / 54 sub-task
+Total   : 9 / 54 sub-task
 ```
 
 ---
@@ -488,14 +488,32 @@ Commit              : feat: tsvector full-text search setup, trigger, RebuildSea
 
 ### Sub-task 2.5 — Tenant Settings + Policy + Business Hours
 ```
-Status          : [ ] TODO
-Files Created   : -
+Status          : [x] DONE — 2026-05-14
+Files Created   :
+  app/Modules/TenantConfig/Models/TenantSetting.php
+  app/Modules/TenantConfig/Models/TenantPolicy.php
+  app/Modules/TenantConfig/Support/PolicyDefaults.php
+  app/Modules/TenantConfig/Services/TenantConfigResolver.php
+  app/Modules/TenantConfig/Services/BusinessHoursService.php
+  app/Modules/TenantConfig/Services/TenantPolicyService.php
+  app/Modules/TenantConfig/TenantConfigServiceProvider.php
+  app/Modules/TenantConfig/Tests/TenantConfigTest.php
+  app/Modules/Tenancy/Models/Tenant.php (updated: settings, policies relations)
 Methods Exposed :
-  - TenantConfigResolver::resolve(tenantId, key, default)
-  - BusinessHoursService::isOpen(tenantId, datetime)
-  - TenantPolicyService::getPolicy(tenantId, policyKey)
-Tests Pass      : - / -
-Commit          : -
+  - TenantConfigResolver::resolve(tenantId): TenantConfigDTO
+  - TenantConfigResolver::get(tenantId, key, default): mixed
+  - TenantConfigResolver::invalidateCache(tenantId): void
+  - BusinessHoursService::isOpen(tenantId, datetime): bool
+  - BusinessHoursService::getNextOpenTime(tenantId, from): Carbon
+  - BusinessHoursService::getAfterHoursBehavior(tenantId): string
+  - TenantPolicyService::getPolicy(tenantId, policyKey): string
+  - TenantPolicyService::getPolicies(tenantId): array
+  - TenantPolicyService::setPolicy(tenantId, policyKey, value): void
+Tests Pass      : 17 / 17 (118 total suite)
+Notes           : TenantConfigDTO cached as array (not object) to avoid
+                  PHP incomplete class on Redis deserialization.
+                  TenantSetting extends BaseModel (not TenantBaseModel) — 1-to-1 with tenants.
+Commit          : feat: TenantConfig, BusinessHoursService, TenantPolicyService, PolicyDefaults
 ```
 
 ### Sub-task 2.6 — Filament Knowledge Panel

@@ -618,7 +618,7 @@ Git commit: "feat: tsvector full-text search setup, trigger, RebuildSearchVector
 ---
 
 ### SUB-TASK 2.5 — Tenant Settings + Policy + Business Hours
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 2.4 selesai
 **Estimated Time:** 1.5 jam
 

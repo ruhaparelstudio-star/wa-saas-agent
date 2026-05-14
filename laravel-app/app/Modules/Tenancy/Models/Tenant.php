@@ -5,6 +5,8 @@ namespace App\Modules\Tenancy\Models;
 use App\Modules\Auth\Models\User;
 use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Models\BaseModel;
+use App\Modules\TenantConfig\Models\TenantPolicy;
+use App\Modules\TenantConfig\Models\TenantSetting;
 
 class Tenant extends BaseModel
 {
@@ -42,6 +44,16 @@ class Tenant extends BaseModel
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by_id');
+    }
+
+    public function settings()
+    {
+        return $this->hasOne(TenantSetting::class);
+    }
+
+    public function policies()
+    {
+        return $this->hasMany(TenantPolicy::class);
     }
 
     public function scopeActive($query)
