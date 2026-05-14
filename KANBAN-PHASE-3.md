@@ -518,7 +518,7 @@ Git commit: "feat: EntityExtractionService — wedding entity extraction, normal
 ---
 
 ### SUB-TASK 3.5 — Conversation + ConversationState + Lead Models + Migrations
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 3.4 selesai
 **Estimated Time:** 2 jam
 
@@ -700,7 +700,7 @@ Git commit: "feat: Conversation, ConversationMessage, Lead models + migrations +
 ---
 
 ### SUB-TASK 3.6 — DecisionEngineService (PHP Rules Only)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-14
 **Depends On:** 3.5 selesai
 **Estimated Time:** 2 jam
 

@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.6 (KANBAN) — DecisionEngineService
+Sub-task Aktif : 3.7 (KANBAN) — ValidatorChain
 Last Updated   : 2026-05-14
 Git Branch     : dev
-Last Commit    : feat: Conversation, ConversationMessage, Lead models + migrations + ConversationRepository
+Last Commit    : feat: DecisionEngineService — PHP-only rule engine, stage machine, handoff triggers
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,7 +23,7 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 5 / 15 sub-task  [▓▓▓▓▓          ]
+Phase 3 : 6 / 15 sub-task  [▓▓▓▓▓▓         ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
@@ -786,6 +786,29 @@ CATATAN PENTING:
 - updateEntityCache() hanya merge field non-null (tidak menghapus entity lama)
 - findOrCreateByPhone() auto-create Lead record saat buat Conversation baru
 - TenantScope dibypass di Repository (withoutGlobalScope) karena tidak ada auth user di pipeline
+```
+
+### Sub-task KANBAN 3.6 — DecisionEngineService (PHP Rules Only)
+```
+Status         : [x] DONE — 2026-05-14
+Files Created  : app/Modules/AgentCore/Decision/Services/DecisionEngineService.php
+                 app/Modules/AgentCore/Tests/DecisionEngineServiceTest.php
+Interface Impl : DecisionEngineInterface
+Methods Exposed: decide(TurnContextDTO): DecisionDTO
+                 checkHandoffTriggers() — handoff_request, kata kasar 2x, ancaman, out_of_scope 3x
+                 determineDesiredActions() — maps 20 intents to action arrays
+                 determineStageTransition() — stage machine: NEW_LEAD→EXPLORATION→…→BOOKING
+                 determineReplyStrategy() — 6 reply strategies
+                 checkAfterHours() — delegates to BusinessHoursService
+Tests Pass     : 18 / 18 — total suite 224 / 224
+Commit         : feat: DecisionEngineService — PHP-only rule engine, stage machine, handoff triggers
+
+CATATAN PENTING (PRINSIP 1):
+- DecisionEngine = PHP ONLY. ZERO LLM calls. Verifikasi: MockLlmAdapter.getCallCount() == 0
+- kata kasar dideteksi via current message body + state.entities['abusive_count'] untuk tracking antar turn
+- kata ancaman (somasi, lapor, pengacara, dll) → URGENT handoff LANGSUNG tanpa threshold
+- Stage transition: rule-based, NOT LLM — setiap stage punya kondisi PHP murni
+- checkAfterHours() → isOpen() false + behavior != 'ignore' → return 'after_hours' decision
 ```
 
 ### Sub-task 3.7 — EntityMatcherService

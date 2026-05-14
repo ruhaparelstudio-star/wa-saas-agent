@@ -14,7 +14,7 @@ Target Tenant : Semua vendor wedding (foto, catering, dekorasi, venue, WO)
 Target Market : Calon pengantin segmen budget (< 50 juta), Jabodetabek
 Gaya Bahasa   : Semi-formal — "Kak", bahasa campuran Indonesia informal
 Channel MVP   : WhatsApp (utama), arsitektur siap multi-channel
-Stack         : Laravel 11 + PostgreSQL + Redis + Filament + Node.js Baileys
+Stack         : Laravel 13 + PostgreSQL + Redis + Filament + Node.js Baileys
 Prinsip       : Natural conversation, fully validated, fully logged, zero black box
 ```
 
