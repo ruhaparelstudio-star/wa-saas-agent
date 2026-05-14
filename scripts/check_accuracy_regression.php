@@ -40,7 +40,7 @@ $entitySpotCheck = [
     ['message' => 'nama saya Rina',              'existing' => [], 'expected_key' => 'customer_name', 'expected_val' => 'Rina'],
     ['message' => 'tanggalnya 20 april 2025',    'existing' => [], 'expected_key' => 'event_date',    'expected_val' => '2025-04-20'],
     ['message' => 'budgetnya sekitar 30 juta',   'existing' => [], 'expected_key' => 'budget_min',    'expected_val' => 27000000],
-    ['message' => 'tertarik paket gold kak',     'existing' => [], 'expected_key' => 'package_interest', 'expected_val' => 'Paket Gold'],
+    ['message' => 'tertarik paket gold kak',     'existing' => [], 'expe    cted_key' => 'package_interest', 'expected_val' => 'Paket Gold'],
     ['message' => 'tamu sekitar 150 orang',      'existing' => [], 'expected_key' => 'guest_count',   'expected_val' => 150],
 ];
 

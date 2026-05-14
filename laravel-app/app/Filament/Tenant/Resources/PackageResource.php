@@ -3,8 +3,9 @@
 namespace App\Filament\Tenant\Resources;
 
 use App\Filament\Tenant\Resources\PackageResource\Pages;
-use App\Filament\Tenant\Resources\PackageResource\RelationManagers;
 use App\Modules\Knowledge\Models\Package;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -67,6 +68,50 @@ class PackageResource extends Resource
                 ->label('Urutan')
                 ->numeric()
                 ->default(0),
+            Repeater::make('prices')
+                ->label('Daftar Harga')
+                ->relationship('prices')
+                ->schema([
+                    TextInput::make('label')
+                        ->label('Label')
+                        ->required()
+                        ->maxLength(100)
+                        ->placeholder('Contoh: Weekday, Weekend, Peak Season')
+                        ->columnSpan(2),
+                    TextInput::make('price_idr')
+                        ->label('Harga (IDR)')
+                        ->required()
+                        ->numeric()
+                        ->prefix('Rp')
+                        ->columnSpan(2),
+                    DatePicker::make('valid_from')
+                        ->label('Berlaku Dari')
+                        ->required()
+                        ->columnSpan(1),
+                    DatePicker::make('valid_until')
+                        ->label('Berlaku Sampai')
+                        ->nullable()
+                        ->helperText('Kosongkan jika berlaku selamanya')
+                        ->columnSpan(1),
+                    Textarea::make('notes')
+                        ->label('Catatan')
+                        ->nullable()
+                        ->rows(2)
+                        ->columnSpan(2),
+                    Toggle::make('is_active')
+                        ->label('Aktif')
+                        ->default(true)
+                        ->columnSpan(2),
+                ])
+                ->columns(2)
+                ->addActionLabel('+ Tambah Variasi Harga')
+                ->collapsible()
+                ->defaultItems(1)
+                ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                    $data['tenant_id'] = auth()->user()->tenant_id;
+                    return $data;
+                })
+                ->columnSpanFull(),
         ]);
     }
 
@@ -78,10 +123,25 @@ class PackageResource extends Resource
                     ->label('Nama Paket')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('price_range')
+                    ->label('Harga')
+                    ->getStateUsing(function (Package $record): string {
+                        $prices = $record->activePrices()->orderBy('price_idr')->pluck('price_idr');
+                        if ($prices->isEmpty()) {
+                            return '-';
+                        }
+                        $min = 'Rp ' . number_format($prices->first(), 0, ',', '.');
+                        if ($prices->count() === 1) {
+                            return $min;
+                        }
+                        $max = 'Rp ' . number_format($prices->last(), 0, ',', '.');
+                        return $min . ' – ' . $max;
+                    }),
                 Tables\Columns\TextColumn::make('prices_count')
                     ->counts('prices')
                     ->badge()
-                    ->label('Harga'),
+                    ->color('gray')
+                    ->label('Variasi'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->label('Aktif')
@@ -105,9 +165,7 @@ class PackageResource extends Resource
 
     public static function getRelationManagers(): array
     {
-        return [
-            RelationManagers\PricesRelationManager::class,
-        ];
+        return [];
     }
 
     public static function getPages(): array
