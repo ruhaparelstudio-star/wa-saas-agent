@@ -1281,7 +1281,7 @@ Git commit: "feat: DecisionTraceLogger, decision_traces migration — Zero Black
 ---
 
 ### SUB-TASK 3.11 — TurnPipelineService + ProcessInboundMessageJob
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-15
 **Depends On:** 3.10 selesai
 **Estimated Time:** 2 jam
 

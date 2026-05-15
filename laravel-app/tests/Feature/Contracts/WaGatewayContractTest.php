@@ -46,6 +46,7 @@ class WaGatewayContractTest extends TestCase
     {
         $response = $this->postJson('/webhook/inbound', [
             'wa_account_id' => 'acc-001',
+            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
             'from_phone'    => '+628111000001',
             'message_type'  => 'text',
             'body'          => 'Halo kak, mau tanya soal paket',
@@ -64,6 +65,7 @@ class WaGatewayContractTest extends TestCase
 
         $response = $this->postJson('/webhook/inbound', [
             'wa_account_id' => 'acc-001',
+            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
             'from_phone'    => '+628111000001',
             'message_type'  => 'text',
             'body'          => 'test',
@@ -81,6 +83,7 @@ class WaGatewayContractTest extends TestCase
 
         $response = $this->postJson('/webhook/inbound', [
             'wa_account_id' => 'acc-001',
+            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
             'from_phone'    => '+628111000001',
             'message_type'  => 'text',
             'body'          => 'test',
@@ -104,6 +107,7 @@ class WaGatewayContractTest extends TestCase
     {
         $response = $this->postJson('/webhook/inbound', [
             'wa_account_id' => 'acc-001',
+            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
             'from_phone'    => '+628111000001',
             'message_type'  => 'image',
             'body'          => null,

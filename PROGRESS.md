@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.10 (KANBAN) — DecisionTraceLogger DONE; next: 3.11 TurnPipelineService
+Sub-task Aktif : 3.11 (KANBAN) — TurnPipelineService DONE; next: 3.12 PromptVersioningService
 Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : feat: DecisionTraceLogger, decision_traces migration — Zero Black Box logging
+Last Commit    : feat: TurnPipelineService, ProcessInboundMessageJob — full AI pipeline orchestration
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,7 +23,7 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 9 / 15 sub-task  [▓▓▓▓▓▓▓▓▓      ]
+Phase 3 : 10 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓     ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
@@ -940,13 +940,26 @@ Notes          : Phone numbers masked (+62 and 08 prefix) in final_reply and raw
                  validator_result, composed_reply, stage_before, error_message.
 ```
 
-### Sub-task 3.16 — TurnPipelineService
+### Sub-task 3.11 — TurnPipelineService + ProcessInboundMessageJob
 ```
-Status          : [ ] TODO
-Files Created   : -
-Full Flow Works : [ ]
-Tests Pass      : - / -
-Commit          : -
+Status          : [x] DONE — 2026-05-15
+Files Created   : TurnPipelineService.php, ProcessInboundMessageJob.php,
+                  WebhookController.php (updated), WebhookDispatchTest.php,
+                  TurnPipelineServiceTest.php
+Full Flow Works : [x] — 14-step pipeline end-to-end
+Tests Pass      : 10 TurnPipelineServiceTest + 3 WebhookDispatchTest = 13 new tests
+PRINSIP 2       : [x] — Pipeline urutan terjaga, tidak ada shortcut
+PRINSIP 9       : [x] — Semua LLM calls via MockLlmAdapter
+Idempotency     : [x] — Redis key per provider_message_id
+Concurrent Lock : [x] — Cache::lock per conversation_id + phone
+Methods Exposed : TurnPipelineService::process(InboundMessageDTO, tenantId): TurnResultDTO
+                  ProcessInboundMessageJob::handle(TurnPipelineService): void
+Commit          : feat: TurnPipelineService, ProcessInboundMessageJob — full AI pipeline orchestration
+```
+
+### Sub-task 3.16 — TurnPipelineService (OLD PLACEHOLDER)
+```
+Status          : [x] SUPERSEDED by 3.11
 ```
 
 ### Sub-task 3.15 — Decision Trace Logging + Log Viewer

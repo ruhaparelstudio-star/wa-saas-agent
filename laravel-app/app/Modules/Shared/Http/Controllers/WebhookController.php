@@ -2,9 +2,12 @@
 
 namespace App\Modules\Shared\Http\Controllers;
 
+use App\Modules\AgentCore\Jobs\ProcessInboundMessageJob;
+use App\Modules\Shared\DTOs\InboundMessageDTO;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 
 class WebhookController extends Controller
 {
@@ -14,7 +17,7 @@ class WebhookController extends Controller
      * Required fields: wa_account_id, from_phone, message_type, body, received_at
      * Required header: X-Internal-Secret
      *
-     * Full processing implemented in Phase 4 (InboundProcessor).
+     * Phase 3: tenant_id required until wa_accounts lookup is implemented in Phase 4.
      */
     public function inbound(Request $request): JsonResponse
     {
@@ -25,14 +28,33 @@ class WebhookController extends Controller
         }
 
         $validated = $request->validate([
-            'wa_account_id' => 'required|string',
-            'from_phone'    => 'required|string',
-            'message_type'  => 'required|string',
-            'body'          => 'nullable|string',
-            'received_at'   => 'required|string',
+            'wa_account_id'       => 'required|string',
+            'tenant_id'           => 'required|string|uuid',
+            'from_phone'          => 'required|string',
+            'message_type'        => 'required|string|in:text,image,audio,document,video,sticker',
+            'body'                => 'nullable|string',
+            'media_url'           => 'nullable|string',
+            'provider_message_id' => 'nullable|string',
+            'received_at'         => 'required|string',
         ]);
 
-        // Phase 4: dispatch ProcessInboundMessageJob here
-        return response()->json(['accepted' => true, 'wa_account_id' => $validated['wa_account_id']]);
+        $inbound = InboundMessageDTO::from([
+            'wa_account_id'       => $validated['wa_account_id'],
+            'provider_message_id' => $validated['provider_message_id'] ?? Str::uuid()->toString(),
+            'from_phone'          => $validated['from_phone'],
+            'message_type'        => $validated['message_type'],
+            'body'                => $validated['body'] ?? '',
+            'media_url'           => $validated['media_url'] ?? null,
+            'raw_payload'         => $validated,  // only validated scalar fields — safe to serialize
+            'received_at'         => $validated['received_at'],
+        ]);
+
+        ProcessInboundMessageJob::dispatch($inbound, $validated['tenant_id']);
+
+        return response()->json([
+            'status'     => 'queued',
+            'message_id' => $inbound->provider_message_id,
+            'accepted'   => true,
+        ]);
     }
 }
