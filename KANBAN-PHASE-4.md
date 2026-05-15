@@ -571,7 +571,7 @@ Git commit: "feat: HandoffRecord migration, HandoffService — trigger, resolve,
 ---
 
 ### SUB-TASK 4.5 — NotificationService (Admin Alert)
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** 4.4 selesai
 **Estimated Time:** 1 jam
 
