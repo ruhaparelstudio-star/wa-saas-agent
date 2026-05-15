@@ -3,6 +3,7 @@
 namespace App\Modules\AgentCore\Classification\Services;
 
 use App\Modules\AgentCore\LLM\Exceptions\LlmJsonParseException;
+use App\Modules\AgentCore\LLM\Services\PromptVersioningService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\Shared\Contracts\IntentClassifierInterface;
 use App\Modules\Shared\Contracts\LlmClientInterface;
@@ -35,7 +36,7 @@ class IntentClassifierService implements IntentClassifierInterface
         'invoice_inquiry',
     ];
 
-    // v1.0 — hardcoded fallback, will be replaced by PromptVersioningService in sub-task 3.12
+    // v1.0 — hardcoded fallback used when DB template is unavailable
     private const PROMPT_TEMPLATE = <<<'PROMPT'
 You are an intent classifier for a wedding vendor WhatsApp chatbot in Indonesia.
 Your task: classify the customer's intent. Output ONLY valid JSON.
@@ -106,9 +107,12 @@ Output JSON only:
 PROMPT;
 
     public function __construct(
-        private readonly LlmClientInterface $llm,
-        private readonly TokenUsageLogger $tokenUsageLogger,
-    ) {}
+        private readonly LlmClientInterface     $llm,
+        private readonly TokenUsageLogger       $tokenUsageLogger,
+        private readonly PromptVersioningService $promptVersioning,
+    ) {
+        $this->promptVersioning->registerFallback('intent_classifier', self::PROMPT_TEMPLATE);
+    }
 
     public function classify(string $message, string $tenantId, array $conversationContext = []): IntentResultDTO
     {
@@ -190,10 +194,12 @@ PROMPT;
             $contextBlock = "\nRecent conversation context (last 5 messages):\n" . implode("\n", $lines) . "\n";
         }
 
+        $template = $this->promptVersioning->getActiveTemplate('intent_classifier') ?: self::PROMPT_TEMPLATE;
+
         return str_replace(
             ['%CONTEXT%', '%MESSAGE%'],
             [$contextBlock, $message],
-            self::PROMPT_TEMPLATE
+            $template
         );
     }
 }

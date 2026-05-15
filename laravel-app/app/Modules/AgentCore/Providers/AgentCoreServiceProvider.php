@@ -8,6 +8,7 @@ use App\Modules\AgentCore\Decision\Services\DecisionEngineService;
 use App\Modules\AgentCore\Extraction\Services\EntityExtractionService;
 use App\Modules\AgentCore\LLM\Adapters\MockLlmAdapter;
 use App\Modules\AgentCore\LLM\Adapters\OpenAiAdapter;
+use App\Modules\AgentCore\LLM\Services\PromptVersioningService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\AgentCore\Pipeline\Services\ActionDispatcher;
 use App\Modules\AgentCore\Pipeline\Services\DecisionTraceLogger;
@@ -32,6 +33,8 @@ class AgentCoreServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TokenUsageLogger::class);
+
+        $this->app->singleton(PromptVersioningService::class);
 
         $this->app->singleton(DecisionTraceLogger::class);
 

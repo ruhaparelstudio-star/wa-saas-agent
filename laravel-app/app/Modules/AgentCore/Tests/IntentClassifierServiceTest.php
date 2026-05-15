@@ -4,6 +4,7 @@ namespace App\Modules\AgentCore\Tests;
 
 use App\Modules\AgentCore\Classification\Services\IntentClassifierService;
 use App\Modules\AgentCore\LLM\Adapters\MockLlmAdapter;
+use App\Modules\AgentCore\LLM\Services\PromptVersioningService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\Shared\Contracts\LlmClientInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,6 +27,7 @@ class IntentClassifierServiceTest extends TestCase
         $this->classifier = new IntentClassifierService(
             $this->mock,
             $this->app->make(TokenUsageLogger::class),
+            new PromptVersioningService(),
         );
     }
 
@@ -191,7 +193,7 @@ class IntentClassifierServiceTest extends TestCase
             ->method('log')
             ->with('tenant-1', 'intent_classify', $this->anything());
 
-        $classifier = new IntentClassifierService($this->mock, $loggerMock);
+        $classifier = new IntentClassifierService($this->mock, $loggerMock, new PromptVersioningService());
         $classifier->classify('halo', 'tenant-1');
     }
 

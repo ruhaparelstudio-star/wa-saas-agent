@@ -1452,7 +1452,7 @@ Git commit: "feat: TurnPipelineService, ProcessInboundMessageJob — full AI pip
 ---
 
 ### SUB-TASK 3.12 — Prompt Templates DB + PromptVersioningService
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-15
 **Depends On:** 3.11 selesai
 **Estimated Time:** 1 jam
 

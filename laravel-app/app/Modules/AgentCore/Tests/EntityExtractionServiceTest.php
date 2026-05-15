@@ -4,6 +4,7 @@ namespace App\Modules\AgentCore\Tests;
 
 use App\Modules\AgentCore\Extraction\Services\EntityExtractionService;
 use App\Modules\AgentCore\LLM\Adapters\MockLlmAdapter;
+use App\Modules\AgentCore\LLM\Services\PromptVersioningService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\Knowledge\Models\Package;
 use App\Modules\Knowledge\Services\PackageResolver;
@@ -401,6 +402,7 @@ class EntityExtractionServiceTest extends TestCase
             $this->mock,
             $loggerMock,
             $this->mockResolver,
+            new PromptVersioningService(),
         );
 
         $extractor->extract('halo', 'tenant-1');
@@ -416,6 +418,7 @@ class EntityExtractionServiceTest extends TestCase
             $this->mock,
             $this->app->make(TokenUsageLogger::class),
             $resolver,
+            new PromptVersioningService(),
         );
     }
 }

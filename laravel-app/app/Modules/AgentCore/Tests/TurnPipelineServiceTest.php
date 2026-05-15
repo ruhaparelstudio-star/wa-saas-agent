@@ -7,6 +7,7 @@ use App\Modules\AgentCore\Composer\Services\ResponseComposerService;
 use App\Modules\AgentCore\Decision\Services\DecisionEngineService;
 use App\Modules\AgentCore\Extraction\Services\EntityExtractionService;
 use App\Modules\AgentCore\LLM\Adapters\MockLlmAdapter;
+use App\Modules\AgentCore\LLM\Services\PromptVersioningService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\AgentCore\Pipeline\Models\DecisionTrace;
 use App\Modules\AgentCore\Pipeline\Services\ActionDispatcher;
@@ -289,8 +290,8 @@ class TurnPipelineServiceTest extends TestCase
 
         return new TurnPipelineService(
             sanitizer:          app(InputSanitizerService::class),
-            classifier:         new IntentClassifierService($this->mock, $tokenUsageLogger),
-            extractor:          new EntityExtractionService($this->mock, $tokenUsageLogger, app(\App\Modules\Knowledge\Services\PackageResolver::class)),
+            classifier:         new IntentClassifierService($this->mock, $tokenUsageLogger, new PromptVersioningService()),
+            extractor:          new EntityExtractionService($this->mock, $tokenUsageLogger, app(\App\Modules\Knowledge\Services\PackageResolver::class), new PromptVersioningService()),
             knowledgeRetriever: app(KnowledgeRetrieverInterface::class),
             decisionEngine:     app(DecisionEngineService::class),
             validatorChain:     app(ValidatorChainService::class),

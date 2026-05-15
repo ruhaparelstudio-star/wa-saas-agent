@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.11 (KANBAN) — TurnPipelineService DONE; next: 3.12 PromptVersioningService
+Sub-task Aktif : 3.12 (KANBAN) — PromptVersioningService DONE; next: 3.13 Filament AI Dashboard
 Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : feat: TurnPipelineService, ProcessInboundMessageJob — full AI pipeline orchestration
+Last Commit    : feat: prompt_templates migration, PromptVersioningService — versioned prompts dengan accuracy tracking
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,7 +23,7 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 10 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓     ]
+Phase 3 : 11 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓    ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
@@ -872,15 +872,25 @@ Total Tests: 243 pass (was 224)
 Commit     : feat: ValidatorChain — PolicyValidator, GroundingValidator, ActionPermissionValidator, ModeValidator
 ```
 
-### Sub-task 3.12 — Decision Accuracy Test Suite
+### Sub-task 3.12 — Prompt Templates DB + PromptVersioningService
 ```
-Status         : [ ] TODO
-Test Cases     : - / 40
-Accuracy Run 1 : - %
-Accuracy Run 2 : - %
-Accuracy Run 3 : - %
-Average        : - %
-Gate           : [ ] >= 90% sebelum lanjut 3.13
+Status         : [x] DONE — 2026-05-15
+Files Created  : database/migrations/2026_05_12_300001_create_prompt_templates_table.php
+                 app/Modules/AgentCore/LLM/Models/PromptTemplate.php
+                 app/Modules/AgentCore/LLM/Services/PromptVersioningService.php
+                 database/seeders/PromptTemplateSeeder.php
+                 app/Modules/AgentCore/Tests/PromptVersioningServiceTest.php
+Methods        : getActiveTemplate(name): string (10min cache, const fallback)
+                 recordAccuracy(name, version, score, testCount): void
+                 rollback(name): void (clears cache)
+                 registerFallback(name, template): void
+Templates      : intent_classifier v1.0, entity_extractor v1.0, response_composer v1.0
+Tests Pass     : 10 / 10 (PromptVersioningServiceTest)
+Total Tests    : 300 pass
+Commit         : feat: prompt_templates migration, PromptVersioningService — versioned prompts dengan accuracy tracking
+Notes          : IntentClassifierService + EntityExtractionService updated to use DB template with const fallback.
+                 PromptVersioningService registered as singleton in AgentCoreServiceProvider.
+                 Accuracy regression detection: score drop > 5% → Log::warning.
 ```
 
 ### Sub-task 3.13 — ResponseComposerService

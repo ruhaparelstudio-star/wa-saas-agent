@@ -4,6 +4,7 @@ namespace App\Modules\AgentCore\Extraction\Services;
 
 use App\Modules\AgentCore\LLM\Exceptions\LlmJsonParseException;
 use App\Modules\AgentCore\LLM\JsonRepairGuard;
+use App\Modules\AgentCore\LLM\Services\PromptVersioningService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\Knowledge\Services\PackageResolver;
 use App\Modules\Shared\Contracts\EntityExtractorInterface;
@@ -30,7 +31,7 @@ class EntityExtractionService implements EntityExtractorInterface
         'desember'  => 'December',
     ];
 
-    // v1.0 — hardcoded fallback, replaced by PromptVersioningService in sub-task 3.12
+    // v1.0 — hardcoded fallback used when DB template is unavailable
     private const PROMPT_TEMPLATE = <<<'PROMPT'
 You are an entity extractor for a wedding vendor WhatsApp chatbot in Indonesia.
 Your task: extract wedding-related entities from the customer's message.
@@ -101,10 +102,13 @@ Output JSON (include ALL existing entities plus new extractions):
 PROMPT;
 
     public function __construct(
-        private readonly LlmClientInterface $llm,
-        private readonly TokenUsageLogger $tokenUsageLogger,
-        private readonly PackageResolver $packageResolver,
-    ) {}
+        private readonly LlmClientInterface      $llm,
+        private readonly TokenUsageLogger        $tokenUsageLogger,
+        private readonly PackageResolver         $packageResolver,
+        private readonly PromptVersioningService $promptVersioning,
+    ) {
+        $this->promptVersioning->registerFallback('entity_extractor', self::PROMPT_TEMPLATE);
+    }
 
     public function extract(string $message, string $tenantId, array $existingEntities = [], array $context = []): EntityResultDTO
     {
@@ -283,10 +287,12 @@ PROMPT;
             $contextLines = '(no prior context)';
         }
 
+        $template = $this->promptVersioning->getActiveTemplate('entity_extractor') ?: self::PROMPT_TEMPLATE;
+
         return str_replace(
             ['%EXISTING_ENTITIES%', '%CONTEXT%', '%MESSAGE%'],
             [$existingJson, $contextLines, $message],
-            self::PROMPT_TEMPLATE,
+            $template,
         );
     }
 }
