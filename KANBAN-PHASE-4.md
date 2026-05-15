@@ -909,7 +909,7 @@ Git commit: "feat: Filament Tenant Inbox — conversation list, context panel, t
 ---
 
 ### SUB-TASK 4.8 — E2E Integration: Real WA Message Flow Test
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** 4.7 selesai
 **Estimated Time:** 1.5 jam
 

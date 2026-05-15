@@ -2,6 +2,7 @@
 
 namespace App\Modules\WhatsApp\Services;
 
+use App\Modules\Notification\Services\NotificationService;
 use App\Modules\Shared\DTOs\WaAccountStatusDTO;
 use App\Modules\Shared\Enums\WaAccountStatus;
 use App\Modules\WhatsApp\Adapters\WhatsAppGatewayAdapter;
@@ -14,6 +15,7 @@ class WaAccountService
     public function __construct(
         private readonly WaAccountRepository $repository,
         private readonly WhatsAppGatewayAdapter $gateway,
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function initiateConnect(WaAccount $account): bool
@@ -56,7 +58,7 @@ class WaAccountService
         match ($event) {
             'qr'           => $account->markQrPending($payload['qr_base64'] ?? ''),
             'connected'    => $account->markConnected($payload['phone'] ?? ''),
-            'disconnected' => $account->markDisconnected(),
+            'disconnected' => $this->handleDisconnectedCallback($account),
             'failed'       => $account->markFailed(),
             default        => Log::warning('WaAccountService: unknown callback event.', [
                 'event'      => $event,
@@ -68,6 +70,16 @@ class WaAccountService
             'account_id' => $accountId,
             'event'      => $event,
         ]);
+    }
+
+    private function handleDisconnectedCallback(WaAccount $account): void
+    {
+        $wasConnected = $account->status === WaAccountStatus::CONNECTED;
+        $account->markDisconnected();
+
+        if ($wasConnected) {
+            $this->notificationService->notifyWaDisconnected($account);
+        }
     }
 
     public function getGatewayStatus(WaAccount $account): WaAccountStatusDTO

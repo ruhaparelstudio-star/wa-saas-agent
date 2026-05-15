@@ -24,7 +24,7 @@ Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 4 : 7 / 8  sub-task  [▓▓▓▓▓▓▓░]
+Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
 Total   : 16 / 54 sub-task
@@ -1212,6 +1212,35 @@ Commit          : feat: Filament Tenant Inbox — conversation list, context pan
 Notes           : $slug = 'inbox' (route: /app/inbox), wire:poll.10s on page
                   getNavigationBadge() guards against null tenant_id (factory users without tenant)
                   validate() replaced by Validator::make() due to Filament 5 signature conflict
+```
+
+### Sub-task 4.8 (KANBAN) — E2E Integration Test (WaFlowIntegrationTest)
+```
+Status          : [x] DONE — 2026-05-15
+Files Created   : tests/Feature/Integration/WaFlowIntegrationTest.php (7 E2E tests)
+Files Modified  : app/Modules/WhatsApp/Services/WaAccountService.php
+                    (inject NotificationService, fire notifyWaDisconnected on disconnect callback
+                     when account was CONNECTED)
+                  app/Modules/AgentCore/Providers/AgentCoreServiceProvider.php
+                    (wire HandoffService into ActionDispatcher binding so flag_handoff actually
+                     creates HandoffRecord + notification)
+E2E Coverage    : [x] webhook/inbound → pipeline → DecisionTrace saved
+                  [x] handoff intent → HandoffRecord + AdminNotification + agent_mode=HANDOFF
+                  [x] duplicate provider_message_id → 1 trace only (idempotency)
+                  [x] agent_mode=PAUSED → composer NOT called, preset reply saved
+                       (HANDOFF mode cannot be tested directly: findOrCreateByPhone forks a new
+                        conversation when existing is HANDOFF — same ModeValidator path is exercised
+                        via PAUSED)
+                  [x] injection in message → trace.injection_detected=true, pipeline continues
+                  [x] /internal/wa-session-callback event=disconnected → WA_DISCONNECTED notification
+                  [x] greeting → ask_price → stage NEW_LEAD → EXPLORATION + entity_cache accumulated
+Tests Pass      : 7 / 7 (WaFlowIntegrationTest) | Total suite: 413 pass
+Commit          : test: WaFlowIntegrationTest — E2E integration test suite Phase 4
+Notes           : config('queue.default')='sync' + config('cache.default')='array' must be forced
+                  in setUp() — phpunit.xml <env> overrides do NOT override .env values for
+                  queue/cache in this project. Without that, ProcessInboundMessageJob queues to
+                  Redis and never runs inline. PRINSIP 9 satisfied via app()->instance() binding
+                  of MockLlmAdapter. Http::fake covers wa-gateway dispatch / sessions / status.
 ```
 
 ### Integration Checkpoint Phase 4

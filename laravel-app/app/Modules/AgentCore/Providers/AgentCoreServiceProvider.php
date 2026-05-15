@@ -52,6 +52,7 @@ class AgentCoreServiceProvider extends ServiceProvider
             return new ActionDispatcher(
                 $app->make(ChannelGatewayInterface::class),
                 $app->make(\App\Modules\Conversation\Repositories\ConversationRepository::class),
+                $app->make(\App\Modules\Handoff\Services\HandoffService::class),
             );
         });
     }
