@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.8 (KANBAN) — ResponseComposerService
-Last Updated   : 2026-05-14
+Sub-task Aktif : 3.9 (KANBAN) — ActionDispatcher DONE; next: 3.10 DecisionTraceLogger
+Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : feat: ValidatorChain — PolicyValidator, GroundingValidator, ActionPermissionValidator, ModeValidator
+Last Commit    : feat: ActionDispatcher, WhatsAppGatewayAdapter stub — dispatch reply + conversation updates
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,7 +23,7 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 7 / 15 sub-task  [▓▓▓▓▓▓▓        ]
+Phase 3 : 8 / 15 sub-task  [▓▓▓▓▓▓▓▓       ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
@@ -901,7 +901,25 @@ Notes          : HANDOFF/blocked → preset returned, 0 LLM call (verified).
                  Bound ke ResponseComposerInterface di AgentCoreServiceProvider.
 ```
 
-### Sub-task 3.14 — TurnPipelineService
+### Sub-task 3.14 (KANBAN 3.9) — ActionDispatcher + WhatsAppGatewayAdapter
+```
+Status         : [x] DONE — 2026-05-15
+Files Created  : app/Modules/AgentCore/Pipeline/Services/ActionDispatcher.php
+                 app/Modules/WhatsApp/Adapters/WhatsAppGatewayAdapter.php
+                 app/Modules/AgentCore/Tests/ActionDispatcherTest.php
+Methods        : dispatch(TurnContextDTO, ComposedReplyDTO, DecisionDTO): array
+                 sendReply(TurnContextDTO, ComposedReplyDTO): bool
+                 updateConversationStage(TurnContextDTO, string): void
+Gateway Stub   : WhatsAppGatewayAdapter (sendText, sendFile, getStatus) — HTTP stub, no-throw on failure
+Registered     : ActionDispatcher + ChannelGatewayInterface in AgentCoreServiceProvider
+Tests Pass     : 8 / 8
+Commit         : feat: ActionDispatcher, WhatsAppGatewayAdapter stub — dispatch reply + conversation updates
+Notes          : gateway=null mode logs and returns false (dev mode).
+                 flag_handoff action sets agent_mode=HANDOFF on conversation.
+                 Stage transitions applied from decision.stage_transition if not null.
+```
+
+### Sub-task 3.15 — TurnPipelineService
 ```
 Status          : [ ] TODO
 Files Created   : -

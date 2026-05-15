@@ -9,11 +9,14 @@ use App\Modules\AgentCore\Extraction\Services\EntityExtractionService;
 use App\Modules\AgentCore\LLM\Adapters\MockLlmAdapter;
 use App\Modules\AgentCore\LLM\Adapters\OpenAiAdapter;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
+use App\Modules\AgentCore\Pipeline\Services\ActionDispatcher;
+use App\Modules\Shared\Contracts\ChannelGatewayInterface;
 use App\Modules\Shared\Contracts\DecisionEngineInterface;
 use App\Modules\Shared\Contracts\EntityExtractorInterface;
 use App\Modules\Shared\Contracts\IntentClassifierInterface;
 use App\Modules\Shared\Contracts\LlmClientInterface;
 use App\Modules\Shared\Contracts\ResponseComposerInterface;
+use App\Modules\WhatsApp\Adapters\WhatsAppGatewayAdapter;
 use Illuminate\Support\ServiceProvider;
 
 class AgentCoreServiceProvider extends ServiceProvider
@@ -36,6 +39,15 @@ class AgentCoreServiceProvider extends ServiceProvider
         $this->app->bind(DecisionEngineInterface::class, DecisionEngineService::class);
 
         $this->app->bind(ResponseComposerInterface::class, ResponseComposerService::class);
+
+        $this->app->bind(ChannelGatewayInterface::class, WhatsAppGatewayAdapter::class);
+
+        $this->app->bind(ActionDispatcher::class, function ($app) {
+            return new ActionDispatcher(
+                $app->make(ChannelGatewayInterface::class),
+                $app->make(\App\Modules\Conversation\Repositories\ConversationRepository::class),
+            );
+        });
     }
 
     public function boot(): void {}

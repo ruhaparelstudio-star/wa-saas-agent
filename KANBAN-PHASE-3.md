@@ -1042,7 +1042,7 @@ Git commit: "feat: ResponseComposerService — grounded reply, anti-hallucinatio
 ---
 
 ### SUB-TASK 3.9 — ActionDispatcher
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-15
 **Depends On:** 3.8 selesai
 **Estimated Time:** 1 jam
 
