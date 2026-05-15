@@ -1652,7 +1652,7 @@ Git commit: "feat: Filament superadmin — DecisionTrace viewer, PromptTemplate 
 ---
 
 ### SUB-TASK 3.14 — Accuracy Test Suite (MockLlmAdapter End-to-End)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-15
 **Depends On:** 3.13 selesai
 **Estimated Time:** 2 jam
 

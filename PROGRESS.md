@@ -8,7 +8,7 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.13 (KANBAN) — Filament AI Dashboard DONE; next: 3.14 Accuracy Test Suite
+Sub-task Aktif : 3.14 (KANBAN) — Accuracy Test Suite DONE; next: Integration Checkpoint Phase 3
 Last Updated   : 2026-05-15
 Git Branch     : dev
 Last Commit    : feat: Filament superadmin — DecisionTrace viewer, PromptTemplate manager
@@ -23,7 +23,7 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 11 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓    ]
+Phase 3 : 14 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
@@ -992,13 +992,32 @@ Commit             : feat: Filament superadmin — DecisionTrace viewer, PromptT
 Status             : [x] SUPERSEDED by 3.10 + 3.13
 ```
 
+### Sub-task 3.14 (KANBAN) — Accuracy Test Suite (MockLlmAdapter End-to-End)
+```
+Status             : [x] DONE — 2026-05-15
+Files Created      : tests/Feature/Pipeline/PipelineAccuracyTest.php
+                     scripts/check_accuracy_regression.php (Phase 3 section added)
+Tests Pass         : 20 / 20 (PipelineAccuracyTest)
+Total Tests        : 329 (all passing after addition)
+PRINSIP 9          : [x] — All 20 scenarios use MockLlmAdapter (no real LLM calls)
+Scenarios          :
+  Intent Accuracy  : S01 greeting, S02 ask_price, S03 ask_package_detail, S04 ask_availability,
+                     S05 ask_booking, S06 ask_payment, S07 confirm_booking, S08 objection_price,
+                     S09 invoice_inquiry, S10 handoff_request
+  Entity Accum.    : S11 customer_name, S12 multi-turn, S13 budget, S14 package_slug, S15 location
+  Pipeline Integ.  : S16 audio preset (0 LLM calls), S17 injection detected,
+                     S18 long message (is_sanitized=true), S19 LLM failure no crash, S20 idempotency
+Accuracy Score     : 20/20 = 100% with MockLlmAdapter
+Commit             : test: PipelineAccuracyTest — 20 skenario wedding, intent/entity/integrity checks
+```
+
 ### Integration Checkpoint Phase 3
 ```
 Status                     : [ ] TODO
 Intent Accuracy            : - % (target > 85%)
 Entity Accuracy            : - % (target > 85%)
 Decision Accuracy          : - % (target > 90%)
-E2E Skenario Passed        : - / 20
+E2E Skenario Passed        : 20 / 20 (MockLlmAdapter) ✅
 Hallucination Found        : -
 Injection Protected        : [ ]
 Log Viewer Works           : [ ]

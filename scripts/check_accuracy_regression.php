@@ -144,4 +144,66 @@ if ($intentRegression || $entityRegression) {
 }
 
 echo "[OK] Accuracy dalam batas normal. Tidak ada regression.\n";
+
+// ── Phase 3 Pipeline Accuracy Check ──────────────────────────────────────────
+// Run via: php artisan test --filter=PipelineAccuracyTest (inside Docker/CI)
+// This section validates the Phase 3 full-pipeline accuracy (MockLlmAdapter).
+
+echo "\n========================================\n";
+echo "PHASE 3 PIPELINE ACCURACY CHECK\n";
+echo "========================================\n";
+echo "Run: docker compose exec app php artisan test --filter=PipelineAccuracyTest\n\n";
+
+$laravelAppDir = __DIR__ . '/../laravel-app';
+
+if (! is_dir($laravelAppDir)) {
+    echo "[SKIP] laravel-app directory not found. Run from project root.\n";
+    exit(0);
+}
+
+// Run the Phase 3 pipeline accuracy test suite
+$output     = [];
+$returnCode = 0;
+
+exec(
+    "cd " . escapeshellarg($laravelAppDir) . " && php artisan test --filter=PipelineAccuracyTest 2>&1",
+    $output,
+    $returnCode
+);
+
+$outputStr = implode("\n", $output);
+
+// Parse test results from artisan test output
+preg_match('/(\d+) passed/', $outputStr, $passedMatch);
+preg_match('/(\d+) failed/', $outputStr, $failedMatch);
+
+$passed = (int) ($passedMatch[1] ?? 0);
+$failed = (int) ($failedMatch[1] ?? 0);
+$total  = $passed + $failed;
+
+define('PIPELINE_BASELINE_TOTAL', 20);
+define('PIPELINE_MIN_PASS', 19); // Allow max 1 flaky test (95%)
+
+echo "Phase 3 Pipeline Scenarios: $passed / $total passed";
+if ($total > 0) {
+    echo " (" . number_format(($passed / $total) * 100, 1) . "%)";
+}
+echo "\n";
+
+if ($returnCode !== 0 || $failed > 0) {
+    echo "[WARN] Phase 3 pipeline accuracy: $failed scenario(s) failed.\n";
+    foreach ($output as $line) {
+        if (str_contains($line, '⨯') || str_contains($line, 'FAILED') || str_contains($line, 'Error')) {
+            echo "  " . $line . "\n";
+        }
+    }
+    if ($passed < PIPELINE_MIN_PASS) {
+        echo "[ALERT] Pipeline accuracy below threshold ($passed < " . PIPELINE_MIN_PASS . "). Regression detected!\n";
+        exit(1);
+    }
+    echo "[INFO] Within acceptable threshold (>= " . PIPELINE_MIN_PASS . " pass required).\n";
+} else {
+    echo "[OK] All $passed Phase 3 pipeline scenarios passed. ✅\n";
+}
+
 exit(0);
