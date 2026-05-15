@@ -162,7 +162,7 @@ Git commit: "feat: WaAccount model, migration, repository — WA account managem
 ---
 
 ### SUB-TASK 4.2 — WA Gateway Baileys Real Integration
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** 4.1 selesai
 **Estimated Time:** 2 jam
 

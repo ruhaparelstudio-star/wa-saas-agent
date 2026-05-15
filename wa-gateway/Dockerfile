@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Build tools for native module compilation (required by @whiskeysockets/baileys deps)
+RUN apk add --no-cache python3 make g++ git
+
 WORKDIR /app
 
 COPY package.json ./

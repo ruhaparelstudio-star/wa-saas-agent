@@ -24,10 +24,10 @@ Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 4 : 1 / 8  sub-task  [▓░░░░░░░]
+Phase 4 : 2 / 8  sub-task  [▓▓░░░░░░]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 15 / 54 sub-task
+Total   : 16 / 54 sub-task
 ```
 
 ---
@@ -1099,13 +1099,7 @@ CATATAN PENTING ANTAR SUB-TASK Phase 3:
 
 ### Sub-task 4.1 — WA Gateway Node.js (Baileys)
 ```
-Status            : [ ] TODO
-Files Created     : -
-QR Generate       : [ ]
-Session Persist   : [ ]
-Inbound to Laravel: [ ]
-Status Updates    : [ ]
-Commit            : -
+Status            : [x] SUPERSEDED by 4.1(KANBAN) + 4.2(KANBAN)
 ```
 
 ### Sub-task 4.1 (KANBAN) — WaAccount Model + Migration + Repository
@@ -1123,6 +1117,29 @@ Methods       : WaAccount: isConnected, isQrPending, isQrExpired, markConnected,
                                      create, updateStatus, getActiveForTenant
 Tests Pass    : 11 / 11 (340 total)
 Commit        : feat: WaAccount model, migration, repository — WA account management
+```
+
+### Sub-task 4.2 (KANBAN) — WA Gateway Baileys Real Integration
+```
+Status        : [x] DONE — 2026-05-15
+Files Created : wa-gateway/src/sessionManager.js
+Files Modified: wa-gateway/index.js (extended with real Baileys routes)
+                wa-gateway/package.json (added @whiskeysockets/baileys, qrcode, pino, @hapi/boom)
+                wa-gateway/Dockerfile (added python3, make, g++, git for native compilation)
+                tests/Feature/Contracts/WaGatewayContractTest.php (extended with 3 new tests)
+Methods       : SessionManager: startSession, stopSession, getStatus, sendMessage
+Routes Added  : POST /sessions/stop, POST /webhook/test (dev only)
+Routes Updated: POST /sessions/start (real Baileys), POST /dispatch (via sendMessage),
+                GET /status/:id (via getStatus)
+Tests Pass    : 343 / 343 (3 new: health, sessions/start, dispatch_contract_format)
+Commit        : feat: wa-gateway Baileys integration — session manager, QR flow, inbound forward
+Notes         : Dockerfile: apk add python3 make g++ git for native module compilation
+                SessionManager lazy-loaded so gateway starts even if Baileys not yet installed
+                dispatch returns {success: false, error: 'Session not found'} when no active session
+                Reconnect: auto-retry up to 3x with 5s/10s/15s backoff
+                Session persistence: ./sessions/<accountId>/ → wa_sessions Docker volume
+                wa_gateway_modules volume must be RECREATED after Dockerfile changes
+                (docker volume rm wa-saas-agent_wa_gateway_modules + docker compose build)
 ```
 
 ### Sub-task 4.3 — Inbound Processor + Deduplication
