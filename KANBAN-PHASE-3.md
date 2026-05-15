@@ -1553,7 +1553,7 @@ Git commit: "feat: prompt_templates migration, PromptVersioningService — versi
 ---
 
 ### SUB-TASK 3.13 — Filament Superadmin: DecisionTrace Viewer + Prompt Manager
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-15
 **Depends On:** 3.12 selesai
 **Estimated Time:** 1.5 jam
 

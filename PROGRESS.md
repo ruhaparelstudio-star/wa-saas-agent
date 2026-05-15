@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.12 (KANBAN) — PromptVersioningService DONE; next: 3.13 Filament AI Dashboard
+Sub-task Aktif : 3.13 (KANBAN) — Filament AI Dashboard DONE; next: 3.14 Accuracy Test Suite
 Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : feat: prompt_templates migration, PromptVersioningService — versioned prompts dengan accuracy tracking
+Last Commit    : feat: Filament superadmin — DecisionTrace viewer, PromptTemplate manager
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -972,15 +972,24 @@ Commit          : feat: TurnPipelineService, ProcessInboundMessageJob — full A
 Status          : [x] SUPERSEDED by 3.11
 ```
 
+### Sub-task 3.13 (KANBAN) — Filament Superadmin: DecisionTrace Viewer + PromptTemplate Manager
+```
+Status             : [x] DONE — 2026-05-15
+Files Created      : DecisionTraceResource.php, ViewDecisionTrace.php, ListDecisionTraces.php
+                     PromptTemplateResource.php, CreatePromptTemplate.php, EditPromptTemplate.php,
+                     ListPromptTemplates.php, FilamentSuperadminAiTest.php
+Nav Group          : AI Pipeline (DecisionTrace + PromptTemplate)
+DecisionTrace      : [x] Read-only (list + view), filters: tenant/intent/decision/hallucination
+PromptTemplate     : [x] Full CRUD + ToggleActive action + AccuracyHistory modal
+Tenant Isolation   : [x] Superadmin sees all, tenant admin blocked (403)
+Tests Pass         : 9/9 (FilamentSuperadminAiTest)
+Total Tests        : 309 (all passing)
+Commit             : feat: Filament superadmin — DecisionTrace viewer, PromptTemplate manager
+```
+
 ### Sub-task 3.15 — Decision Trace Logging + Log Viewer
 ```
-Status             : [ ] TODO
-Files Created      : -
-Table Created      : decision_traces
-Log Viewer         : [ ] Filament page
-All Fields Visible : [ ]
-Tests Pass         : - / -
-Commit             : -
+Status             : [x] SUPERSEDED by 3.10 + 3.13
 ```
 
 ### Integration Checkpoint Phase 3
