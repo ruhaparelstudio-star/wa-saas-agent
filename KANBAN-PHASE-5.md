@@ -182,7 +182,7 @@ Git commit: "feat: PricelistService — PDF/text/hybrid pricelist dispatch, poli
 ---
 
 ### SUB-TASK 5.2 — Booking Model + Migration + Repository
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-15
 **Depends On:** 5.1 selesai
 **Estimated Time:** 1.5 jam
 

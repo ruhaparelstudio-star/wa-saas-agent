@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.1 — PricelistService DONE
+Sub-task Aktif : 5.3 — BookingService + Concurrent Lock
 Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : feat: PricelistService — PDF/text/hybrid pricelist dispatch, policy gating
+Last Commit    : feat: Booking model, migration, repository — booking foundation
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,7 +25,7 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 1 / 9  sub-task  [▓░░░░░░░░]
+Phase 5 : 2 / 9  sub-task  [▓▓░░░░░░░]
 ─────────────────────────────────
 Total   : 45 / 54 sub-task
 ```
@@ -1360,10 +1360,17 @@ Commit     : feat: PricelistService — PDF/text/hybrid pricelist dispatch, poli
 
 ### Sub-task 5.2 — Booking Flow
 ```
-Status              : [ ] TODO
-Concurrent Lock     : [ ]
-Tests Pass          : - / -
-Commit              : -
+Status              : [x] DONE — 2026-05-15
+Files               : app/Modules/Shared/Enums/BookingStatus.php (new — 7 status values)
+                      app/Modules/Booking/Models/Booking.php (new — TenantBaseModel extend)
+                      app/Modules/Booking/Repositories/BookingRepository.php (new)
+                      app/Modules/Booking/Providers/BookingServiceProvider.php (new — singleton)
+                      app/Modules/Booking/Tests/BookingTest.php (new — 9 tests)
+                      database/migrations/2026_05_12_700001_create_bookings_table.php (new)
+Concurrent Lock     : [x] partial UNIQUE index (tenant_id, event_date, event_type) WHERE status IN (confirmed, awaiting_dp, paid)
+booking_code format : BKG-YYYYMM-XXXX (global sequence)
+Tests Pass          : 9 / 9  (full suite: 438 / 438)
+Commit              : feat: Booking model, migration, repository — booking foundation
 ```
 
 ### Sub-task 5.3 — Invoice Lifecycle
