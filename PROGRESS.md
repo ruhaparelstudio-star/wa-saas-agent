@@ -7,11 +7,11 @@
 ## STATUS TERKINI
 
 ```
-Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (siap mulai)
-Sub-task Aktif : Checkpoint Phase 4 — Gate OPEN
+Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
+Sub-task Aktif : 5.1 — PricelistService DONE
 Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : test: WaFlowIntegrationTest — E2E integration test suite Phase 4
+Last Commit    : feat: PricelistService — PDF/text/hybrid pricelist dispatch, policy gating
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,7 +25,7 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 0 / 9  sub-task  [ ]
+Phase 5 : 1 / 9  sub-task  [▓░░░░░░░░]
 ─────────────────────────────────
 Total   : 45 / 54 sub-task
 ```
@@ -1341,9 +1341,21 @@ For Phase 5 (Pricelist flow, Booking, Invoice, Google Calendar, Follow-up):
 
 ### Sub-task 5.1 — Pricelist Flow
 ```
-Status     : [ ] TODO
-Tests Pass : - / -
-Commit     : -
+Status     : [x] DONE — 2026-05-15
+Files      : app/Modules/Knowledge/Services/PricelistService.php (new)
+             app/Modules/AgentCore/Decision/Services/DecisionEngineService.php (updated — applyPricelistPolicy)
+             app/Modules/AgentCore/Pipeline/Services/ActionDispatcher.php (updated — sendPricelist)
+             app/Modules/AgentCore/Composer/Services/ResponseComposerService.php (updated — buildPricelistGrounding)
+             app/Modules/AgentCore/Providers/AgentCoreServiceProvider.php (updated — DI)
+             app/Modules/WhatsApp/Adapters/WhatsAppGatewayAdapter.php (updated — message_type=document)
+             wa-gateway/src/sessionManager.js (updated — sendDocument)
+             wa-gateway/index.js (updated — /dispatch routes document)
+             app/Modules/Knowledge/Tests/PricelistServiceTest.php (new — 13 tests)
+             tests/Feature/Pipeline/PricelistFlowTest.php (new — 3 tests)
+Modes      : pdf | text | hybrid | disabled
+Policies   : PRICELIST_MODE, PRICELIST_MIN_REQUIREMENT (never|after_qualification|after_event_date)
+Tests Pass : 16 / 16  (full suite: 429 / 429 — was 413 in Phase 4)
+Commit     : feat: PricelistService — PDF/text/hybrid pricelist dispatch, policy gating
 ```
 
 ### Sub-task 5.2 — Booking Flow

@@ -48,9 +48,10 @@ class WhatsAppGatewayAdapter implements ChannelGatewayInterface
                 ->post("{$this->baseUrl}/dispatch", [
                     'wa_account_id' => $accountId,
                     'to_phone'      => $toPhone,
-                    'message_type'  => 'file',
-                    'file_url'      => $fileUrl,
+                    'message_type'  => 'document',
+                    'media_url'     => $fileUrl,
                     'body'          => $caption,
+                    'caption'       => $caption,
                 ]);
 
             return $response->successful() && ($response->json('success') === true);

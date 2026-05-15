@@ -193,6 +193,37 @@ class SessionManager {
         }
     }
 
+    async sendDocument(accountId, toPhone, fileUrl, caption = '', mimetype = 'application/pdf', fileName = null) {
+        const session = this.sessions.get(accountId);
+        if (!session || session.status !== 'connected') {
+            return { success: false, error: 'Session not found' };
+        }
+        try {
+            const jid = toPhone.replace('+', '') + '@s.whatsapp.net';
+            const payload = {
+                document: { url: fileUrl },
+                mimetype,
+                caption: caption || undefined,
+                fileName: fileName || this._fileNameFromUrl(fileUrl),
+            };
+            const result = await session.socket.sendMessage(jid, payload);
+            return { success: true, provider_message_id: result?.key?.id || null };
+        } catch (err) {
+            console.error(`[SessionManager] Send document error for ${accountId}:`, err.message);
+            return { success: false, error: err.message };
+        }
+    }
+
+    _fileNameFromUrl(url) {
+        try {
+            const u = new URL(url);
+            const last = u.pathname.split('/').filter(Boolean).pop();
+            return last || 'document.pdf';
+        } catch (e) {
+            return 'document.pdf';
+        }
+    }
+
     _getMessageType(msg) {
         const m = msg.message;
         if (!m) return 'text';

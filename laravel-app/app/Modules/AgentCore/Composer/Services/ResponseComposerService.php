@@ -3,6 +3,7 @@
 namespace App\Modules\AgentCore\Composer\Services;
 
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
+use App\Modules\Knowledge\Services\PricelistService;
 use App\Modules\Shared\Contracts\LlmClientInterface;
 use App\Modules\Shared\Contracts\ResponseComposerInterface;
 use App\Modules\Shared\DTOs\ComposedReplyDTO;
@@ -48,6 +49,7 @@ PROMPT;
     public function __construct(
         private readonly LlmClientInterface  $llm,
         private readonly TokenUsageLogger    $tokenUsageLogger,
+        private readonly ?PricelistService   $pricelistService = null,
     ) {}
 
     public function compose(
@@ -104,6 +106,14 @@ PROMPT;
     {
         $tone                = $context->config->tone->value;
         $groundingData       = $this->formatGroundingData($context->knowledge->structured_data);
+        $pricelistGrounding  = $this->buildPricelistGrounding($context, $decision);
+
+        if ($pricelistGrounding !== '') {
+            $groundingData = $groundingData === 'No specific product data available for this query.'
+                ? $pricelistGrounding
+                : $groundingData . "\n\n" . $pricelistGrounding;
+        }
+
         $conversationContext = $this->formatConversationContext($context);
 
         return str_replace(
@@ -111,6 +121,41 @@ PROMPT;
             [$tone, $groundingData, $conversationContext, $context->intent->intent, $decision->reply_strategy, $context->inbound_message->body],
             self::PROMPT_TEMPLATE,
         );
+    }
+
+    /**
+     * When send_pricelist is allowed and the tenant operates in text/hybrid mode,
+     * inject the rendered text pricelist as grounded data so the composer cannot
+     * hallucinate prices.
+     */
+    private function buildPricelistGrounding(TurnContextDTO $context, DecisionDTO $decision): string
+    {
+        if ($this->pricelistService === null) {
+            return '';
+        }
+
+        $blockedNames = array_map(
+            fn ($b) => is_array($b) ? ($b['action'] ?? '') : $b->action,
+            $decision->blocked_actions,
+        );
+
+        if (!in_array('send_pricelist', $decision->desired_actions, true)
+            || in_array('send_pricelist', $blockedNames, true)
+        ) {
+            return '';
+        }
+
+        $mode = $this->pricelistService->getMode($context->tenant->id);
+        if (!in_array($mode, [PricelistService::MODE_TEXT, PricelistService::MODE_HYBRID], true)) {
+            return '';
+        }
+
+        $text = $this->pricelistService->buildTextPricelist($context->tenant->id);
+        if ($text === '') {
+            return '';
+        }
+
+        return "PRICELIST (use verbatim — do not add or change prices):\n" . $text;
     }
 
     private function formatGroundingData(array $structuredData): string

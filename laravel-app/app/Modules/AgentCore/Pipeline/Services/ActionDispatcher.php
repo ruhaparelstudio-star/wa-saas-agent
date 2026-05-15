@@ -4,6 +4,7 @@ namespace App\Modules\AgentCore\Pipeline\Services;
 
 use App\Modules\Conversation\Repositories\ConversationRepository;
 use App\Modules\Handoff\Services\HandoffService;
+use App\Modules\Knowledge\Services\PricelistService;
 use App\Modules\Shared\Contracts\ChannelGatewayInterface;
 use App\Modules\Shared\DTOs\ComposedReplyDTO;
 use App\Modules\Shared\DTOs\DecisionDTO;
@@ -16,6 +17,7 @@ class ActionDispatcher
         private readonly ?ChannelGatewayInterface $gateway,
         private readonly ConversationRepository $conversations,
         private readonly ?HandoffService $handoffService = null,
+        private readonly ?PricelistService $pricelistService = null,
     ) {}
 
     /**
@@ -30,7 +32,23 @@ class ActionDispatcher
     ): array {
         $dispatched = [];
 
-        if ($reply->reply_text !== '') {
+        $blockedNames = array_map(
+            fn($b) => is_array($b) ? ($b['action'] ?? '') : $b->action,
+            $decision->blocked_actions,
+        );
+
+        $pricelistAllowed = in_array('send_pricelist', $decision->desired_actions, true)
+            && !in_array('send_pricelist', $blockedNames, true);
+
+        $pricelistMode = $pricelistAllowed && $this->pricelistService !== null
+            ? $this->pricelistService->getMode($context->tenant->id)
+            : null;
+
+        // For PDF mode, the file caption replaces the standalone text reply
+        // to avoid sending the same message twice.
+        $skipTextReply = $pricelistMode === PricelistService::MODE_PDF;
+
+        if ($reply->reply_text !== '' && !$skipTextReply) {
             $sent = $this->sendReply($context, $reply);
             if ($sent) {
                 $dispatched[] = 'send_reply';
@@ -42,11 +60,6 @@ class ActionDispatcher
                 'body'         => $reply->reply_text,
             ]);
         }
-
-        $blockedNames = array_map(
-            fn($b) => is_array($b) ? ($b['action'] ?? '') : $b->action,
-            $decision->blocked_actions,
-        );
 
         foreach ($decision->desired_actions as $action) {
             if (in_array($action, $blockedNames, true)) {
@@ -60,6 +73,7 @@ class ActionDispatcher
                 ),
                 'update_lead'            => $this->updateLead($context),
                 'flag_handoff'           => $this->flagHandoff($context, $decision),
+                'send_pricelist'         => $this->sendPricelist($context, $reply, $pricelistMode),
                 'increment_message_count' => null, // handled by addMessage above
                 default                  => null,
             };
@@ -142,6 +156,81 @@ class ActionDispatcher
         if (!empty($entities)) {
             $lead->updateFromEntities($entities);
         }
+    }
+
+    public function sendPricelist(
+        TurnContextDTO $context,
+        ComposedReplyDTO $reply,
+        ?string $mode = null,
+    ): bool {
+        if ($this->pricelistService === null) {
+            Log::info('ActionDispatcher: PricelistService not configured, skipping send_pricelist.');
+            return false;
+        }
+
+        $mode ??= $this->pricelistService->getMode($context->tenant->id);
+
+        // Text mode — already sent as part of the normal text reply
+        if ($mode === PricelistService::MODE_TEXT) {
+            return true;
+        }
+
+        if ($this->gateway === null) {
+            Log::info('ActionDispatcher: gateway not configured, skipping send_pricelist file.');
+            return false;
+        }
+
+        $asset = $this->pricelistService->getPricelistAsset($context->tenant->id);
+
+        if ($asset === null) {
+            Log::warning('ActionDispatcher: pricelist asset not found, falling back to text.', [
+                'tenant_id' => $context->tenant->id,
+                'mode'      => $mode,
+            ]);
+
+            // Fallback — make sure the customer receives the text body if the
+            // PDF flow skipped it earlier.
+            if ($mode === PricelistService::MODE_PDF && $reply->reply_text !== '') {
+                $sent = $this->sendReply($context, $reply);
+                if ($sent) {
+                    $this->conversations->findById($context->conversation->id)?->addMessage([
+                        'direction'    => 'outbound',
+                        'message_type' => 'text',
+                        'body'         => $reply->reply_text,
+                    ]);
+                }
+            }
+
+            return false;
+        }
+
+        $caption = $mode === PricelistService::MODE_PDF ? $reply->reply_text : '';
+
+        try {
+            $sent = $this->gateway->sendFile(
+                $context->conversation->wa_account_id,
+                $context->conversation->from_phone,
+                $asset->file_url,
+                $caption,
+            );
+        } catch (\Throwable $e) {
+            Log::warning('ActionDispatcher: sendPricelist file failed.', [
+                'error'         => $e->getMessage(),
+                'wa_account_id' => $context->conversation->wa_account_id,
+            ]);
+            return false;
+        }
+
+        if ($sent) {
+            $body = $caption !== '' ? $caption : ('[pricelist] ' . $asset->name);
+            $this->conversations->findById($context->conversation->id)?->addMessage([
+                'direction'    => 'outbound',
+                'message_type' => 'document',
+                'body'         => $body,
+            ]);
+        }
+
+        return $sent;
     }
 
     private function flagHandoff(TurnContextDTO $context, DecisionDTO $decision): void

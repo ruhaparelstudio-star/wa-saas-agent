@@ -114,10 +114,57 @@ app.post('/messages/send', verifySecret, async (req, res) => {
 
 // ── PRINSIP 13 — Contract: POST /dispatch (Laravel → WA) ─────────────────────
 app.post('/dispatch', verifySecret, async (req, res) => {
-    const { wa_account_id, to_phone, message_type, body } = req.body;
-    if (!wa_account_id || !to_phone || !message_type || body === undefined) {
+    const {
+        wa_account_id,
+        to_phone,
+        message_type,
+        body,
+        file_url,
+        media_url,
+        mimetype,
+        file_name,
+    } = req.body;
+
+    if (!wa_account_id || !to_phone || !message_type) {
         return res.status(422).json({
-            error: 'Missing required fields: wa_account_id, to_phone, message_type, body',
+            error: 'Missing required fields: wa_account_id, to_phone, message_type',
+        });
+    }
+
+    const isDocument = message_type === 'document' || message_type === 'file';
+
+    if (isDocument) {
+        const url = file_url || media_url;
+        if (!url) {
+            return res.status(422).json({
+                error: 'Missing file_url (or media_url) for document message_type',
+            });
+        }
+
+        try {
+            const sm = getSessionManager();
+            const result = await sm.sendDocument(
+                wa_account_id,
+                to_phone,
+                url,
+                body || '',
+                mimetype || 'application/pdf',
+                file_name || null,
+            );
+            return res.json({
+                success: result.success,
+                provider_message_id: result.provider_message_id || null,
+                ...(result.error && { error: result.error }),
+            });
+        } catch (err) {
+            console.error('[wa-gateway] dispatch document error:', err.message);
+            return res.json({ success: false, error: err.message });
+        }
+    }
+
+    if (body === undefined) {
+        return res.status(422).json({
+            error: 'Missing body for text message_type',
         });
     }
 

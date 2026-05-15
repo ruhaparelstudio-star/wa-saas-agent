@@ -2,7 +2,9 @@
 
 namespace App\Modules\AgentCore\Decision\Services;
 
+use App\Modules\Knowledge\Services\PricelistService;
 use App\Modules\Shared\Contracts\DecisionEngineInterface;
+use App\Modules\Shared\DTOs\BlockedActionDTO;
 use App\Modules\Shared\DTOs\DecisionDTO;
 use App\Modules\Shared\DTOs\TurnContextDTO;
 use App\Modules\Shared\Enums\ConversationStage;
@@ -25,6 +27,7 @@ class DecisionEngineService implements DecisionEngineInterface
 
     public function __construct(
         private readonly BusinessHoursService $businessHoursService,
+        private readonly ?PricelistService $pricelistService = null,
     ) {}
 
     public function decide(TurnContextDTO $context): DecisionDTO
@@ -68,21 +71,29 @@ class DecisionEngineService implements DecisionEngineInterface
         // b. Map intent → desired actions
         $desiredActions = $this->determineDesiredActions($context);
 
-        // c. Determine stage machine transition
+        // c. Apply pricelist policy → may move send_pricelist to blocked_actions
+        $blockedActions = $this->applyPricelistPolicy($context, $desiredActions);
+        $blockedNames   = array_map(fn (BlockedActionDTO $b) => $b->action, $blockedActions);
+        $allowedActions = array_values(array_filter(
+            $desiredActions,
+            fn (string $a) => !in_array($a, $blockedNames, true),
+        ));
+
+        // d. Determine stage machine transition
         $stageTransition = $this->determineStageTransition($context, $desiredActions);
 
-        // d. Reply strategy based on new stage (or current)
+        // e. Reply strategy based on new stage (or current)
         $effectiveStage = $stageTransition
             ? ConversationStage::from($stageTransition)
             : $context->state->stage;
 
-        $replyStrategy = $this->determineReplyStrategy($context, $effectiveStage);
+        $replyStrategy = $this->determineReplyStrategy($context, $effectiveStage, $blockedActions);
 
         return DecisionDTO::from([
             'decision'             => 'proceed',
             'desired_actions'      => $desiredActions,
-            'allowed_actions'      => $desiredActions, // validators will filter further
-            'blocked_actions'      => [],
+            'allowed_actions'      => $allowedActions,
+            'blocked_actions'      => $blockedActions,
             'handoff_required'     => false,
             'handoff_reason'       => null,
             'handoff_priority'     => HandoffPriority::LOW->value,
@@ -150,7 +161,7 @@ class DecisionEngineService implements DecisionEngineInterface
         $intent   = $context->intent->intent;
         $entities = $context->entities->entities;
 
-        return match ($intent) {
+        $actions = match ($intent) {
             'greeting'                                      => ['send_greeting'],
             'ask_price'                                     => ['send_price_info'],
             'ask_package_list'                              => ['send_package_list'],
@@ -170,6 +181,44 @@ class DecisionEngineService implements DecisionEngineInterface
             'handoff_request'                               => ['flag_handoff'],
             default                                         => ['send_general_reply'],
         };
+
+        // Pricelist intent fan-out — append send_pricelist without overriding existing actions
+        if (in_array($intent, ['ask_price', 'ask_package_list'], true)
+            && !in_array('send_pricelist', $actions, true)
+        ) {
+            $actions[] = 'send_pricelist';
+        }
+
+        return $actions;
+    }
+
+    /**
+     * @param  array<int,string>  $desiredActions
+     * @return array<int,BlockedActionDTO>
+     */
+    private function applyPricelistPolicy(TurnContextDTO $context, array $desiredActions): array
+    {
+        if ($this->pricelistService === null) {
+            return [];
+        }
+
+        if (!in_array('send_pricelist', $desiredActions, true)) {
+            return [];
+        }
+
+        $check = $this->pricelistService->canSendPricelist($context);
+        if ($check['allowed']) {
+            return [];
+        }
+
+        return [
+            new BlockedActionDTO(
+                action: 'send_pricelist',
+                reason: $check['reason'] ?? 'Pricelist policy denied',
+                can_fallback: $check['fallback'] !== null,
+                fallback_action: $check['fallback'],
+            ),
+        ];
     }
 
     private function determineStageTransition(TurnContextDTO $context, array $desiredActions): ?string
@@ -238,9 +287,21 @@ class DecisionEngineService implements DecisionEngineInterface
         return null;
     }
 
-    private function determineReplyStrategy(TurnContextDTO $context, ConversationStage $stage): string
-    {
+    /**
+     * @param  array<int,BlockedActionDTO>  $blockedActions
+     */
+    private function determineReplyStrategy(
+        TurnContextDTO $context,
+        ConversationStage $stage,
+        array $blockedActions = [],
+    ): string {
         $intent = $context->intent->intent;
+
+        foreach ($blockedActions as $blocked) {
+            if ($blocked->action === 'send_pricelist' && $blocked->fallback_action !== null) {
+                return $blocked->fallback_action;
+            }
+        }
 
         return match (true) {
             $intent === 'ask_price'                                       => 'send_price_breakdown',

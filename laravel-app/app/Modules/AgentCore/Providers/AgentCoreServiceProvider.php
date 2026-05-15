@@ -12,6 +12,7 @@ use App\Modules\AgentCore\LLM\Services\PromptVersioningService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\AgentCore\Pipeline\Services\ActionDispatcher;
 use App\Modules\AgentCore\Pipeline\Services\DecisionTraceLogger;
+use App\Modules\Knowledge\Services\PricelistService;
 use App\Modules\Shared\Contracts\ChannelGatewayInterface;
 use App\Modules\Shared\Contracts\DecisionEngineInterface;
 use App\Modules\Shared\Contracts\EntityExtractorInterface;
@@ -53,6 +54,7 @@ class AgentCoreServiceProvider extends ServiceProvider
                 $app->make(ChannelGatewayInterface::class),
                 $app->make(\App\Modules\Conversation\Repositories\ConversationRepository::class),
                 $app->make(\App\Modules\Handoff\Services\HandoffService::class),
+                $app->make(PricelistService::class),
             );
         });
     }
