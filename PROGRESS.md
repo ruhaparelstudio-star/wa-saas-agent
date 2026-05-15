@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 3 — AI Pipeline & Logging
-Sub-task Aktif : 3.9 (KANBAN) — ActionDispatcher DONE; next: 3.10 DecisionTraceLogger
+Sub-task Aktif : 3.10 (KANBAN) — DecisionTraceLogger DONE; next: 3.11 TurnPipelineService
 Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : feat: ActionDispatcher, WhatsAppGatewayAdapter stub — dispatch reply + conversation updates
+Last Commit    : feat: DecisionTraceLogger, decision_traces migration — Zero Black Box logging
 Last Tag       : v0.3-knowledge-complete
 ```
 
@@ -23,11 +23,11 @@ Last Tag       : v0.3-knowledge-complete
 Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 3 : 8 / 15 sub-task  [▓▓▓▓▓▓▓▓       ]
+Phase 3 : 9 / 15 sub-task  [▓▓▓▓▓▓▓▓▓      ]
 Phase 4 : 0 / 8  sub-task  [ ]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
-Total   : 14 / 54 sub-task
+Total   : 15 / 54 sub-task
 ```
 
 ---
@@ -919,7 +919,28 @@ Notes          : gateway=null mode logs and returns false (dev mode).
                  Stage transitions applied from decision.stage_transition if not null.
 ```
 
-### Sub-task 3.15 — TurnPipelineService
+### Sub-task 3.15 (KANBAN 3.10) — DecisionTraceLogger + decision_traces Migration
+```
+Status         : [x] DONE — 2026-05-15
+Files Created  : database/migrations/2026_05_12_200001_create_decision_traces_table.php
+                 app/Modules/AgentCore/Pipeline/Models/DecisionTrace.php
+                 app/Modules/AgentCore/Pipeline/Services/DecisionTraceLogger.php
+                 app/Modules/AgentCore/Tests/DecisionTraceLoggerTest.php
+Methods        : log(TurnContextDTO, TurnResultDTO, array $llmData): DecisionTrace
+                 getTracesByConversation(string, int): Collection
+                 maskPhone(string): string
+Registered     : DecisionTraceLogger::class singleton in AgentCoreServiceProvider
+Tests Pass     : 12 / 12
+Commit         : feat: DecisionTraceLogger, decision_traces migration — Zero Black Box logging
+Notes          : Phone numbers masked (+62 and 08 prefix) in final_reply and raw_message.
+                 PRINSIP 7: all pipeline data logged — raw_message, intent, entities,
+                 decision, validator_results, prompts, LLM responses, reply, tokens.
+                 $llmData array carries: intent_prompt, entity_prompt, composer_prompt,
+                 intent_raw, entity_raw, composer_raw, token_totals, decision,
+                 validator_result, composed_reply, stage_before, error_message.
+```
+
+### Sub-task 3.16 — TurnPipelineService
 ```
 Status          : [ ] TODO
 Files Created   : -

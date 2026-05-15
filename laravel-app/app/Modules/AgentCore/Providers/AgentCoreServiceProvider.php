@@ -10,6 +10,7 @@ use App\Modules\AgentCore\LLM\Adapters\MockLlmAdapter;
 use App\Modules\AgentCore\LLM\Adapters\OpenAiAdapter;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\AgentCore\Pipeline\Services\ActionDispatcher;
+use App\Modules\AgentCore\Pipeline\Services\DecisionTraceLogger;
 use App\Modules\Shared\Contracts\ChannelGatewayInterface;
 use App\Modules\Shared\Contracts\DecisionEngineInterface;
 use App\Modules\Shared\Contracts\EntityExtractorInterface;
@@ -31,6 +32,8 @@ class AgentCoreServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TokenUsageLogger::class);
+
+        $this->app->singleton(DecisionTraceLogger::class);
 
         $this->app->bind(IntentClassifierInterface::class, IntentClassifierService::class);
 

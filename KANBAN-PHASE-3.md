@@ -1130,7 +1130,7 @@ Git commit: "feat: ActionDispatcher, WhatsAppGatewayAdapter stub — dispatch re
 ---
 
 ### SUB-TASK 3.10 — DecisionTraceLogger + decision_traces Migration
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-15
 **Depends On:** 3.9 selesai
 **Estimated Time:** 1.5 jam
 
