@@ -3,6 +3,7 @@
 namespace App\Modules\AgentCore\Providers;
 
 use App\Modules\AgentCore\Classification\Services\IntentClassifierService;
+use App\Modules\AgentCore\Composer\Services\ResponseComposerService;
 use App\Modules\AgentCore\Decision\Services\DecisionEngineService;
 use App\Modules\AgentCore\Extraction\Services\EntityExtractionService;
 use App\Modules\AgentCore\LLM\Adapters\MockLlmAdapter;
@@ -12,6 +13,7 @@ use App\Modules\Shared\Contracts\DecisionEngineInterface;
 use App\Modules\Shared\Contracts\EntityExtractorInterface;
 use App\Modules\Shared\Contracts\IntentClassifierInterface;
 use App\Modules\Shared\Contracts\LlmClientInterface;
+use App\Modules\Shared\Contracts\ResponseComposerInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AgentCoreServiceProvider extends ServiceProvider
@@ -32,6 +34,8 @@ class AgentCoreServiceProvider extends ServiceProvider
         $this->app->bind(EntityExtractorInterface::class, EntityExtractionService::class);
 
         $this->app->bind(DecisionEngineInterface::class, DecisionEngineService::class);
+
+        $this->app->bind(ResponseComposerInterface::class, ResponseComposerService::class);
     }
 
     public function boot(): void {}

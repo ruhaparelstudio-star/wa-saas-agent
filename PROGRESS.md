@@ -885,12 +885,20 @@ Gate           : [ ] >= 90% sebelum lanjut 3.13
 
 ### Sub-task 3.13 — ResponseComposerService
 ```
-Status         : [ ] TODO
-Files Created  : -
+Status         : [x] DONE — 2026-05-15
+Files Created  : app/Modules/AgentCore/Composer/Services/ResponseComposerService.php
+                 app/Modules/AgentCore/Tests/ResponseComposerServiceTest.php
 Interface Impl : ResponseComposerInterface
-Prompt Version : -
-Tests Pass     : - / -
-Commit         : -
+Methods        : compose(TurnContextDTO, DecisionDTO, ValidatorResultDTO): ComposedReplyDTO
+                 buildPrompt(), formatGroundingData(), formatConversationContext(), detectHallucination()
+Preset Messages: HANDOFF_MESSAGE, ERROR_FALLBACK, VOICE_NOTE, IMAGE_ACK
+Prompt Version : v1.0 (hardcoded const — akan dipindah ke DB di 3.12)
+Tests Pass     : 14 / 14
+Commit         : feat: ResponseComposerService — grounded reply, anti-hallucination, preset messages
+Notes          : HANDOFF/blocked → preset returned, 0 LLM call (verified).
+                 detectHallucination: heuristic Rp-pattern vs grounding_refs.
+                 TokenUsageLogger dipanggil hanya jika LLM dipanggil.
+                 Bound ke ResponseComposerInterface di AgentCoreServiceProvider.
 ```
 
 ### Sub-task 3.14 — TurnPipelineService
