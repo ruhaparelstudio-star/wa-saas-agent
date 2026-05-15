@@ -5,6 +5,7 @@ namespace App\Modules\Handoff\Services;
 use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Handoff\Models\HandoffRecord;
 use App\Modules\Handoff\Repositories\HandoffRepository;
+use App\Modules\Notification\Services\NotificationService;
 use App\Modules\Shared\DTOs\DecisionDTO;
 use App\Modules\Shared\Enums\AgentMode;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,6 +15,7 @@ class HandoffService
 {
     public function __construct(
         private readonly HandoffRepository $repository,
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function triggerHandoff(Conversation $conversation, DecisionDTO $decision): HandoffRecord
@@ -35,6 +37,8 @@ class HandoffService
             'conversation_id'   => $conversation->id,
             'priority'          => $decision->handoff_priority->value,
         ]);
+
+        $this->notificationService->notifyHandoffRequired($conversation, $record);
 
         return $record;
     }
