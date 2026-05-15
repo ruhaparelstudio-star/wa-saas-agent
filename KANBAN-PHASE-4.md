@@ -313,7 +313,7 @@ Git commit: "feat: wa-gateway Baileys integration — session manager, QR flow, 
 ---
 
 ### SUB-TASK 4.3 — WaAccountService (Connect/Disconnect Flow dari Laravel)
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** 4.2 selesai
 **Estimated Time:** 1.5 jam
 
@@ -433,7 +433,7 @@ Git commit: "feat: WaAccountService, session callback webhook — connect/discon
 ---
 
 ### SUB-TASK 4.4 — Handoff System (HandoffRecord + HandoffService)
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** 4.3 selesai
 **Estimated Time:** 2 jam
 

@@ -3,11 +3,11 @@
 namespace App\Modules\AgentCore\Pipeline\Services;
 
 use App\Modules\Conversation\Repositories\ConversationRepository;
+use App\Modules\Handoff\Services\HandoffService;
 use App\Modules\Shared\Contracts\ChannelGatewayInterface;
 use App\Modules\Shared\DTOs\ComposedReplyDTO;
 use App\Modules\Shared\DTOs\DecisionDTO;
 use App\Modules\Shared\DTOs\TurnContextDTO;
-use App\Modules\Shared\Enums\AgentMode;
 use Illuminate\Support\Facades\Log;
 
 class ActionDispatcher
@@ -15,6 +15,7 @@ class ActionDispatcher
     public function __construct(
         private readonly ?ChannelGatewayInterface $gateway,
         private readonly ConversationRepository $conversations,
+        private readonly ?HandoffService $handoffService = null,
     ) {}
 
     /**
@@ -58,7 +59,7 @@ class ActionDispatcher
                     $decision->stage_transition ?? $context->conversation->stage->value,
                 ),
                 'update_lead'            => $this->updateLead($context),
-                'flag_handoff'           => $this->flagHandoff($context),
+                'flag_handoff'           => $this->flagHandoff($context, $decision),
                 'increment_message_count' => null, // handled by addMessage above
                 default                  => null,
             };
@@ -143,17 +144,20 @@ class ActionDispatcher
         }
     }
 
-    private function flagHandoff(TurnContextDTO $context): void
+    private function flagHandoff(TurnContextDTO $context, DecisionDTO $decision): void
     {
         $conversation = $this->conversations->findById($context->conversation->id);
         if ($conversation === null) {
             return;
         }
 
-        $conversation->update(['agent_mode' => AgentMode::HANDOFF->value]);
-
-        Log::info('ActionDispatcher: conversation flagged for handoff.', [
-            'conversation_id' => $context->conversation->id,
-        ]);
+        if ($this->handoffService !== null) {
+            $this->handoffService->triggerHandoff($conversation, $decision);
+        } else {
+            $conversation->update(['agent_mode' => \App\Modules\Shared\Enums\AgentMode::HANDOFF->value]);
+            Log::info('ActionDispatcher: conversation flagged for handoff (no HandoffService).', [
+                'conversation_id' => $context->conversation->id,
+            ]);
+        }
     }
 }
