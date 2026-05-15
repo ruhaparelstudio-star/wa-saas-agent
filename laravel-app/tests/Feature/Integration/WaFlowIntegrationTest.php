@@ -20,6 +20,7 @@ use App\Modules\Shared\Enums\WaAccountStatus;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WhatsApp\Models\WaAccount;
 use App\Modules\WhatsApp\Repositories\WaAccountRepository;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -45,6 +46,10 @@ class WaFlowIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Freeze to a known business-hours moment (Fri 10:00 WIB = 03:00 UTC) so
+        // AFTER_HOURS_BEHAVIOR never short-circuits the pipeline mid-test.
+        Carbon::setTestNow(Carbon::parse('2026-05-15 03:00:00', 'UTC'));
 
         // PRINSIP 9 — inject MockLlmAdapter
         $this->mock = new MockLlmAdapter();
@@ -73,6 +78,12 @@ class WaFlowIntegrationTest extends TestCase
 
         $this->waAccount = app(WaAccountRepository::class)->create($this->tenant->id, 'CS Utama');
         $this->waAccount->markConnected('+6285555555555');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     // ── Test 1: inbound message triggers pipeline + saves trace ──────────

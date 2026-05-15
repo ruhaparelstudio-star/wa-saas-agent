@@ -30,6 +30,7 @@ use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Enums\UserRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\TenantConfig\Services\TenantConfigResolver;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -56,6 +57,12 @@ class PipelineAccuracyTest extends TestCase
     {
         parent::setUp();
 
+        // Freeze to a known business-hours moment (Fri 10:00 WIB = 03:00 UTC).
+        // Without this, AFTER_HOURS_BEHAVIOR can short-circuit the composer when
+        // the suite runs outside 08:00–21:00 WIB, breaking stage-transition and
+        // entity-accumulation assertions.
+        Carbon::setTestNow(Carbon::parse('2026-05-15 03:00:00', 'UTC'));
+
         config(['cache.default' => 'array']);
 
         $this->mock = new MockLlmAdapter();
@@ -67,6 +74,12 @@ class PipelineAccuracyTest extends TestCase
 
         $this->repo     = new ConversationRepository();
         $this->pipeline = $this->makePipeline();
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     // ══════════════════════════════════════════════════════════════

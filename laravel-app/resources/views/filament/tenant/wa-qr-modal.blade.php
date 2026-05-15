@@ -65,7 +65,7 @@
         <div class="flex flex-col items-center gap-4 text-center">
             <template x-if="qrCode">
                 <div class="border-4 border-gray-200 rounded-xl p-2">
-                    <img :src="'data:image/png;base64,' + qrCode" alt="QR Code" class="w-56 h-56 object-contain" />
+                    <img :src="qrCode.startsWith('data:') ? qrCode : 'data:image/png;base64,' + qrCode" alt="QR Code" class="w-56 h-56 object-contain" />
                 </div>
             </template>
             <template x-if="!qrCode">

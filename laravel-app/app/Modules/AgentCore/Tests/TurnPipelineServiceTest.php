@@ -28,6 +28,7 @@ use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Enums\UserRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\TenantConfig\Services\TenantConfigResolver;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -51,6 +52,12 @@ class TurnPipelineServiceTest extends TestCase
     {
         parent::setUp();
 
+        // Freeze to a known business-hours moment (Fri 10:00 WIB = 03:00 UTC).
+        // Without this, AFTER_HOURS_BEHAVIOR kicks in when the suite happens to
+        // run after 21:00 WIB, short-circuiting the composer and offsetting the
+        // mock-LLM response queue across turns.
+        Carbon::setTestNow(Carbon::parse('2026-05-15 03:00:00', 'UTC'));
+
         // PRINSIP 9 — inject MockLlmAdapter
         $this->mock = new MockLlmAdapter();
         app()->instance(LlmClientInterface::class, $this->mock);
@@ -61,6 +68,12 @@ class TurnPipelineServiceTest extends TestCase
 
         $this->repo     = new ConversationRepository();
         $this->pipeline = $this->makePipeline();
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     // ── process() returns TurnResultDTO ───────────────────────────────────

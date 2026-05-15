@@ -20,7 +20,7 @@ class WaAccountService
 
     public function initiateConnect(WaAccount $account): bool
     {
-        $callbackUrl = route('wa.session.callback', ['account_id' => $account->id]);
+        $callbackUrl = $this->buildCallbackUrl($account->id);
 
         $success = $this->gateway->startSession(
             accountId: $account->id,
@@ -32,6 +32,19 @@ class WaAccountService
         }
 
         return $success;
+    }
+
+    private function buildCallbackUrl(string $accountId): string
+    {
+        // wa-gateway runs in docker and cannot reach APP_URL (typically a host-bound URL like
+        // http://localhost:8080). Use the internal docker network URL instead, falling back to
+        // route() so testing/non-docker setups still work.
+        $base = config('services.wa_gateway.callback_base');
+        $path = route('wa.session.callback', ['account_id' => $accountId], absolute: false);
+
+        return $base
+            ? rtrim($base, '/') . $path
+            : route('wa.session.callback', ['account_id' => $accountId]);
     }
 
     public function disconnect(WaAccount $account): bool

@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'wa_gateway' => [
+        'url'             => env('WA_GATEWAY_URL', 'http://wa-gateway:3001'),
+        'secret'          => env('WA_INTERNAL_SECRET', ''),
+        'internal_secret' => env('WA_INTERNAL_SECRET', ''),
+        // Base URL for callbacks from wa-gateway back to Laravel. Inside docker, wa-gateway
+        // cannot resolve APP_URL (e.g. http://localhost:8080); it must hit nginx on the
+        // docker network instead.
+        'callback_base'   => env('WA_GATEWAY_CALLBACK_BASE', 'http://nginx'),
+    ],
+
 ];
