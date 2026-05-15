@@ -9,6 +9,7 @@ use App\Modules\Shared\Enums\LeadTemperature;
 use App\Modules\Shared\Enums\MemoryMode;
 use App\Modules\Shared\Models\TenantBaseModel;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WhatsApp\Models\WaAccount;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -60,6 +61,11 @@ class Conversation extends TenantBaseModel
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
+    public function waAccount(): BelongsTo
+    {
+        return $this->belongsTo(WaAccount::class, 'wa_account_id');
     }
 
     public function isActive(): bool

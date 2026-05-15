@@ -28,7 +28,7 @@ Yang sudah ada dari Phase 3 (JANGAN dibuat ulang):
 ---
 
 ### SUB-TASK 4.1 — WaAccount Model + Migration + Repository
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** Phase 3 gate OPEN
 **Estimated Time:** 1.5 jam
 

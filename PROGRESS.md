@@ -24,7 +24,7 @@ Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 4 : 0 / 8  sub-task  [ ]
+Phase 4 : 1 / 8  sub-task  [▓░░░░░░░]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
 Total   : 15 / 54 sub-task
@@ -1108,12 +1108,21 @@ Status Updates    : [ ]
 Commit            : -
 ```
 
-### Sub-task 4.2 — WA Account Management
+### Sub-task 4.1 (KANBAN) — WaAccount Model + Migration + Repository
 ```
-Status        : [ ] TODO
-Files Created : -
-Tests Pass    : - / -
-Commit        : -
+Status        : [x] DONE
+Files Created : database/migrations/2026_05_12_400001_create_wa_accounts_table.php
+                app/Modules/WhatsApp/Models/WaAccount.php
+                app/Modules/WhatsApp/Repositories/WaAccountRepository.php
+                app/Modules/WhatsApp/Providers/WhatsAppServiceProvider.php
+                app/Modules/Shared/DTOs/WaAccountStatusDTO.php
+                app/Modules/WhatsApp/Tests/WaAccountTest.php
+Methods       : WaAccount: isConnected, isQrPending, isQrExpired, markConnected,
+                           markDisconnected, markQrPending, markFailed, toStatusDTO
+              : WaAccountRepository: findById, findByTenant, findConnectedByTenant,
+                                     create, updateStatus, getActiveForTenant
+Tests Pass    : 11 / 11 (340 total)
+Commit        : feat: WaAccount model, migration, repository — WA account management
 ```
 
 ### Sub-task 4.3 — Inbound Processor + Deduplication
