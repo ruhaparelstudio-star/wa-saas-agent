@@ -3,6 +3,8 @@
 namespace App\Modules\AgentCore\Pipeline\Models;
 
 use App\Modules\Shared\Models\TenantBaseModel;
+use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DecisionTrace extends TenantBaseModel
 {
@@ -52,6 +54,11 @@ class DecisionTrace extends TenantBaseModel
         'processing_time_ms',
         'error_message',
     ];
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
 
     protected function casts(): array
     {
