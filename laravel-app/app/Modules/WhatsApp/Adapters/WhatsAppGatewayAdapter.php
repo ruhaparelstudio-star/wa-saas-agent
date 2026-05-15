@@ -63,6 +63,46 @@ class WhatsAppGatewayAdapter implements ChannelGatewayInterface
         }
     }
 
+    public function startSession(string $accountId, string $callbackUrl): bool
+    {
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-Internal-Secret' => $this->secret])
+                ->post("{$this->baseUrl}/sessions/start", [
+                    'wa_account_id'   => $accountId,
+                    'callback_url'    => $callbackUrl,
+                    'internal_secret' => $this->secret,
+                ]);
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::warning('WhatsAppGatewayAdapter: startSession failed.', [
+                'error'      => $e->getMessage(),
+                'account_id' => $accountId,
+            ]);
+            return false;
+        }
+    }
+
+    public function stopSession(string $accountId): bool
+    {
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-Internal-Secret' => $this->secret])
+                ->post("{$this->baseUrl}/sessions/stop", [
+                    'wa_account_id' => $accountId,
+                ]);
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::warning('WhatsAppGatewayAdapter: stopSession failed.', [
+                'error'      => $e->getMessage(),
+                'account_id' => $accountId,
+            ]);
+            return false;
+        }
+    }
+
     public function getStatus(string $accountId): WaAccountStatus
     {
         try {
