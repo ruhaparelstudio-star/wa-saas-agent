@@ -683,7 +683,7 @@ Git commit: "feat: NotificationService, AdminNotification — handoff alert, WA 
 ---
 
 ### SUB-TASK 4.6 — Filament Tenant Panel: WA Account Manager + QR Connect
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** 4.5 selesai
 **Estimated Time:** 2 jam
 

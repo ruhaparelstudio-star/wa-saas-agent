@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\WhatsApp\Http\Controllers\WaAccountQrStatusController;
 use App\Modules\WhatsApp\Http\Controllers\WaSessionCallbackController;
 use Illuminate\Support\Facades\Route;
 
@@ -7,3 +8,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('internal.secret')
     ->post('/internal/wa-session-callback/{account_id}', [WaSessionCallbackController::class, 'handle'])
     ->name('wa.session.callback');
+
+// Tenant-authenticated QR status endpoint (polled by QR modal in Filament)
+Route::middleware(['web', 'auth'])
+    ->get('/app/wa-accounts/{id}/qr-status', [WaAccountQrStatusController::class, 'show'])
+    ->name('tenant.wa-accounts.qr-status');

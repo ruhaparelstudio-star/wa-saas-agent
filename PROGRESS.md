@@ -1169,12 +1169,20 @@ Tests Pass    : - / -
 Commit        : -
 ```
 
-### Sub-task 4.6 — Handoff & Notification System
+### Sub-task 4.6 — Filament Tenant Panel: WA Account Manager + QR Connect
 ```
-Status        : [ ] TODO
-Files Created : -
-Tests Pass    : - / -
-Commit        : -
+Status        : [x] DONE
+Files Created : app/Filament/Tenant/Resources/WaAccountResource.php
+                app/Filament/Tenant/Resources/WaAccountResource/Pages/ListWaAccounts.php
+                app/Filament/Tenant/Resources/WaAccountResource/Pages/CreateWaAccount.php
+                app/Modules/WhatsApp/Http/Controllers/WaAccountQrStatusController.php
+                resources/views/filament/tenant/wa-qr-modal.blade.php
+                tests/Feature/Filament/FilamentTenantWaTest.php
+Tests Pass    : 9 / 9 (FilamentTenantWaTest) | Total suite: 390 pass
+Commit        : feat: Filament WA Account Manager — QR connect flow, status badge, tenant panel
+Notes         : QR modal uses Alpine.js polling (fetch every 3s) via /app/wa-accounts/{id}/qr-status
+                TenantScope hides other-tenant records → QR status returns 404 (not 403) for isolation
+                Superadmin returns 403 (not 302) when accessing /app — Filament 5 behavior
 ```
 
 ### Sub-task 4.7 — Admin Takeover & Resume
