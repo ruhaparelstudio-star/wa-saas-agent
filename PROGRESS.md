@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 4 — WhatsApp & Conversation
-Sub-task Aktif : 4.1 — next to start
+Sub-task Aktif : 4.8 — E2E Integration Test
 Last Updated   : 2026-05-15
 Git Branch     : dev
-Last Commit    : chore: Integration Checkpoint Phase 3 DONE — v0.4-pipeline-complete
+Last Commit    : feat: Filament Tenant Inbox — conversation list, context panel, takeover/resume
 Last Tag       : v0.4-pipeline-complete
 ```
 
@@ -24,7 +24,7 @@ Phase 0 : 5 / 5  sub-task  [▓▓▓▓▓] ✅ COMPLETE
 Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 4 : 2 / 8  sub-task  [▓▓░░░░░░]
+Phase 4 : 7 / 8  sub-task  [▓▓▓▓▓▓▓░]
 Phase 5 : 0 / 9  sub-task  [ ]
 ─────────────────────────────────
 Total   : 16 / 54 sub-task
@@ -1187,21 +1187,31 @@ Notes         : QR modal uses Alpine.js polling (fetch every 3s) via /app/wa-acc
 
 ### Sub-task 4.7 — Admin Takeover & Resume
 ```
-Status         : [ ] TODO
-Files Created  : -
-Takeover Works : [ ]
-Resume Works   : [ ]
-Tests Pass     : - / -
-Commit         : -
+Status         : [x] DONE — 2026-05-15 (implemented inside InboxPage)
+Files Created  : app/Filament/Tenant/Pages/InboxPage.php (takeoverConversation, resumeAI methods)
+Takeover Works : [x] HandoffService::triggerHandoff → agent_mode=HANDOFF + HandoffRecord created
+Resume Works   : [x] HandoffService::resolveHandoff(resumeAI=true) → agent_mode=ACTIVE
+Tests Pass     : 16 / 16 (FilamentTenantInboxTest) | Total suite: 406 pass
+Commit         : feat: Filament Tenant Inbox — conversation list, context panel, takeover/resume
 ```
 
-### Sub-task 4.8 — Filament Inbox + Context Panel
+### Sub-task 4.8 (KANBAN 4.7) — Filament Inbox + Context Panel
 ```
-Status          : [ ] TODO
-Files Created   : -
-Inbox Works     : [ ]
-Context Panel   : [ ]
-Commit          : -
+Status          : [x] DONE — 2026-05-15
+Files Created   : app/Filament/Tenant/Pages/InboxPage.php
+                  resources/views/filament/tenant/pages/inbox.blade.php
+                  tests/Feature/Filament/FilamentTenantInboxTest.php
+Files Modified  : app/Modules/Conversation/Models/Conversation.php (handoffRecords relation)
+Inbox Works     : [x] /app/inbox → 200, conversation list, filter by stage/mode/handoff
+Context Panel   : [x] Chat History tab, Lead Info tab, AI Trace tab
+Admin Reply     : [x] manual reply saved as ConversationMessage outbound + sent via WA Gateway
+Navigation Badge: [x] pending handoff count shown in nav
+Tenant Isolation: [x] tenant B cannot take over tenant A's conversation
+Tests Pass      : 16 / 16 (FilamentTenantInboxTest) | Total suite: 406 pass
+Commit          : feat: Filament Tenant Inbox — conversation list, context panel, takeover/resume
+Notes           : $slug = 'inbox' (route: /app/inbox), wire:poll.10s on page
+                  getNavigationBadge() guards against null tenant_id (factory users without tenant)
+                  validate() replaced by Validator::make() due to Filament 5 signature conflict
 ```
 
 ### Integration Checkpoint Phase 4

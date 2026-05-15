@@ -783,7 +783,7 @@ Git commit: "feat: Filament WA Account Manager — QR connect flow, status badge
 ---
 
 ### SUB-TASK 4.7 — Filament Tenant Panel: Inbox + Context Panel
-**Status:** [ ] TODO
+**Status:** [x] DONE
 **Depends On:** 4.6 selesai
 **Estimated Time:** 2 jam
 

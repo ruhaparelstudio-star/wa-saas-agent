@@ -2,6 +2,7 @@
 
 namespace App\Modules\Conversation\Models;
 
+use App\Modules\Handoff\Models\HandoffRecord;
 use App\Modules\Lead\Models\Lead;
 use App\Modules\Shared\Enums\AgentMode;
 use App\Modules\Shared\Enums\ConversationStage;
@@ -66,6 +67,11 @@ class Conversation extends TenantBaseModel
     public function waAccount(): BelongsTo
     {
         return $this->belongsTo(WaAccount::class, 'wa_account_id');
+    }
+
+    public function handoffRecords(): HasMany
+    {
+        return $this->hasMany(HandoffRecord::class, 'conversation_id');
     }
 
     public function isActive(): bool
