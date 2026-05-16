@@ -12,9 +12,11 @@ use App\Modules\Plans\Models\TenantSubscription;
 use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Enums\TenantTone;
 use App\Modules\Shared\Enums\UserRole;
+use App\Modules\Shared\Enums\WaAccountStatus;
 use App\Modules\TenantConfig\Models\TenantSetting;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantUser;
+use App\Modules\WhatsApp\Models\WaAccount;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -240,8 +242,18 @@ class WeddingDemoSeeder extends Seeder
             );
         }
 
+        // 8. WA Account (disconnected — user must scan QR to connect)
+        WaAccount::updateOrCreate(
+            ['tenant_id' => $tenant->id, 'display_name' => 'CS Utama'],
+            [
+                'id'        => Str::uuid()->toString(),
+                'tenant_id' => $tenant->id,
+                'status'    => WaAccountStatus::DISCONNECTED,
+            ]
+        );
+
         $this->command->info('WeddingDemoSeeder: Capture Moment Photography demo tenant seeded.');
         $this->command->info('  Email: demo@capturemoment.id | Password: Demo123!');
-        $this->command->info('  Packages: 3 | FAQs: 10 | KnowledgeItems: 3');
+        $this->command->info('  Packages: 3 | FAQs: 10 | KnowledgeItems: 3 | WaAccount: 1 (disconnected)');
     }
 }

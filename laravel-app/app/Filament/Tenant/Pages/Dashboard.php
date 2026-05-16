@@ -18,13 +18,13 @@ class Dashboard extends BaseDashboard
     {
         return [
             \App\Filament\Tenant\Widgets\TenantOverviewWidget::class,
+            \App\Filament\Tenant\Widgets\OverdueInvoicesWidget::class,
+            \App\Filament\Tenant\Widgets\UpcomingBookingsWidget::class,
         ];
     }
 
     public function getHeaderWidgets(): array
     {
-        return [
-            \App\Filament\Tenant\Widgets\TenantOverviewWidget::class,
-        ];
+        return [];
     }
 }
