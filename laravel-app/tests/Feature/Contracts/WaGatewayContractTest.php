@@ -2,8 +2,14 @@
 
 namespace Tests\Feature\Contracts;
 
+use App\Modules\Auth\Models\User;
+use App\Modules\Shared\Enums\TenantStatus;
+use App\Modules\Shared\Enums\UserRole;
+use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WhatsApp\Models\WaAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -21,12 +27,41 @@ class WaGatewayContractTest extends TestCase
 
     private string $waGatewayUrl;
     private string $internalSecret;
+    private string $waAccountId;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->waGatewayUrl   = rtrim(env('WA_GATEWAY_URL', 'http://wa-gateway:3001'), '/');
         $this->internalSecret = env('WA_INTERNAL_SECRET', '');
+
+        $user = User::create([
+            'id'        => Str::uuid()->toString(),
+            'name'      => 'Contract Test Superadmin',
+            'email'     => 'contract-super@test.com',
+            'password'  => bcrypt('password'),
+            'role'      => UserRole::SUPERADMIN,
+            'is_active' => true,
+        ]);
+
+        $tenant = Tenant::create([
+            'id'            => Str::uuid()->toString(),
+            'name'          => 'Contract Test Tenant',
+            'slug'          => 'contract-test-tenant',
+            'status'        => TenantStatus::ACTIVE,
+            'industry'      => 'wedding',
+            'contact_email' => 'contract@test.com',
+            'created_by_id' => $user->id,
+        ]);
+
+        $waAccount = WaAccount::create([
+            'id'           => Str::uuid()->toString(),
+            'tenant_id'    => $tenant->id,
+            'display_name' => 'Contract Test WA Account',
+            'status'       => 'connected',
+        ]);
+
+        $this->waAccountId = $waAccount->id;
     }
 
     private function requireGateway(): void
@@ -45,8 +80,7 @@ class WaGatewayContractTest extends TestCase
     public function test_webhook_inbound_accepts_valid_payload_with_secret(): void
     {
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id' => 'acc-001',
-            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
+            'wa_account_id' => $this->waAccountId,
             'from_phone'    => '+628111000001',
             'message_type'  => 'text',
             'body'          => 'Halo kak, mau tanya soal paket',
@@ -64,8 +98,7 @@ class WaGatewayContractTest extends TestCase
         }
 
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id' => 'acc-001',
-            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
+            'wa_account_id' => $this->waAccountId,
             'from_phone'    => '+628111000001',
             'message_type'  => 'text',
             'body'          => 'test',
@@ -82,8 +115,7 @@ class WaGatewayContractTest extends TestCase
         }
 
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id' => 'acc-001',
-            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
+            'wa_account_id' => $this->waAccountId,
             'from_phone'    => '+628111000001',
             'message_type'  => 'text',
             'body'          => 'test',
@@ -96,18 +128,30 @@ class WaGatewayContractTest extends TestCase
     public function test_webhook_inbound_rejects_missing_required_fields(): void
     {
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id' => 'acc-001',
+            'wa_account_id' => $this->waAccountId,
             // missing: from_phone, message_type, received_at
         ], ['X-Internal-Secret' => $this->internalSecret]);
 
         $response->assertStatus(422);
     }
 
+    public function test_webhook_inbound_returns_404_for_unknown_wa_account(): void
+    {
+        $response = $this->postJson('/webhook/inbound', [
+            'wa_account_id' => Str::uuid()->toString(),
+            'from_phone'    => '+628111000001',
+            'message_type'  => 'text',
+            'body'          => 'test',
+            'received_at'   => now()->toIso8601String(),
+        ], ['X-Internal-Secret' => $this->internalSecret]);
+
+        $response->assertStatus(404);
+    }
+
     public function test_webhook_inbound_accepts_null_body_for_media_messages(): void
     {
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id' => 'acc-001',
-            'tenant_id'     => '00000000-0000-0000-0000-000000000001',
+            'wa_account_id' => $this->waAccountId,
             'from_phone'    => '+628111000001',
             'message_type'  => 'image',
             'body'          => null,

@@ -7,6 +7,8 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
+use App\Filament\Superadmin\Widgets\PlatformStatsWidget;
+use App\Filament\Superadmin\Widgets\TenantStatsWidget;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -40,6 +42,10 @@ class SuperadminPanelProvider extends PanelProvider
                 in: app_path('Filament/Superadmin/Widgets'),
                 for: 'App\\Filament\\Superadmin\\Widgets'
             )
+            ->widgets([
+                TenantStatsWidget::class,
+                PlatformStatsWidget::class,
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

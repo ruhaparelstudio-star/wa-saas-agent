@@ -12,6 +12,8 @@ class PlatformStatsWidget extends BaseWidget
 {
     protected static ?int $sort = 2;
 
+    protected static bool $isLazy = false;
+
     protected function getStats(): array
     {
         $thisMonth = now()->startOfMonth();

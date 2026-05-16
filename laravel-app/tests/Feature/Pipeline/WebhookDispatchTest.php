@@ -7,6 +7,7 @@ use App\Modules\Auth\Models\User;
 use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Enums\UserRole;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WhatsApp\Models\WaAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -20,14 +21,15 @@ class WebhookDispatchTest extends TestCase
 {
     use RefreshDatabase;
 
-    private string $tenantId;
+    private string $waAccountId;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $superadmin     = $this->makeSuperadmin();
-        $this->tenantId = $this->makeTenant($superadmin)->id;
+        $superadmin        = $this->makeSuperadmin();
+        $tenant            = $this->makeTenant($superadmin);
+        $this->waAccountId = $this->makeWaAccount($tenant->id)->id;
     }
 
     /**
@@ -45,8 +47,7 @@ class WebhookDispatchTest extends TestCase
 
         $msgId    = 'msg-' . Str::uuid()->toString();
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id'       => 'acc-001',
-            'tenant_id'           => $this->tenantId,
+            'wa_account_id'       => $this->waAccountId,
             'from_phone'          => '+628121234567',
             'message_type'        => 'text',
             'body'                => 'halo kak',
@@ -68,8 +69,7 @@ class WebhookDispatchTest extends TestCase
 
         $msgId    = 'msg-' . Str::uuid()->toString();
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id'       => 'acc-001',
-            'tenant_id'           => $this->tenantId,
+            'wa_account_id'       => $this->waAccountId,
             'from_phone'          => '+628121234567',
             'message_type'        => 'text',
             'body'                => 'test message',
@@ -81,18 +81,17 @@ class WebhookDispatchTest extends TestCase
                  ->assertJsonFragment(['message_id' => $msgId]);
     }
 
-    public function test_webhook_rejects_invalid_tenant_id(): void
+    public function test_webhook_returns_404_for_unknown_wa_account(): void
     {
         $response = $this->postJson('/webhook/inbound', [
-            'wa_account_id' => 'acc-001',
-            'tenant_id'     => 'not-a-uuid',
+            'wa_account_id' => Str::uuid()->toString(),
             'from_phone'    => '+628121234567',
             'message_type'  => 'text',
             'body'          => 'halo',
             'received_at'   => now()->toISOString(),
         ], ['X-Internal-Secret' => env('WA_INTERNAL_SECRET', '')]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(404);
     }
 
     private function makeSuperadmin(): User
@@ -118,6 +117,16 @@ class WebhookDispatchTest extends TestCase
             'industry'      => 'wedding',
             'contact_email' => $slug . '@example.com',
             'created_by_id' => $createdBy->id,
+        ]);
+    }
+
+    private function makeWaAccount(string $tenantId): WaAccount
+    {
+        return WaAccount::create([
+            'id'           => Str::uuid()->toString(),
+            'tenant_id'    => $tenantId,
+            'display_name' => 'Test WA Account',
+            'status'       => 'connected',
         ]);
     }
 }

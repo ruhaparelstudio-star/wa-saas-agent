@@ -35,15 +35,32 @@ class CalendarSettingsPage extends Page
 
     public ?array $data = [];
 
+    public ?TenantSetting $tenantSetting = null;
+
     public function mount(): void
     {
         $tenantId = auth()->user()->tenant_id;
-        $setting  = TenantSetting::where('tenant_id', $tenantId)->first();
+        $this->tenantSetting = TenantSetting::where('tenant_id', $tenantId)->first();
 
         $this->form->fill([
-            'google_calendar_enabled' => (bool) ($setting?->google_calendar_enabled ?? false),
-            'google_calendar_email'   => $setting?->google_calendar_email ?? '',
+            'google_calendar_enabled' => (bool) ($this->tenantSetting?->google_calendar_enabled ?? false),
+            'google_calendar_email'   => $this->tenantSetting?->google_calendar_email ?? '',
         ]);
+    }
+
+    public function getConnectionStatus(): array
+    {
+        $setting = $this->tenantSetting;
+
+        if (!$setting || !$setting->google_calendar_enabled) {
+            return ['color' => 'gray', 'label' => 'Tidak Aktif', 'icon' => '○'];
+        }
+
+        if (!empty($setting->google_calendar_email)) {
+            return ['color' => 'warning', 'label' => 'Email Tersimpan — Menunggu OAuth (Phase 6)', 'icon' => '◑'];
+        }
+
+        return ['color' => 'danger', 'label' => 'Email Belum Diisi', 'icon' => '✕'];
     }
 
     public function form(Schema $schema): Schema

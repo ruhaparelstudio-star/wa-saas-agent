@@ -4,6 +4,7 @@ namespace App\Modules\Shared\Http\Controllers;
 
 use App\Modules\AgentCore\Jobs\ProcessInboundMessageJob;
 use App\Modules\Shared\DTOs\InboundMessageDTO;
+use App\Modules\WhatsApp\Models\WaAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -17,7 +18,7 @@ class WebhookController extends Controller
      * Required fields: wa_account_id, from_phone, message_type, body, received_at
      * Required header: X-Internal-Secret
      *
-     * Phase 3: tenant_id required until wa_accounts lookup is implemented in Phase 4.
+     * tenant_id is looked up from wa_accounts using wa_account_id — not required in payload.
      */
     public function inbound(Request $request): JsonResponse
     {
@@ -29,7 +30,6 @@ class WebhookController extends Controller
 
         $validated = $request->validate([
             'wa_account_id'       => 'required|string',
-            'tenant_id'           => 'required|string|uuid',
             'from_phone'          => 'required|string',
             'message_type'        => 'required|string|in:text,image,audio,document,video,sticker',
             'body'                => 'nullable|string',
@@ -38,6 +38,14 @@ class WebhookController extends Controller
             'received_at'         => 'required|string',
         ]);
 
+        $waAccount = WaAccount::withoutGlobalScopes()
+            ->where('id', $validated['wa_account_id'])
+            ->first();
+
+        if (!$waAccount) {
+            return response()->json(['error' => 'WA account not found'], 404);
+        }
+
         $inbound = InboundMessageDTO::from([
             'wa_account_id'       => $validated['wa_account_id'],
             'provider_message_id' => $validated['provider_message_id'] ?? Str::uuid()->toString(),
@@ -45,11 +53,11 @@ class WebhookController extends Controller
             'message_type'        => $validated['message_type'],
             'body'                => $validated['body'] ?? '',
             'media_url'           => $validated['media_url'] ?? null,
-            'raw_payload'         => $validated,  // only validated scalar fields — safe to serialize
+            'raw_payload'         => $validated,
             'received_at'         => $validated['received_at'],
         ]);
 
-        ProcessInboundMessageJob::dispatch($inbound, $validated['tenant_id']);
+        ProcessInboundMessageJob::dispatch($inbound, $waAccount->tenant_id);
 
         return response()->json([
             'status'     => 'queued',
