@@ -5,6 +5,7 @@ namespace App\Modules\Invoice\Services;
 use App\Modules\Auth\Models\User;
 use App\Modules\Booking\Models\Booking;
 use App\Modules\Conversation\Repositories\ConversationRepository;
+use App\Modules\Invoice\Jobs\GenerateInvoicePdfJob;
 use App\Modules\Invoice\Models\Invoice;
 use App\Modules\Invoice\Repositories\InvoiceRepository;
 use App\Modules\Notification\Models\AdminNotification;
@@ -78,6 +79,8 @@ class InvoiceService
             'type'           => $type->value,
         ]);
 
+        GenerateInvoicePdfJob::dispatch($invoice);
+
         return $invoice;
     }
 
@@ -119,7 +122,21 @@ class InvoiceService
 
         $message = $this->formatInvoiceMessage($invoice, $booking);
 
-        $this->gateway->sendText($waAccount->id, $toPhone, $message);
+        $sent = false;
+        if ($invoice->pdf_url) {
+            try {
+                $this->gateway->sendFile($waAccount->id, $toPhone, $invoice->pdf_url, $message);
+                $sent = true;
+            } catch (\Throwable $e) {
+                Log::warning('InvoiceService: sendFile failed, falling back to text.', [
+                    'invoice_id' => $invoice->id,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+        }
+        if (! $sent) {
+            $this->gateway->sendText($waAccount->id, $toPhone, $message);
+        }
 
         $invoice->markSent();
 

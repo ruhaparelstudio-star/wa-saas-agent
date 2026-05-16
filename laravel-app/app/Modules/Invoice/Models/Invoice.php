@@ -23,6 +23,7 @@ class Invoice extends TenantBaseModel
         'amount',
         'due_date',
         'notes',
+        'pdf_url',
         'sent_count',
         'sent_at',
         'paid_at',

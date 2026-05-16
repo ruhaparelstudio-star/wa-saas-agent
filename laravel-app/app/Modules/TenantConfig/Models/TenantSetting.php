@@ -22,6 +22,9 @@ class TenantSetting extends BaseModel
         'google_oauth_token',
         'google_calendar_enabled',
         'google_calendar_email',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_name',
     ];
 
     protected function casts(): array
