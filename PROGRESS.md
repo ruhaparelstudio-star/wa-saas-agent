@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 6 — Analytics, Real OAuth, PDF Generation, Multi-channel
-Sub-task Aktif : Sub-task 6.1
+Sub-task Aktif : Sub-task 6.2
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : chore: Phase 5 Integration Checkpoint DONE — 529 tests pass, gate OPEN
+Last Commit    : feat: AnalyticsService — lead funnel, revenue, conversion metrics
 Last Tag       : v0.6-commerce-complete
 ```
 
@@ -26,8 +26,9 @@ Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT P
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 5 : 9 / 9  sub-task  [▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
+Phase 6 : 1 / 8  sub-task  [▓░░░░░░░] 🔄 IN PROGRESS
 ─────────────────────────────────
-Total   : 54 / 54 sub-task (Phase 0-5)
+Total   : 55 / 62 sub-task
 ```
 
 ---
@@ -1572,6 +1573,38 @@ APP_DEBUG=false        : [ ]
 30 Benchmark Scenarios : - / 30
 Git Tag                : v1.0-production
 ```
+
+---
+
+## PHASE 6 — Analytics, Google OAuth, PDF, Storage, Multi-channel
+
+### Sub-task 6.1 — AnalyticsService (Lead Funnel, Revenue, Conversion)
+```
+Status          : [x] DONE — 2026-05-16
+Files Created   : app/Modules/Analytics/Services/AnalyticsService.php
+                  app/Modules/Analytics/Providers/AnalyticsServiceProvider.php
+                  app/Modules/Analytics/Tests/AnalyticsServiceTest.php
+                  app/Modules/Shared/DTOs/AnalyticsPeriodDTO.php
+                  app/Modules/Shared/DTOs/LeadFunnelDTO.php
+                  app/Modules/Shared/DTOs/RevenueMetricDTO.php
+                  app/Modules/Shared/DTOs/ConversionMetricDTO.php
+                  app/Modules/Shared/DTOs/ResponseTimeMetricDTO.php
+                  app/Modules/Shared/DTOs/TenantAnalyticsSummaryDTO.php
+Tests Pass      : 13 / 13
+  [x] getLeadFunnel — stage distribution + percentage
+  [x] getRevenue — only PAID invoices summed, DP vs PELUNASAN breakdown
+  [x] getConversion — rate calculation, DRAFT excluded
+  [x] getTopPackages — sorted by booking count
+  [x] getSummary ADVANCED=true → full data
+  [x] getSummary ADVANCED=false → basic only (is_advanced=false)
+  [x] makePeriod last_30_days / this_month
+  [x] Tenant isolation: revenue + funnel scoped per tenant
+Notes           : auto-discovered via AppServiceProvider glob; no manual registration needed
+                  ResponseTimeMetricDTO returns null fields when sample_count < 5
+Commit          : feat: AnalyticsService — lead funnel, revenue, conversion metrics
+```
+
+---
 
 ### Integration Checkpoint Phase 5 (FINAL)
 ```
