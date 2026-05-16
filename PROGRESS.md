@@ -7,12 +7,12 @@
 ## STATUS TERKINI
 
 ```
-Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (COMPLETE — awaiting Integration Checkpoint)
-Sub-task Aktif : Integration Checkpoint Phase 5
+Phase Aktif    : Phase 6 — Analytics, Real OAuth, PDF Generation, Multi-channel
+Sub-task Aktif : Sub-task 6.1
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : test: BookingFlowIntegrationTest — E2E pricelist/booking/invoice/calendar/follow-up
-Last Tag       : v0.5-whatsapp-complete
+Last Commit    : chore: Phase 5 Integration Checkpoint DONE — 529 tests pass, gate OPEN
+Last Tag       : v0.6-commerce-complete
 ```
 
 ---
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 9 / 9  sub-task  [▓▓▓▓▓▓▓▓▓] ✅ COMPLETE
+Phase 5 : 9 / 9  sub-task  [▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 ─────────────────────────────────
-Total   : 52 / 54 sub-task
+Total   : 54 / 54 sub-task (Phase 0-5)
 ```
 
 ---
@@ -1575,14 +1575,21 @@ Git Tag                : v1.0-production
 
 ### Integration Checkpoint Phase 5 (FINAL)
 ```
-Status                   : [ ] TODO
-All Tests                : - / - pass
-Benchmark Score          : - / 30
-Security Checklist       : - / 100%
-Tenant Isolation Final   : [ ]
-Production Deployed      : [ ]
-Human Review Final       : [ ] 3+ external testers
-Gate                     : [ ] PRODUCTION READY
+Status                   : [x] DONE — 2026-05-16
+All Tests                : 529 / 529 pass (1081 assertions)
+  - Phase 5 specific     : 116 tests (PricelistService, Booking, Invoice, Calendar, FollowUp, E2E)
+  - Regression           : all Phase 0-4 tests still passing
+Fix Applied              : phpunit.xml memory_limit=512M (was 128M, caused premature process end)
+Docker Containers        : 10 / 10 running (all healthy)
+migrate:fresh --seed     : ✅ all 31 migrations + seeder OK
+followups:schedule       : ✅ hourly schedule active
+CalendarProviderInterface: ✅ NullCalendarAdapter default, google when CALENDAR_PROVIDER=google
+Booking code format      : ✅ BKG-YYYYMM-XXXX verified
+Invoice number format    : ✅ INV-YYYYMM-XXXX verified
+Pricelist text           : ✅ buildTextPricelist includes package name + price
+Filament /app            : ✅ HTTP 302 (redirect to login — correct)
+Git Tag                  : v0.6-commerce-complete
+Gate                     : [x] OPEN untuk Phase 6
 ```
 
 ---
@@ -1676,4 +1683,27 @@ ID    | Sub-task | Shortcut | Fix Deadline
 [Phase 4 selesai]:
 - WA Gateway contract yang fixed: -
 - Hal penting Phase 5: -
+
+[Phase 5 selesai — 2026-05-16]:
+- Pricelist mode: pdf/text/hybrid/disabled dikontrol PolicyKey::PRICELIST_MODE
+  PRICELIST_MIN_REQUIREMENT: never/after_qualification/after_event_date
+  Action send_pricelist di-emit oleh DecisionEngineService, di-execute oleh ActionDispatcher
+- Booking concurrent lock: lockForUpdate() di dalam DB::transaction — WAJIB untuk semua availability check
+  Unique constraint di DB: [tenant_id, event_date, event_type] WHERE status IN ('confirmed','awaiting_dp','paid')
+  booking_code format: BKG-YYYYMM-XXXX (sequence per bulan per tenant)
+- Calendar sync: CalendarProviderInterface → NullCalendarAdapter (default) / GoogleCalendarAdapter
+  env CALENDAR_PROVIDER=google untuk enable; booking.calendar_event_id disimpan setelah createEvent
+  Jika createEvent gagal → booking tetap CONFIRMED (calendar adalah side-effect, bukan blocker)
+- Invoice resend guard: canResend() cek sent_count < PolicyKey::INVOICE_MAX_RESEND
+  POST_INVOICE_LIMITED stage: konversasi dibatasi setelah invoice dikirim
+- Follow-up idempotency: Redis lock key follow_up:{conv_id}:{reason}:{date} TTL 24h
+  4 reasons: STALE_LEAD, BOOKING_PENDING_DP, INVOICE_OVERDUE, EVENT_REMINDER_H7
+  Feature flag FOLLOW_UP_AUTOMATION per tenant
+- phpunit.xml memory_limit=512M diperlukan (dari 128M) agar full test suite tidak crash
+- Hal penting untuk Phase 6 (Analytics, real Google OAuth, PDF generation, multi-channel):
+  * Google OAuth flow Phase 6 — saat ini Phase 5 pakai manual paste token di CalendarSettingsPage
+  * PDF invoice generation Phase 6 — saat ini invoice dikirim sebagai teks WA
+  * Analytics advanced (FeatureKey::ANALYTICS_ADVANCED) Phase 6
+  * Multi-channel (FeatureKey::MULTI_CHANNEL) Phase 6
+  * Seeder demo sudah ada di WeddingDemoSeeder — gunakan untuk E2E manual testing
 ```

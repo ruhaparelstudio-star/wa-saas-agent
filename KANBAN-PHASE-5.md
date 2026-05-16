@@ -1142,7 +1142,7 @@ Git commit: "test: BookingFlowIntegrationTest — E2E pricelist/booking/invoice/
 ---
 
 ### INTEGRATION CHECKPOINT — PHASE 5
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 
 **PROMPT:**
 ```
