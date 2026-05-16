@@ -45,4 +45,12 @@ return [
         'callback_base'   => env('WA_GATEWAY_CALLBACK_BASE', 'http://nginx'),
     ],
 
+    'calendar' => [
+        'provider' => env('CALENDAR_PROVIDER', 'null'),
+    ],
+
+    'google_calendar' => [
+        'base_url' => env('GOOGLE_CALENDAR_BASE_URL', 'https://www.googleapis.com/calendar/v3'),
+    ],
+
 ];

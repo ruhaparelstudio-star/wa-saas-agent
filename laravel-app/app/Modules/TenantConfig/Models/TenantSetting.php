@@ -19,6 +19,7 @@ class TenantSetting extends BaseModel
         'business_hours_end',
         'business_days',
         'after_hours_message',
+        'google_oauth_token',
     ];
 
     protected function casts(): array

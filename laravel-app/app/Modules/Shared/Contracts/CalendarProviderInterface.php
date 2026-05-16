@@ -2,13 +2,19 @@
 
 namespace App\Modules\Shared\Contracts;
 
-use App\Modules\Shared\DTOs\AvailabilityResultDTO;
+use App\Modules\Shared\DTOs\CalendarEventDTO;
 
 interface CalendarProviderInterface
 {
-    /** Check if a date is available for booking. */
-    public function checkAvailability(string $date, string $tenantId): AvailabilityResultDTO;
+    /** Create a calendar event. Returns the external event id, or null if disabled/failed. */
+    public function createEvent(string $tenantId, CalendarEventDTO $event): ?string;
 
-    /** Get all events on a specific date for a calendar. */
-    public function getEventsOnDate(string $date, string $calendarId): array;
+    /** Update an existing calendar event. Returns true on success. */
+    public function updateEvent(string $tenantId, string $eventId, CalendarEventDTO $event): bool;
+
+    /** Delete a calendar event. Returns true on success. */
+    public function deleteEvent(string $tenantId, string $eventId): bool;
+
+    /** Fetch a calendar event by external id. Returns null if not found or disabled. */
+    public function getEvent(string $tenantId, string $eventId): ?CalendarEventDTO;
 }

@@ -599,7 +599,7 @@ Git commit: "feat: Invoice model + service — issue, send, mark paid, overdue s
 ---
 
 ### SUB-TASK 5.5 — CalendarProviderInterface + GoogleCalendarAdapter (Stub Safe)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 5.4 selesai
 **Estimated Time:** 2 jam
 

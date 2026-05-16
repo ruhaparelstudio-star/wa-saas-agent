@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.5 — CalendarProviderInterface + GoogleCalendarAdapter
+Sub-task Aktif : 5.6 — Booking ↔ Calendar Sync
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : feat: Invoice model + service — issue, send, mark paid, overdue scan
+Last Commit    : feat: CalendarProviderInterface + Google/Null adapters — calendar foundation
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 4 / 9  sub-task  [▓▓▓▓░░░░░]
+Phase 5 : 5 / 9  sub-task  [▓▓▓▓▓░░░░]
 ─────────────────────────────────
-Total   : 47 / 54 sub-task
+Total   : 48 / 54 sub-task
 ```
 
 ---
@@ -1417,11 +1417,34 @@ Tests Pass          : 13 / 13 new  (full suite: 442+ passing)
 Commit              : feat: Invoice model + service — issue, send, mark paid, overdue scan
 ```
 
-### Sub-task 5.5 — Memory & Follow-up System
+### Sub-task 5.5 — CalendarProviderInterface + GoogleCalendarAdapter (Stub Safe)
 ```
-Status     : [ ] TODO
-Tests Pass : - / -
-Commit     : -
+Status        : [x] DONE — 2026-05-16
+Files Created :
+  app/Modules/Shared/DTOs/CalendarEventDTO.php
+  app/Modules/Shared/Contracts/CalendarProviderInterface.php (updated — CRUD interface)
+  app/Modules/Calendar/Adapters/GoogleCalendarAdapter.php
+  app/Modules/Calendar/Adapters/NullCalendarAdapter.php
+  app/Modules/Calendar/Providers/CalendarServiceProvider.php
+  app/Modules/Calendar/Tests/CalendarAdapterTest.php
+  database/migrations/2026_05_15_000001_add_google_oauth_token_to_tenant_settings.php
+Files Updated :
+  app/Modules/Notification/Services/NotificationService.php (+ notifyCalendarError)
+  app/Modules/TenantConfig/Models/TenantSetting.php (+ google_oauth_token fillable)
+  config/services.php (+ calendar + google_calendar config)
+Tenant Isolation : [x] google_oauth_token per tenant, no cross-tenant token use
+Feature Gate     : [x] FeatureGateService::isCalendarEnabled — no-op jika disabled
+Http::fake       : [x] Google Calendar API dapat di-fake sepenuhnya untuk test
+Tests Pass       : 14 / 14 new  (full suite: 432+ passing)
+Commit           : feat: CalendarProviderInterface + Google/Null adapters — calendar foundation
+Notes:
+  - CalendarProviderInterface diperbarui dari checkAvailability/getEventsOnDate
+    menjadi CRUD: createEvent/updateEvent/deleteEvent/getEvent
+  - CALENDAR_PROVIDER=null (default) → NullCalendarAdapter (no-op)
+  - CALENDAR_PROVIDER=google → GoogleCalendarAdapter (Http-based, fakeable)
+  - google_oauth_token disimpan di tenant_settings per tenant (Phase 5 manual paste)
+  - Real Google OAuth flow → Phase 6
+  - NotificationService::notifyCalendarError dipanggil saat Google API error
 ```
 
 ### Sub-task 5.6 — Analytics Dashboard

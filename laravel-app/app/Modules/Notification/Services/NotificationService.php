@@ -115,6 +115,35 @@ class NotificationService
         ]);
     }
 
+    public function notifyCalendarError(string $tenantId, string $context, string $error): void
+    {
+        $admins = $this->getTenantAdmins($tenantId);
+
+        $title = 'Google Calendar Sync Error';
+        $body  = sprintf('Gagal sinkronisasi calendar: %s. Error: %s', $context, $error);
+
+        foreach ($admins as $admin) {
+            AdminNotification::create([
+                'tenant_id' => $tenantId,
+                'user_id'   => $admin->id,
+                'type'      => NotificationType::CALENDAR_ERROR->value,
+                'title'     => $title,
+                'body'      => $body,
+                'data'      => [
+                    'context' => $context,
+                    'error'   => $error,
+                ],
+            ]);
+        }
+
+        Log::error('NotificationService: calendar_error notification sent.', [
+            'tenant_id'   => $tenantId,
+            'context'     => $context,
+            'error'       => $error,
+            'admin_count' => $admins->count(),
+        ]);
+    }
+
     public function markAllRead(string $userId): void
     {
         AdminNotification::withoutGlobalScopes()
