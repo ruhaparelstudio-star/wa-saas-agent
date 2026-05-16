@@ -797,7 +797,7 @@ Git commit: "feat: Booking ↔ Calendar sync — create/update/delete via provid
 ---
 
 ### SUB-TASK 5.7 — Follow-up Automation (FollowUpJob + Scheduler)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 5.6 selesai
 **Estimated Time:** 2 jam
 

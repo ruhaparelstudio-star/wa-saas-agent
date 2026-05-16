@@ -213,6 +213,7 @@ class BookingFlowTest extends TestCase
             $this->bookingRepo,
             app(NotificationService::class),
             $this->convRepo,
+            app(\App\Modules\Shared\Contracts\CalendarProviderInterface::class),
         );
 
         return new TurnPipelineService(

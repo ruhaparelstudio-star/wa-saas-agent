@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.7 — Follow-up Automation (FollowUpJob + Scheduler)
+Sub-task Aktif : 5.8 — Filament Tenant Panel: Bookings + Invoices + Calendar Status
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : feat: Booking ↔ Calendar sync — create/update/delete via provider
+Last Commit    : feat: FollowUpService — stale lead, pending DP, overdue, H-7 reminder
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 6 / 9  sub-task  [▓▓▓▓▓▓░░░]
+Phase 5 : 7 / 9  sub-task  [▓▓▓▓▓▓▓░░]
 ─────────────────────────────────
-Total   : 49 / 54 sub-task
+Total   : 50 / 54 sub-task
 ```
 
 ---
@@ -1474,17 +1474,50 @@ Tests Pass    : 10 new (BookingCalendarSyncTest), full suite 22/22 (BookingServi
 Commit        : feat: Booking ↔ Calendar sync — create/update/delete via provider
 ```
 
-### Sub-task 5.7 — Security Hardening
+### Sub-task 5.7 — Follow-up Automation (FollowUpJob + Scheduler)
 ```
-Status                  : [ ] TODO
-Internal Secret         : [ ]
-Rate Limiting           : [ ]
-Tenant Isolation Test   : [ ]
-File Upload Security    : [ ]
-Log Sanitization        : [ ]
-PII Handling            : [ ]
-Tests Pass              : - / -
-Commit                  : -
+Status        : [x] DONE — 2026-05-16
+Files Created :
+  app/Modules/Shared/Enums/FollowUpReason.php
+    STALE_LEAD | BOOKING_PENDING_DP | INVOICE_OVERDUE | EVENT_REMINDER_H7
+  app/Modules/Shared/DTOs/FollowUpCandidateDTO.php
+    readonly class, static from() factory
+  database/migrations/2026_05_12_900001_create_follow_up_logs_table.php
+    follow_up_logs: tenant_id, conversation_id, booking_id, invoice_id,
+    reason, sent_at, message_body, delivered, metadata
+    INDEX [tenant_id, sent_at] | INDEX [conversation_id, reason]
+  app/Modules/FollowUp/Models/FollowUpLog.php
+  app/Modules/FollowUp/Services/FollowUpService.php
+    findCandidates(): 4 query (STALE_LEAD, PENDING_DP, OVERDUE, H7)
+    sendFollowUp(): Redis lock 24h TTL + DB fallback guard + FollowUpLog save
+    buildMessage(): template per reason (tidak pakai LLM)
+  app/Modules/FollowUp/Jobs/FollowUpJob.php
+    queue=follow_ups, featureGate check dulu
+  app/Modules/FollowUp/Console/ScheduleFollowUpsCommand.php
+    signature=followups:schedule, dispatch ke semua tenant ACTIVE
+  app/Modules/FollowUp/Providers/FollowUpServiceProvider.php
+    auto-register ScheduleFollowUpsCommand
+  app/Modules/FollowUp/Tests/FollowUpServiceTest.php
+    12 tests: STALE_LEAD, PENDING_DP, OVERDUE, H7, send, idempotency,
+              feature disabled no-op, tenant isolation
+Files Updated :
+  routes/console.php: Schedule::command('followups:schedule')->hourly()
+  tests/Feature/Pipeline/BookingFlowTest.php: inject CalendarProviderInterface (fix 5.6 gap)
+Follow-up Behavior:
+  [x] STALE_LEAD: lead WARM/HOT + last_message_at > 24h → candidate
+  [x] STALE_LEAD: lead WARM + last_message_at < 24h → excluded
+  [x] COLD lead → excluded (only WARM/HOT trigger)
+  [x] BOOKING_PENDING_DP: AWAITING_DP + updated_at > 48h → candidate
+  [x] BOOKING_PENDING_DP: fresh → excluded
+  [x] INVOICE_OVERDUE: SENT + due_date lewat → candidate
+  [x] EVENT_REMINDER_H7: CONFIRMED/PAID + event_date = H-7 → candidate
+  [x] sendFollowUp: FollowUpLog tersimpan + gateway dipanggil
+  [x] Idempotency: Redis lock 24h + DB guard → 2nd call return false
+  [x] Feature disabled: FollowUpJob no-op, tidak ada log/HTTP
+  [x] Tenant isolation: tenant A tidak dapat kandidat dari tenant B
+  [x] Scheduler: hourly via routes/console.php
+Tests Pass    : 12 new (FollowUpServiceTest) + 4 fixed (BookingFlowTest) = 16 total fixes
+Commit        : feat: FollowUpService — stale lead, pending DP, overdue, H-7 reminder
 ```
 
 ### Sub-task 5.8 — Production Docker & Deploy Pack
