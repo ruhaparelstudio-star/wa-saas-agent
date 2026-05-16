@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.4 — Invoice Model + Migration + InvoiceService
+Sub-task Aktif : 5.5 — CalendarProviderInterface + GoogleCalendarAdapter
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : feat: BookingService — concurrent lock, create/confirm/cancel, pipeline action
+Last Commit    : feat: Invoice model + service — issue, send, mark paid, overdue scan
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 3 / 9  sub-task  [▓▓▓░░░░░░]
+Phase 5 : 4 / 9  sub-task  [▓▓▓▓░░░░░]
 ─────────────────────────────────
-Total   : 46 / 54 sub-task
+Total   : 47 / 54 sub-task
 ```
 
 ---
@@ -1394,13 +1394,27 @@ Tests Pass          : 16 / 16 new  (full suite: 454+ passing)
 Commit              : feat: BookingService — concurrent lock, create/confirm/cancel, pipeline action
 ```
 
-### Sub-task 5.4 — Google Calendar Integration
+### Sub-task 5.4 — Invoice Model + Migration + InvoiceService
 ```
-Status            : [ ] TODO
-Feature Gate      : [ ]
-Concurrent Lock   : [ ]
-Tests Pass        : - / -
-Commit            : -
+Status              : [x] DONE — 2026-05-16
+Files               : app/Modules/Shared/Enums/InvoiceStatus.php (new)
+                      app/Modules/Shared/Enums/InvoiceType.php (new)
+                      database/migrations/2026_05_12_800001_create_invoices_table.php (new)
+                      app/Modules/Invoice/Models/Invoice.php (new)
+                      app/Modules/Invoice/Repositories/InvoiceRepository.php (new)
+                      app/Modules/Invoice/Services/InvoiceService.php (new)
+                      app/Modules/Invoice/Providers/InvoiceServiceProvider.php (new — auto-discovered)
+                      app/Modules/Invoice/Tests/InvoiceServiceTest.php (new — 13 tests)
+Methods             : issue (create invoice ISSUED, booking→AWAITING_DP, conv→INVOICE_PHASE, notify admin)
+                      send (canResend check, gateway sendText, markSent, conv→POST_INVOICE_LIMITED)
+                      markPaid (markPaid, booking→PAID, conv→BOOKING, notify admin)
+                      markCancelled (status→CANCELLED)
+                      getOverdueByTenant (auto-mark SENT→OVERDUE when isOverdue)
+                      generateInvoiceNumber (INV-YYYYMM-XXXX, sequential global lock)
+Resend Guard        : canResend(maxResend) via PolicyKey::INVOICE_MAX_RESEND (default: 3)
+Tenant Isolation    : [x] TenantBaseModel + withoutGlobalScopes where needed
+Tests Pass          : 13 / 13 new  (full suite: 442+ passing)
+Commit              : feat: Invoice model + service — issue, send, mark paid, overdue scan
 ```
 
 ### Sub-task 5.5 — Memory & Follow-up System

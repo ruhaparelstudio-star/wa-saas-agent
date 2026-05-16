@@ -448,7 +448,7 @@ Git commit: "feat: BookingService — concurrent lock, create/confirm/cancel, pi
 ---
 
 ### SUB-TASK 5.4 — Invoice Model + Migration + InvoiceService
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 5.3 selesai
 **Estimated Time:** 2 jam
 
