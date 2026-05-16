@@ -1606,6 +1606,27 @@ Commit          : feat: AnalyticsService — lead funnel, revenue, conversion me
 
 ---
 
+### Sub-task 6.2 — Filament Analytics Dashboard (Tenant + Superadmin)
+```
+Status          : [x] DONE — 2026-05-16
+Files Created   : app/Filament/Superadmin/Pages/CrossTenantAnalyticsPage.php
+                  resources/views/filament/superadmin/pages/cross-tenant-analytics.blade.php
+                  app/Filament/Tenant/Widgets/RevenueStatWidget.php
+                  app/Filament/Tenant/Widgets/ConversionStatWidget.php
+                  tests/Feature/Filament/FilamentAnalyticsTest.php
+Tests Pass      : 5 / 5
+  [x] Tenant admin GET /app/analytics → 200
+  [x] Feature disabled → upgrade notice shown, no error
+  [x] Revenue shown in IDR format (Rp prefix)
+  [x] Superadmin GET /superadmin/analytics → 200
+  [x] Tenant admin blocked from superadmin analytics
+Notes           : CrossTenantAnalyticsPage auto-discovered via discoverPages in SuperadminPanelProvider
+                  RevenueStatWidget + ConversionStatWidget auto-discovered via discoverWidgets
+Commit          : feat: Filament Analytics — tenant dashboard + superadmin cross-tenant
+```
+
+---
+
 ### Integration Checkpoint Phase 5 (FINAL)
 ```
 Status                   : [x] DONE — 2026-05-16
