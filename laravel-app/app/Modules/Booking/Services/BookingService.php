@@ -317,15 +317,15 @@ class BookingService
         $dateStr  = $booking->event_date->toDateString();
         $startStr = $booking->event_time_start ?? '08:00';
 
-        $startAt = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$startStr}", $timezone)
+        $startAt = Carbon::parse("{$dateStr} {$startStr}", $timezone)
             ->setTimezone('UTC')
             ->toIso8601String();
 
         $endAt = $booking->event_time_end
-            ? Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$booking->event_time_end}", $timezone)
+            ? Carbon::parse("{$dateStr} {$booking->event_time_end}", $timezone)
                 ->setTimezone('UTC')
                 ->toIso8601String()
-            : Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$startStr}", $timezone)
+            : Carbon::parse("{$dateStr} {$startStr}", $timezone)
                 ->addHours(4)
                 ->setTimezone('UTC')
                 ->toIso8601String();

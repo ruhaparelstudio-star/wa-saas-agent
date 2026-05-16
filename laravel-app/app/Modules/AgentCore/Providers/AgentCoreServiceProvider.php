@@ -45,6 +45,14 @@ class AgentCoreServiceProvider extends ServiceProvider
 
         $this->app->bind(DecisionEngineInterface::class, DecisionEngineService::class);
 
+        // Explicit binding so PricelistService is always injected in the webhook path.
+        $this->app->bind(DecisionEngineService::class, function ($app) {
+            return new DecisionEngineService(
+                $app->make(\App\Modules\TenantConfig\Services\BusinessHoursService::class),
+                $app->make(PricelistService::class),
+            );
+        });
+
         $this->app->bind(ResponseComposerInterface::class, ResponseComposerService::class);
 
         $this->app->bind(ChannelGatewayInterface::class, WhatsAppGatewayAdapter::class);
@@ -55,6 +63,7 @@ class AgentCoreServiceProvider extends ServiceProvider
                 $app->make(\App\Modules\Conversation\Repositories\ConversationRepository::class),
                 $app->make(\App\Modules\Handoff\Services\HandoffService::class),
                 $app->make(PricelistService::class),
+                $app->make(\App\Modules\Booking\Services\BookingService::class),
             );
         });
     }

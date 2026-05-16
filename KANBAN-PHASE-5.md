@@ -1041,7 +1041,7 @@ Git commit: "feat: Filament Tenant — BookingResource, InvoiceResource, Calenda
 ---
 
 ### SUB-TASK 5.9 — E2E Integration Test Phase 5
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 5.8 selesai
 **Estimated Time:** 1.5 jam
 

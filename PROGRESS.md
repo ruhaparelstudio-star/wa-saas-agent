@@ -7,11 +7,11 @@
 ## STATUS TERKINI
 
 ```
-Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.9 — E2E Integration Test Phase 5
+Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (COMPLETE — awaiting Integration Checkpoint)
+Sub-task Aktif : Integration Checkpoint Phase 5
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : feat: Filament Tenant — BookingResource, InvoiceResource, Calendar settings
+Last Commit    : test: BookingFlowIntegrationTest — E2E pricelist/booking/invoice/calendar/follow-up
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 8 / 9  sub-task  [▓▓▓▓▓▓▓▓░]
+Phase 5 : 9 / 9  sub-task  [▓▓▓▓▓▓▓▓▓] ✅ COMPLETE
 ─────────────────────────────────
-Total   : 51 / 54 sub-task
+Total   : 52 / 54 sub-task
 ```
 
 ---
@@ -1538,6 +1538,27 @@ Notes           : BookingResource: Confirm/Cancel/Reschedule/SendInvoice actions
                   UpcomingBookingsWidget: next 14 days, OverdueInvoicesWidget: stats
                   Action classes use Filament\Actions\* (not Filament\Tables\Actions\*)
                   CalendarSettingsPage slug = 'calendar-settings' (custom $slug)
+```
+
+### Sub-task 5.9 — E2E Integration Test Phase 5
+```
+Status          : [x] DONE — 2026-05-16
+Files Created   : tests/Feature/Integration/BookingFlowIntegrationTest.php (9 tests)
+Files Modified  : app/Modules/Booking/Services/BookingService.php (Carbon::parse fix)
+                  app/Modules/AgentCore/Providers/AgentCoreServiceProvider.php (explicit bindings)
+Tests Pass      : 9 / 9
+  [x] test_full_pricelist_flow_pdf_mode              — pipeline + Http dispatch assert
+  [x] test_pricelist_blocked_by_policy_disabled      — blocked_actions contain send_pricelist
+  [x] test_booking_create_draft_via_pipeline         — Booking DRAFT + stage WAITING_BOOKING
+  [x] test_booking_concurrent_date_conflict          — createDraft returns null on conflict
+  [x] test_invoice_flow_issue_send_pay               — issue → send → markPaid → PAID
+  [x] test_booking_confirm_creates_calendar_event    — calendar_event_id persisted to booking
+  [x] test_booking_cancel_deletes_calendar_event     — deleteEvent called with correct event_id
+  [x] test_follow_up_stale_lead_sent                 — FollowUpLog created, idempotent
+  [x] test_follow_up_feature_disabled_no_op          — 0 FollowUpLog when feature off
+Bug Fixed       : BookingService::buildCalendarEvent — Carbon::createFromFormat('Y-m-d H:i')
+                  fails on PostgreSQL TIME columns (returns HH:MM:SS); switched to Carbon::parse
+Commit          : test: BookingFlowIntegrationTest — E2E pricelist/booking/invoice/calendar/follow-up
 ```
 
 ### Sub-task 5.9 — Production Smoke Test
