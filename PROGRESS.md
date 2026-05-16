@@ -1606,6 +1606,28 @@ Commit          : feat: AnalyticsService — lead funnel, revenue, conversion me
 
 ---
 
+### Sub-task 6.4 — R2StorageAdapter (StorageProviderInterface)
+```
+Status          : [x] DONE — 2026-05-17
+Files Created   : app/Modules/Shared/Storage/NullStorageAdapter.php
+                  app/Modules/Storage/Adapters/R2StorageAdapter.php
+                  app/Modules/Storage/Providers/StorageServiceProvider.php
+                  app/Modules/Storage/Tests/StorageAdapterTest.php
+Files Updated   : config/filesystems.php (r2 disk added)
+                  .env.example (R2_* vars already added in 6.3)
+Tests Pass      : 7 / 7
+  [x] NullStorageAdapter upload/getUrl/delete
+  [x] R2StorageAdapter upload → Storage::fake('r2') assertExists
+  [x] R2StorageAdapter getUrl with R2_PUBLIC_URL → uses custom domain
+  [x] R2StorageAdapter delete → file removed
+  [x] StorageProviderInterface binding → NullAdapter (no R2 config in test)
+Notes           : StorageServiceProvider auto-discovered via AppServiceProvider glob
+                  league/flysystem-aws-s3-v3 installed
+Commit          : feat: R2StorageAdapter — StorageProviderInterface impl, Cloudflare R2/S3-compat
+```
+
+---
+
 ### Sub-task 6.3 — Google OAuth 2.0 Real Flow
 ```
 Status          : [x] DONE — 2026-05-16
