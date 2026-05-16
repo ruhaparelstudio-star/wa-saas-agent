@@ -14,16 +14,20 @@ class TenantSubscription extends BaseModel
         'starts_at',
         'ends_at',
         'trial_ends_at',
+        'current_period_start',
+        'current_period_end',
     ];
 
     protected function casts(): array
     {
         return [
-            'starts_at' => 'datetime',
-            'ends_at' => 'datetime',
-            'trial_ends_at' => 'datetime',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
+            'starts_at'            => 'datetime',
+            'ends_at'              => 'datetime',
+            'trial_ends_at'        => 'datetime',
+            'current_period_start' => 'datetime',
+            'current_period_end'   => 'datetime',
+            'created_at'           => 'datetime',
+            'updated_at'           => 'datetime',
         ];
     }
 
@@ -53,5 +57,14 @@ class TenantSubscription extends BaseModel
     public function isTrial(): bool
     {
         return $this->status === 'trial';
+    }
+
+    public function isInCurrentPeriod(Carbon $date): bool
+    {
+        if ($this->current_period_start === null || $this->current_period_end === null) {
+            return false;
+        }
+
+        return $date->between($this->current_period_start, $this->current_period_end);
     }
 }

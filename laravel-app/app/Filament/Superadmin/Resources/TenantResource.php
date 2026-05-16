@@ -134,17 +134,23 @@ class TenantResource extends Resource
                     ->action(function (Tenant $record, array $data) {
                         $plan = Plan::findOrFail($data['plan_id']);
                         $trialDays = (int) ($data['trial_days'] ?? 0);
+                        $now = now();
 
                         TenantSubscription::updateOrCreate(
                             ['tenant_id' => $record->id],
                             [
-                                'plan_id' => $plan->id,
-                                'status' => $trialDays > 0 ? 'trial' : 'active',
-                                'starts_at' => now(),
-                                'ends_at' => null,
-                                'trial_ends_at' => $trialDays > 0 ? now()->addDays($trialDays) : null,
+                                'plan_id'              => $plan->id,
+                                'status'               => $trialDays > 0 ? 'trial' : 'active',
+                                'starts_at'            => $now,
+                                'ends_at'              => null,
+                                'trial_ends_at'        => $trialDays > 0 ? $now->copy()->addDays($trialDays) : null,
+                                'current_period_start' => $now,
+                                'current_period_end'   => $now->copy()->addMonth(),
                             ]
                         );
+
+                        $tenantStatus = $trialDays > 0 ? TenantStatus::TRIAL : TenantStatus::ACTIVE;
+                        app(TenantService::class)->updateStatus($record, $tenantStatus);
 
                         app(FeatureGateService::class)->clearCache($record->id);
 

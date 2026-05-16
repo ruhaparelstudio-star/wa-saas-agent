@@ -21,6 +21,7 @@ class TenantSetting extends BaseModel
         'after_hours_message',
         'google_oauth_token',
         'google_calendar_enabled',
+        'google_calendar_email',
     ];
 
     protected function casts(): array

@@ -4,7 +4,7 @@ namespace App\Filament\Tenant\Pages;
 
 use App\Modules\TenantConfig\Models\TenantSetting;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -42,7 +42,7 @@ class CalendarSettingsPage extends Page
 
         $this->form->fill([
             'google_calendar_enabled' => (bool) ($setting?->google_calendar_enabled ?? false),
-            'google_oauth_token'      => $setting?->google_oauth_token ?? '',
+            'google_calendar_email'   => $setting?->google_calendar_email ?? '',
         ]);
     }
 
@@ -53,11 +53,11 @@ class CalendarSettingsPage extends Page
                 ->label('Aktifkan Google Calendar')
                 ->helperText('Sinkronkan booking dengan Google Calendar milik tenant.')
                 ->live(),
-            Textarea::make('google_oauth_token')
-                ->label('OAuth Token Google (manual Phase 5)')
-                ->helperText('Paste token dari Google OAuth Playground. Phase 6 akan pakai flow otomatis.')
-                ->rows(4)
-                ->placeholder('ya29.xxx...')
+            TextInput::make('google_calendar_email')
+                ->label('Email Google Calendar')
+                ->helperText('Masukkan email akun Google yang akan disinkronkan dengan booking.')
+                ->email()
+                ->placeholder('nama@gmail.com')
                 ->visible(fn ($get) => (bool) $get('google_calendar_enabled')),
         ])->statePath('data');
     }
@@ -80,7 +80,7 @@ class CalendarSettingsPage extends Page
             ['tenant_id' => $tenantId],
             [
                 'google_calendar_enabled' => (bool) ($data['google_calendar_enabled'] ?? false),
-                'google_oauth_token'      => $data['google_oauth_token'] ?? null,
+                'google_calendar_email'   => $data['google_calendar_email'] ?? null,
             ]
         );
 
