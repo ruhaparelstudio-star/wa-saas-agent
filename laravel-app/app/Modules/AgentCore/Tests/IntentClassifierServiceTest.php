@@ -223,10 +223,11 @@ class IntentClassifierServiceTest extends TestCase
         $this->assertStringNotContainsString('message 2', $prompt);
     }
 
-    public function test_all_20_valid_intents_are_defined(): void
+    public function test_all_valid_intents_are_defined(): void
     {
-        $this->assertCount(20, IntentClassifierService::VALID_INTENTS);
+        $this->assertCount(21, IntentClassifierService::VALID_INTENTS);
         $this->assertContains('greeting', IntentClassifierService::VALID_INTENTS);
+        $this->assertContains('request_booking', IntentClassifierService::VALID_INTENTS);
         $this->assertContains('handoff_request', IntentClassifierService::VALID_INTENTS);
         $this->assertContains('invoice_inquiry', IntentClassifierService::VALID_INTENTS);
     }

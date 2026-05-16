@@ -316,7 +316,7 @@ Git commit: "feat: Booking model, migration, repository — booking foundation"
 ---
 
 ### SUB-TASK 5.3 — BookingService + Concurrent Lock + CreateBookingAction
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 5.2 selesai
 **Estimated Time:** 2 jam
 

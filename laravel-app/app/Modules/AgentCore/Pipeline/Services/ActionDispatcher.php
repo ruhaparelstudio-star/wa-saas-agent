@@ -2,6 +2,7 @@
 
 namespace App\Modules\AgentCore\Pipeline\Services;
 
+use App\Modules\Booking\Services\BookingService;
 use App\Modules\Conversation\Repositories\ConversationRepository;
 use App\Modules\Handoff\Services\HandoffService;
 use App\Modules\Knowledge\Services\PricelistService;
@@ -18,6 +19,7 @@ class ActionDispatcher
         private readonly ConversationRepository $conversations,
         private readonly ?HandoffService $handoffService = null,
         private readonly ?PricelistService $pricelistService = null,
+        private readonly ?BookingService $bookingService = null,
     ) {}
 
     /**
@@ -74,7 +76,8 @@ class ActionDispatcher
                 'update_lead'            => $this->updateLead($context),
                 'flag_handoff'           => $this->flagHandoff($context, $decision),
                 'send_pricelist'         => $this->sendPricelist($context, $reply, $pricelistMode),
-                'increment_message_count' => null, // handled by addMessage above
+                'create_booking'         => $this->createBooking($context, $decision),
+                'increment_message_count' => null,
                 default                  => null,
             };
 
@@ -231,6 +234,44 @@ class ActionDispatcher
         }
 
         return $sent;
+    }
+
+    public function createBooking(TurnContextDTO $context, DecisionDTO $decision): void
+    {
+        if ($this->bookingService === null) {
+            Log::info('ActionDispatcher: BookingService not configured, skipping create_booking.');
+            return;
+        }
+
+        $entities = $context->entities->entities ?? [];
+        if (empty($entities['event_date'])) {
+            Log::info('ActionDispatcher: create_booking skipped — event_date missing.', [
+                'conversation_id' => $context->conversation->id,
+            ]);
+            return;
+        }
+
+        $booking = $this->bookingService->createDraft($context);
+
+        if ($booking === null) {
+            Log::info('ActionDispatcher: create_booking — date unavailable.', [
+                'tenant_id'  => $context->tenant->id,
+                'event_date' => $entities['event_date'],
+            ]);
+            return;
+        }
+
+        // Store booking code in conversation metadata so the composer can reference it
+        $conversation = $this->conversations->findById($context->conversation->id);
+        if ($conversation !== null) {
+            $meta = $conversation->entity_cache ?? [];
+            $meta['last_booking_code'] = $booking->booking_code;
+            $conversation->update(['entity_cache' => $meta]);
+        }
+
+        Log::info('ActionDispatcher: booking draft created.', [
+            'booking_code' => $booking->booking_code,
+        ]);
     }
 
     private function flagHandoff(TurnContextDTO $context, DecisionDTO $decision): void

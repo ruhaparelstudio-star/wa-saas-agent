@@ -174,6 +174,7 @@ class DecisionEngineService implements DecisionEngineInterface
             'ask_payment', 'payment_topic'                  => ['send_payment_info'],
             'ask_booking', 'provide_budget'                 => ['send_booking_info'],
             'confirm_booking'                               => ['initiate_booking'],
+            'request_booking'                               => ['send_booking_info'],
             'cancel_booking'                                => ['cancel_booking_flow'],
             'objection_price', 'objection_trust',
             'objection_timing'                              => ['handle_objection', 'send_grounded_reply'],
@@ -187,6 +188,14 @@ class DecisionEngineService implements DecisionEngineInterface
             && !in_array('send_pricelist', $actions, true)
         ) {
             $actions[] = 'send_pricelist';
+        }
+
+        // Booking intent fan-out — create_booking when event_date is known
+        if (in_array($intent, ['confirm_booking', 'request_booking'], true)
+            && !empty($entities['event_date'])
+            && !in_array('create_booking', $actions, true)
+        ) {
+            $actions[] = 'create_booking';
         }
 
         return $actions;
@@ -227,13 +236,17 @@ class DecisionEngineService implements DecisionEngineInterface
         $intent       = $context->intent->intent;
         $entities     = $context->entities->entities;
 
+        // If a booking creation is desired, transition to WAITING_BOOKING
+        if (in_array('create_booking', $desiredActions, true)) {
+            return ConversationStage::WAITING_BOOKING->value;
+        }
+
         return match ($currentStage) {
             ConversationStage::NEW_LEAD     => $this->transitionFromNewLead($intent),
             ConversationStage::EXPLORATION  => $this->transitionFromExploration($entities),
             ConversationStage::QUALIFICATION => $this->transitionFromQualification($entities),
             ConversationStage::RECOMMENDATION => $this->transitionFromRecommendation($entities),
             ConversationStage::CONSIDERATION => $this->transitionFromConsideration($intent),
-            ConversationStage::BOOKING      => ConversationStage::WAITING_BOOKING->value,
             default                         => null,
         };
     }

@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.3 — BookingService + Concurrent Lock
-Last Updated   : 2026-05-15
+Sub-task Aktif : 5.4 — Invoice Model + Migration + InvoiceService
+Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : feat: Booking model, migration, repository — booking foundation
+Last Commit    : feat: BookingService — concurrent lock, create/confirm/cancel, pipeline action
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 2 / 9  sub-task  [▓▓░░░░░░░]
+Phase 5 : 3 / 9  sub-task  [▓▓▓░░░░░░]
 ─────────────────────────────────
-Total   : 45 / 54 sub-task
+Total   : 46 / 54 sub-task
 ```
 
 ---
@@ -1373,11 +1373,25 @@ Tests Pass          : 9 / 9  (full suite: 438 / 438)
 Commit              : feat: Booking model, migration, repository — booking foundation
 ```
 
-### Sub-task 5.3 — Invoice Lifecycle
+### Sub-task 5.3 — BookingService + Concurrent Lock + CreateBookingAction
 ```
-Status     : [ ] TODO
-Tests Pass : - / -
-Commit     : -
+Status              : [x] DONE — 2026-05-16
+Files               : app/Modules/Booking/Services/BookingService.php (new)
+                      app/Modules/Booking/Tests/BookingServiceTest.php (new — 12 tests)
+                      app/Modules/AgentCore/Pipeline/Services/ActionDispatcher.php (updated — create_booking)
+                      app/Modules/AgentCore/Decision/Services/DecisionEngineService.php (updated — request_booking/confirm_booking fan-out)
+                      app/Modules/AgentCore/Classification/Services/IntentClassifierService.php (updated — request_booking added to VALID_INTENTS)
+                      app/Modules/AgentCore/Tests/IntentClassifierServiceTest.php (updated — count 21)
+                      tests/Feature/Pipeline/BookingFlowTest.php (new — 4 tests)
+Methods             : checkAvailability (lockForUpdate in DB::transaction)
+                      createDraft (availability check + pessimistic lock, conv.stage=WAITING_BOOKING)
+                      confirm (re-check lock, conv.stage=BOOKING, notification)
+                      cancel (markCancelled, notification)
+                      suggestAlternatives (±14 days)
+Concurrent Lock     : [x] lockForUpdate via DB::transaction inside createDraft
+booking_code note   : global sequence (UNIQUE global), generateBookingCode called inside transaction
+Tests Pass          : 16 / 16 new  (full suite: 454+ passing)
+Commit              : feat: BookingService — concurrent lock, create/confirm/cancel, pipeline action
 ```
 
 ### Sub-task 5.4 — Google Calendar Integration
