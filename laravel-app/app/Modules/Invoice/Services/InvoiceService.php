@@ -9,7 +9,7 @@ use App\Modules\Invoice\Jobs\GenerateInvoicePdfJob;
 use App\Modules\Invoice\Models\Invoice;
 use App\Modules\Invoice\Repositories\InvoiceRepository;
 use App\Modules\Notification\Models\AdminNotification;
-use App\Modules\Shared\Contracts\ChannelGatewayInterface;
+use App\Modules\Shared\Services\ChannelRegistry;
 use App\Modules\Shared\Enums\BookingStatus;
 use App\Modules\Shared\Enums\ConversationStage;
 use App\Modules\Shared\Enums\InvoiceStatus;
@@ -28,7 +28,7 @@ class InvoiceService
     public function __construct(
         private readonly InvoiceRepository $invoiceRepository,
         private readonly TenantPolicyService $policyService,
-        private readonly ChannelGatewayInterface $gateway,
+        private readonly ChannelRegistry $channelRegistry,
         private readonly WaAccountRepository $waAccountRepository,
         private readonly ConversationRepository $conversationRepository,
     ) {}
@@ -103,21 +103,40 @@ class InvoiceService
             return false;
         }
 
-        $waAccount = $this->waAccountRepository->getActiveForTenant($invoice->tenant_id);
-        if (!$waAccount) {
-            Log::warning('InvoiceService: no active WA account for tenant.', [
-                'tenant_id' => $invoice->tenant_id,
-            ]);
-            return false;
-        }
+        $booking      = $invoice->booking;
+        $conversation = $booking?->conversation;
+        $channel      = $conversation?->channel ?? 'whatsapp';
+        $tenantId     = $invoice->tenant_id;
 
-        $booking = $invoice->booking;
-        $toPhone = $booking?->customer_phone;
-        if (!$toPhone) {
-            Log::warning('InvoiceService: no customer phone for invoice.', [
-                'invoice_id' => $invoice->id,
-            ]);
-            return false;
+        $adapter  = $this->channelRegistry->getAdapter($channel, $tenantId);
+        $accountId = '';
+
+        if ($channel === 'email') {
+            $toAddress = $conversation?->customer_email;
+            if (!$toAddress) {
+                Log::warning('InvoiceService: no customer email for email channel.', [
+                    'invoice_id' => $invoice->id,
+                ]);
+                return false;
+            }
+            $to = $toAddress;
+        } else {
+            $waAccount = $this->waAccountRepository->getActiveForTenant($tenantId);
+            if (!$waAccount) {
+                Log::warning('InvoiceService: no active WA account for tenant.', [
+                    'tenant_id' => $tenantId,
+                ]);
+                return false;
+            }
+            $toPhone = $booking?->customer_phone;
+            if (!$toPhone) {
+                Log::warning('InvoiceService: no customer phone for invoice.', [
+                    'invoice_id' => $invoice->id,
+                ]);
+                return false;
+            }
+            $accountId = $waAccount->id;
+            $to        = $toPhone;
         }
 
         $message = $this->formatInvoiceMessage($invoice, $booking);
@@ -125,7 +144,7 @@ class InvoiceService
         $sent = false;
         if ($invoice->pdf_url) {
             try {
-                $this->gateway->sendFile($waAccount->id, $toPhone, $invoice->pdf_url, $message);
+                $adapter->sendFile($accountId, $to, $invoice->pdf_url, $message);
                 $sent = true;
             } catch (\Throwable $e) {
                 Log::warning('InvoiceService: sendFile failed, falling back to text.', [
@@ -134,13 +153,12 @@ class InvoiceService
                 ]);
             }
         }
-        if (! $sent) {
-            $this->gateway->sendText($waAccount->id, $toPhone, $message);
+        if (!$sent) {
+            $adapter->sendText($accountId, $to, $message);
         }
 
         $invoice->markSent();
 
-        // Lock AI after invoice sent
         if ($booking?->conversation_id) {
             $this->conversationRepository->updateState($booking->conversation_id, [
                 'stage' => ConversationStage::POST_INVOICE_LIMITED->value,
@@ -148,9 +166,10 @@ class InvoiceService
         }
 
         Log::info('InvoiceService: invoice sent.', [
-            'invoice_id'  => $invoice->id,
-            'sent_count'  => $invoice->fresh()->sent_count,
-            'to_phone'    => substr($toPhone, 0, 4) . '***',
+            'invoice_id' => $invoice->id,
+            'sent_count' => $invoice->fresh()->sent_count,
+            'channel'    => $channel,
+            'to'         => substr($to, 0, 4) . '***',
         ]);
 
         return true;

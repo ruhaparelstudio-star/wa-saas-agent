@@ -13,6 +13,8 @@ readonly class FollowUpCandidateDTO
         public string  $to_phone,
         public string  $wa_account_id,
         public array   $context_data = [],
+        public string  $channel = 'whatsapp',
+        public ?string $to_email = null,
     ) {}
 
     public static function from(array $data): static
@@ -26,6 +28,8 @@ readonly class FollowUpCandidateDTO
             to_phone:        $data['to_phone'] ?? '',
             wa_account_id:   $data['wa_account_id'] ?? '',
             context_data:    $data['context_data'] ?? [],
+            channel:         $data['channel'] ?? 'whatsapp',
+            to_email:        $data['to_email'] ?? null,
         );
     }
 }

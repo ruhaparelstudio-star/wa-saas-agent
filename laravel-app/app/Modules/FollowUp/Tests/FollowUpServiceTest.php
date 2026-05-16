@@ -16,7 +16,7 @@ use App\Modules\Plans\Models\Plan;
 use App\Modules\Plans\Models\PlanFeature;
 use App\Modules\Plans\Models\TenantSubscription;
 use App\Modules\Plans\Services\FeatureGateService;
-use App\Modules\Shared\Contracts\ChannelGatewayInterface;
+use App\Modules\Shared\Services\ChannelRegistry;
 use App\Modules\Shared\Enums\AgentMode;
 use App\Modules\Shared\Enums\BookingStatus;
 use App\Modules\Shared\Enums\ConversationStage;
@@ -30,7 +30,6 @@ use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Enums\UserRole;
 use App\Modules\Shared\Enums\WaAccountStatus;
 use App\Modules\Tenancy\Models\Tenant;
-use App\Modules\WhatsApp\Adapters\WhatsAppGatewayAdapter;
 use App\Modules\WhatsApp\Models\WaAccount;
 use App\Modules\WhatsApp\Repositories\WaAccountRepository;
 use Carbon\Carbon;
@@ -91,7 +90,7 @@ class FollowUpServiceTest extends TestCase
 
         $this->service = new FollowUpService(
             $this->featureGateService,
-            new WhatsAppGatewayAdapter(),
+            app(ChannelRegistry::class),
             app(ConversationRepository::class),
             app(BookingRepository::class),
             app(InvoiceRepository::class),

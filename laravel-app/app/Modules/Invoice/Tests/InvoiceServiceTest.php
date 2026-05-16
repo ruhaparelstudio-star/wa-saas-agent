@@ -11,7 +11,7 @@ use App\Modules\Invoice\Models\Invoice;
 use App\Modules\Invoice\Repositories\InvoiceRepository;
 use App\Modules\Invoice\Services\InvoiceService;
 use App\Modules\Notification\Models\AdminNotification;
-use App\Modules\Shared\Contracts\ChannelGatewayInterface;
+use App\Modules\Shared\Services\ChannelRegistry;
 use App\Modules\Shared\Enums\AgentMode;
 use App\Modules\Shared\Enums\BookingStatus;
 use App\Modules\Shared\Enums\ConversationStage;
@@ -23,7 +23,6 @@ use App\Modules\Shared\Enums\TenantStatus;
 use App\Modules\Shared\Enums\UserRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\TenantConfig\Services\TenantPolicyService;
-use App\Modules\WhatsApp\Adapters\WhatsAppGatewayAdapter;
 use App\Modules\WhatsApp\Models\WaAccount;
 use App\Modules\WhatsApp\Repositories\WaAccountRepository;
 use Carbon\Carbon;
@@ -70,7 +69,7 @@ class InvoiceServiceTest extends TestCase
         $this->service       = new InvoiceService(
             $this->repo,
             $this->policyService,
-            new WhatsAppGatewayAdapter(),
+            app(ChannelRegistry::class),
             app(WaAccountRepository::class),
             app(ConversationRepository::class),
         );

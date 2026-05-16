@@ -23,7 +23,9 @@ class Conversation extends TenantBaseModel
     protected $fillable = [
         'tenant_id',
         'wa_account_id',
+        'channel',
         'customer_phone',
+        'customer_email',
         'customer_name',
         'stage',
         'agent_mode',
@@ -72,6 +74,11 @@ class Conversation extends TenantBaseModel
     public function handoffRecords(): HasMany
     {
         return $this->hasMany(HandoffRecord::class, 'conversation_id');
+    }
+
+    public function isEmailChannel(): bool
+    {
+        return $this->channel === 'email';
     }
 
     public function isActive(): bool

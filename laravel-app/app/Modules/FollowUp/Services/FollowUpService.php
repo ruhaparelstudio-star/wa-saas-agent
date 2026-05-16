@@ -10,7 +10,7 @@ use App\Modules\FollowUp\Models\FollowUpLog;
 use App\Modules\Invoice\Models\Invoice;
 use App\Modules\Invoice\Repositories\InvoiceRepository;
 use App\Modules\Plans\Services\FeatureGateService;
-use App\Modules\Shared\Contracts\ChannelGatewayInterface;
+use App\Modules\Shared\Services\ChannelRegistry;
 use App\Modules\Shared\DTOs\FollowUpCandidateDTO;
 use App\Modules\Shared\Enums\BookingStatus;
 use App\Modules\Shared\Enums\FeatureKey;
@@ -24,12 +24,12 @@ use Illuminate\Support\Facades\Log;
 class FollowUpService
 {
     public function __construct(
-        private readonly FeatureGateService    $featureGateService,
-        private readonly ChannelGatewayInterface $gateway,
-        private readonly ConversationRepository  $conversationRepo,
-        private readonly BookingRepository       $bookingRepo,
-        private readonly InvoiceRepository       $invoiceRepo,
-        private readonly WaAccountRepository     $waAccountRepo,
+        private readonly FeatureGateService     $featureGateService,
+        private readonly ChannelRegistry        $channelRegistry,
+        private readonly ConversationRepository $conversationRepo,
+        private readonly BookingRepository      $bookingRepo,
+        private readonly InvoiceRepository      $invoiceRepo,
+        private readonly WaAccountRepository    $waAccountRepo,
     ) {}
 
     /** @return FollowUpCandidateDTO[] */
@@ -58,13 +58,12 @@ class FollowUpService
             return false;
         }
 
-        $message = $this->buildMessage($candidate);
+        $message  = $this->buildMessage($candidate);
+        $channel  = $candidate->channel ?? 'whatsapp';
+        $adapter  = $this->channelRegistry->getAdapter($channel, $candidate->tenant_id);
+        $to       = ($channel === 'email') ? ($candidate->to_email ?? $candidate->to_phone) : $candidate->to_phone;
 
-        $sent = $this->gateway->sendText(
-            $candidate->wa_account_id,
-            $candidate->to_phone,
-            $message,
-        );
+        $sent = $adapter->sendText($candidate->wa_account_id, $to, $message);
 
         FollowUpLog::create([
             'tenant_id'       => $candidate->tenant_id,
