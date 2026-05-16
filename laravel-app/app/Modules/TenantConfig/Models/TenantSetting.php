@@ -20,13 +20,15 @@ class TenantSetting extends BaseModel
         'business_days',
         'after_hours_message',
         'google_oauth_token',
+        'google_calendar_enabled',
     ];
 
     protected function casts(): array
     {
         return array_merge(parent::casts(), [
-            'tone'          => TenantTone::class,
-            'business_days' => 'array',
+            'tone'                    => TenantTone::class,
+            'business_days'           => 'array',
+            'google_calendar_enabled' => 'boolean',
         ]);
     }
 

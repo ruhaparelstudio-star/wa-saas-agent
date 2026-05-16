@@ -1,0 +1,278 @@
+<?php
+
+namespace App\Filament\Tenant\Resources;
+
+use App\Filament\Tenant\Resources\BookingResource\Pages;
+use App\Modules\Booking\Models\Booking;
+use App\Modules\Booking\Services\BookingService;
+use App\Modules\Invoice\Services\InvoiceService;
+use App\Modules\Knowledge\Models\Package;
+use App\Modules\Shared\Enums\BookingStatus;
+use App\Modules\Shared\Enums\InvoiceType;
+use Carbon\Carbon;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
+class BookingResource extends Resource
+{
+    protected static ?string $model = Booking::class;
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
+
+    protected static ?string $navigationLabel = 'Booking';
+
+    protected static ?int $navigationSort = 1;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Bookings';
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes()
+            ->where('tenant_id', auth()->user()->tenant_id);
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            DatePicker::make('event_date')
+                ->label('Tanggal Event')
+                ->required(),
+            TimePicker::make('event_time_start')
+                ->label('Waktu Mulai')
+                ->seconds(false),
+            TimePicker::make('event_time_end')
+                ->label('Waktu Selesai')
+                ->seconds(false),
+            Select::make('event_type')
+                ->label('Tipe Event')
+                ->options([
+                    'akad'      => 'Akad',
+                    'resepsi'   => 'Resepsi',
+                    'keduanya'  => 'Akad + Resepsi',
+                ]),
+            TextInput::make('location')
+                ->label('Lokasi')
+                ->maxLength(255),
+            TextInput::make('guest_count')
+                ->label('Jumlah Tamu')
+                ->numeric()
+                ->minValue(1),
+            TextInput::make('customer_name')
+                ->label('Nama Customer')
+                ->maxLength(255),
+            TextInput::make('customer_phone')
+                ->label('Nomor HP Customer')
+                ->tel()
+                ->maxLength(20),
+            Select::make('package_id')
+                ->label('Paket')
+                ->options(fn () => Package::withoutGlobalScopes()
+                    ->where('tenant_id', auth()->user()->tenant_id)
+                    ->where('is_active', true)
+                    ->pluck('name', 'id')
+                )
+                ->searchable(),
+            TextInput::make('total_amount')
+                ->label('Total Harga (IDR)')
+                ->numeric()
+                ->prefix('Rp'),
+            TextInput::make('dp_amount')
+                ->label('DP Amount (IDR)')
+                ->numeric()
+                ->prefix('Rp'),
+            Textarea::make('notes')
+                ->label('Catatan')
+                ->rows(3),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('booking_code')
+                    ->label('Kode Booking')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('customer_name')
+                    ->label('Customer')
+                    ->formatStateUsing(fn (?string $state, Booking $record): string => $state ?: '-')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('event_date')
+                    ->label('Tanggal Event')
+                    ->date('d M Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('event_type')
+                    ->label('Tipe')
+                    ->placeholder('-'),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (BookingStatus $state): string => match ($state) {
+                        BookingStatus::DRAFT       => 'gray',
+                        BookingStatus::CONFIRMED   => 'success',
+                        BookingStatus::AWAITING_DP => 'warning',
+                        BookingStatus::PAID        => 'success',
+                        BookingStatus::COMPLETED   => 'info',
+                        BookingStatus::CANCELLED   => 'danger',
+                        BookingStatus::EXPIRED     => 'danger',
+                    })
+                    ->formatStateUsing(fn (BookingStatus $state) => $state->label()),
+                Tables\Columns\TextColumn::make('total_amount')
+                    ->label('Total')
+                    ->formatStateUsing(fn (?int $state): string => $state
+                        ? 'Rp ' . number_format($state, 0, ',', '.')
+                        : '-'
+                    ),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(collect(BookingStatus::cases())
+                        ->mapWithKeys(fn ($s) => [$s->value => $s->label()])
+                    )
+                    ->multiple(),
+                Filter::make('event_date')
+                    ->form([
+                        DatePicker::make('from')->label('Dari Tanggal'),
+                        DatePicker::make('until')->label('Sampai Tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'], fn ($q, $v) => $q->where('event_date', '>=', $v))
+                            ->when($data['until'], fn ($q, $v) => $q->where('event_date', '<=', $v));
+                    }),
+            ])
+            ->actions([
+                Action::make('confirm')
+                    ->label('Konfirmasi')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Booking $record): bool => $record->status === BookingStatus::DRAFT)
+                    ->requiresConfirmation()
+                    ->action(function (Booking $record): void {
+                        try {
+                            app(BookingService::class)->confirm($record);
+                            Notification::make()->title('Booking dikonfirmasi.')->success()->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()->title('Gagal: ' . $e->getMessage())->danger()->send();
+                        }
+                    }),
+                Action::make('cancel')
+                    ->label('Batalkan')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Booking $record): bool => $record->isActive())
+                    ->requiresConfirmation()
+                    ->form([
+                        Textarea::make('reason')
+                            ->label('Alasan Pembatalan')
+                            ->required()
+                            ->rows(2),
+                    ])
+                    ->action(function (Booking $record, array $data): void {
+                        app(BookingService::class)->cancel($record, $data['reason'] ?? '');
+                        Notification::make()->title('Booking dibatalkan.')->warning()->send();
+                    }),
+                Action::make('reschedule')
+                    ->label('Reschedule')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('info')
+                    ->visible(fn (Booking $record): bool => $record->isActive())
+                    ->form([
+                        DatePicker::make('new_date')
+                            ->label('Tanggal Baru')
+                            ->required()
+                            ->minDate(now()),
+                        TimePicker::make('new_time_start')
+                            ->label('Waktu Mulai Baru')
+                            ->seconds(false),
+                    ])
+                    ->action(function (Booking $record, array $data): void {
+                        $newDate = Carbon::parse($data['new_date']);
+                        $success = app(BookingService::class)->rescheduleBooking(
+                            $record,
+                            $newDate,
+                            $data['new_time_start'] ?? null
+                        );
+                        if ($success) {
+                            Notification::make()->title('Booking dijadwal ulang.')->success()->send();
+                        } else {
+                            Notification::make()->title('Tanggal sudah terisi, pilih tanggal lain.')->danger()->send();
+                        }
+                    }),
+                Action::make('send_invoice')
+                    ->label('Kirim Invoice')
+                    ->icon('heroicon-o-document-text')
+                    ->color('primary')
+                    ->visible(fn (Booking $record): bool => in_array($record->status, [
+                        BookingStatus::CONFIRMED,
+                        BookingStatus::AWAITING_DP,
+                    ]))
+                    ->form([
+                        Select::make('type')
+                            ->label('Tipe Invoice')
+                            ->options([
+                                InvoiceType::DP->value        => InvoiceType::DP->label(),
+                                InvoiceType::PELUNASAN->value => InvoiceType::PELUNASAN->label(),
+                            ])
+                            ->required(),
+                        TextInput::make('amount')
+                            ->label('Nominal (IDR)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->required(),
+                        DatePicker::make('due_date')
+                            ->label('Jatuh Tempo')
+                            ->required()
+                            ->minDate(now()),
+                    ])
+                    ->action(function (Booking $record, array $data): void {
+                        $invoiceService = app(InvoiceService::class);
+                        $invoice = $invoiceService->issue(
+                            $record,
+                            InvoiceType::from($data['type']),
+                            (int) $data['amount'],
+                            Carbon::parse($data['due_date'])
+                        );
+                        $sent = $invoiceService->send($invoice);
+                        $msg  = $sent ? 'Invoice dikirim via WA.' : 'Invoice dibuat (gagal kirim WA, cek WA account).';
+                        Notification::make()->title($msg)->success()->send();
+                    }),
+                EditAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index'  => Pages\ListBookings::route('/'),
+            'create' => Pages\CreateBooking::route('/create'),
+            'edit'   => Pages\EditBooking::route('/{record}/edit'),
+        ];
+    }
+}
