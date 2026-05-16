@@ -2,9 +2,10 @@
 
 namespace App\Filament\Tenant\Pages;
 
+use App\Modules\Calendar\Services\GoogleOAuthService;
 use App\Modules\TenantConfig\Models\TenantSetting;
+use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -44,23 +45,31 @@ class CalendarSettingsPage extends Page
 
         $this->form->fill([
             'google_calendar_enabled' => (bool) ($this->tenantSetting?->google_calendar_enabled ?? false),
-            'google_calendar_email'   => $this->tenantSetting?->google_calendar_email ?? '',
         ]);
     }
 
     public function getConnectionStatus(): array
     {
-        $setting = $this->tenantSetting;
+        $setting   = $this->tenantSetting;
+        $tokenData = $this->loadTokenData($setting);
 
-        if (!$setting || !$setting->google_calendar_enabled) {
-            return ['color' => 'gray', 'label' => 'Tidak Aktif', 'icon' => '○'];
+        if (! $setting || ! $setting->google_calendar_enabled) {
+            return ['color' => 'gray', 'label' => 'Tidak Aktif', 'connected' => false];
         }
 
-        if (!empty($setting->google_calendar_email)) {
-            return ['color' => 'warning', 'label' => 'Email Tersimpan — Menunggu OAuth (Phase 6)', 'icon' => '◑'];
+        if (! empty($tokenData['access_token'])) {
+            $expiresAt = ! empty($tokenData['expires_at'])
+                ? Carbon::parse($tokenData['expires_at'])->format('d M Y H:i')
+                : null;
+            return [
+                'color'      => 'success',
+                'label'      => 'Terhubung ke Google Calendar',
+                'connected'  => true,
+                'expires_at' => $expiresAt,
+            ];
         }
 
-        return ['color' => 'danger', 'label' => 'Email Belum Diisi', 'icon' => '✕'];
+        return ['color' => 'warning', 'label' => 'Belum Terhubung — Klik "Connect" untuk mulai OAuth', 'connected' => false];
     }
 
     public function form(Schema $schema): Schema
@@ -70,22 +79,39 @@ class CalendarSettingsPage extends Page
                 ->label('Aktifkan Google Calendar')
                 ->helperText('Sinkronkan booking dengan Google Calendar milik tenant.')
                 ->live(),
-            TextInput::make('google_calendar_email')
-                ->label('Email Google Calendar')
-                ->helperText('Masukkan email akun Google yang akan disinkronkan dengan booking.')
-                ->email()
-                ->placeholder('nama@gmail.com')
-                ->visible(fn ($get) => (bool) $get('google_calendar_enabled')),
         ])->statePath('data');
     }
 
-    protected function getFormActions(): array
+    protected function getHeaderActions(): array
     {
-        return [
-            Action::make('save')
-                ->label('Simpan Pengaturan')
-                ->action('save'),
-        ];
+        $tenantId  = auth()->user()->tenant_id;
+        $status    = $this->getConnectionStatus();
+
+        $actions = [];
+
+        if ($status['connected']) {
+            $actions[] = Action::make('disconnect')
+                ->label('Disconnect Google Calendar')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->action(function () use ($tenantId) {
+                    app(GoogleOAuthService::class)->revokeToken($tenantId);
+                    $this->tenantSetting = TenantSetting::where('tenant_id', $tenantId)->first();
+                    Notification::make()->title('Google Calendar diputus.')->warning()->send();
+                });
+        } else {
+            $actions[] = Action::make('connect')
+                ->label('Connect Google Calendar')
+                ->color('success')
+                ->url(route('calendar.oauth.redirect'))
+                ->openUrlInNewTab(false);
+        }
+
+        $actions[] = Action::make('save')
+            ->label('Simpan Pengaturan')
+            ->action('save');
+
+        return $actions;
     }
 
     public function save(): void
@@ -95,15 +121,23 @@ class CalendarSettingsPage extends Page
 
         TenantSetting::updateOrCreate(
             ['tenant_id' => $tenantId],
-            [
-                'google_calendar_enabled' => (bool) ($data['google_calendar_enabled'] ?? false),
-                'google_calendar_email'   => $data['google_calendar_email'] ?? null,
-            ]
+            ['google_calendar_enabled' => (bool) ($data['google_calendar_enabled'] ?? false)]
         );
+
+        $this->tenantSetting = TenantSetting::where('tenant_id', $tenantId)->first();
 
         Notification::make()
             ->title('Pengaturan kalender disimpan.')
             ->success()
             ->send();
+    }
+
+    private function loadTokenData(?TenantSetting $setting): array
+    {
+        if (! $setting || ! $setting->google_oauth_token) {
+            return [];
+        }
+        $decoded = json_decode($setting->google_oauth_token, true);
+        return is_array($decoded) ? $decoded : [];
     }
 }

@@ -53,4 +53,11 @@ return [
         'base_url' => env('GOOGLE_CALENDAR_BASE_URL', 'https://www.googleapis.com/calendar/v3'),
     ],
 
+    'google_oauth' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID', ''),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
+        'redirect_uri'  => env('GOOGLE_REDIRECT_URI', ''),
+        'scopes'        => ['https://www.googleapis.com/auth/calendar.events'],
+    ],
+
 ];

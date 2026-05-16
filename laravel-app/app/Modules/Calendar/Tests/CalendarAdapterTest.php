@@ -294,15 +294,22 @@ class CalendarAdapterTest extends TestCase
 
     private function makeGoogleAdapter(FeatureGateService $featureGate): GoogleCalendarAdapter
     {
-        return new GoogleCalendarAdapter($featureGate, app(NotificationService::class));
+        return new GoogleCalendarAdapter(
+            $featureGate,
+            app(NotificationService::class),
+            app(\App\Modules\Calendar\Services\GoogleOAuthService::class),
+        );
     }
 
     private function makeTenantSetting(string $tenantId, string $oauthToken): TenantSetting
     {
         return TenantSetting::create([
-            'id'                 => Str::uuid()->toString(),
             'tenant_id'          => $tenantId,
-            'google_oauth_token' => $oauthToken,
+            'google_oauth_token' => json_encode([
+                'access_token'  => $oauthToken,
+                'refresh_token' => 'refresh-' . $oauthToken,
+                'expires_at'    => now()->addHour()->toIso8601String(),
+            ]),
         ]);
     }
 

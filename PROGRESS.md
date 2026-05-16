@@ -1606,6 +1606,39 @@ Commit          : feat: AnalyticsService — lead funnel, revenue, conversion me
 
 ---
 
+### Sub-task 6.3 — Google OAuth 2.0 Real Flow
+```
+Status          : [x] DONE — 2026-05-16
+Files Created   : app/Modules/Calendar/Services/GoogleOAuthService.php
+                  app/Http/Controllers/GoogleOAuthController.php
+                  app/Modules/Calendar/Tests/GoogleOAuthServiceTest.php
+                  tests/Feature/GoogleOAuthFlowTest.php
+Files Updated   : app/Modules/Calendar/Adapters/GoogleCalendarAdapter.php (inject GoogleOAuthService)
+                  app/Filament/Tenant/Pages/CalendarSettingsPage.php (OAuth connect/disconnect UI)
+                  resources/views/filament/tenant/pages/calendar-settings.blade.php
+                  config/services.php (google_oauth section)
+                  .env.example (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI)
+                  routes/web.php (OAuth redirect/callback routes)
+                  app/Modules/Calendar/Tests/CalendarAdapterTest.php (token format fix)
+Tests Pass      : 11 / 11 (GoogleOAuthServiceTest: 7, GoogleOAuthFlowTest: 4)
+  [x] getAuthorizationUrl → contains client_id, scope, state
+  [x] exchangeCode → stores JSON token to tenant_settings
+  [x] refreshAccessToken → updates access_token in tenant_settings
+  [x] getValidToken → returns valid token without refresh
+  [x] getValidToken → auto-refresh when < 5 min remaining
+  [x] refreshAccessToken failure → returns null + CALENDAR_ERROR
+  [x] revokeToken → POST revoke endpoint, clears tenant_settings
+  [x] OAuth redirect → 302 to accounts.google.com
+  [x] OAuth callback valid → token stored, redirect to settings
+  [x] OAuth callback invalid state → 400
+  [x] OAuth callback no code → 302 redirect
+Notes           : CalendarAdapterTest updated: token stored as JSON {access_token, refresh_token, expires_at}
+                  GoogleCalendarAdapter now uses GoogleOAuthService.getValidToken() for auto-refresh
+Commit          : feat: Google OAuth 2.0 real flow — auto token refresh, calendar connect/disconnect
+```
+
+---
+
 ### Sub-task 6.2 — Filament Analytics Dashboard (Tenant + Superadmin)
 ```
 Status          : [x] DONE — 2026-05-16

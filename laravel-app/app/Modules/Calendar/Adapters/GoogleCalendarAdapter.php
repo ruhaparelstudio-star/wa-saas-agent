@@ -2,11 +2,11 @@
 
 namespace App\Modules\Calendar\Adapters;
 
+use App\Modules\Calendar\Services\GoogleOAuthService;
 use App\Modules\Notification\Services\NotificationService;
 use App\Modules\Plans\Services\FeatureGateService;
 use App\Modules\Shared\Contracts\CalendarProviderInterface;
 use App\Modules\Shared\DTOs\CalendarEventDTO;
-use App\Modules\TenantConfig\Models\TenantSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -17,6 +17,7 @@ class GoogleCalendarAdapter implements CalendarProviderInterface
     public function __construct(
         private readonly FeatureGateService $featureGate,
         private readonly NotificationService $notificationService,
+        private readonly GoogleOAuthService $oauthService,
     ) {
         $this->baseUrl = rtrim(config('services.google_calendar.base_url', 'https://www.googleapis.com/calendar/v3'), '/');
     }
@@ -146,8 +147,7 @@ class GoogleCalendarAdapter implements CalendarProviderInterface
 
     private function getOAuthToken(string $tenantId): string
     {
-        $setting = TenantSetting::where('tenant_id', $tenantId)->first();
-        return $setting?->google_oauth_token ?? '';
+        return $this->oauthService->getValidToken($tenantId) ?? '';
     }
 
     private function handleError(string $tenantId, string $method, string $error): void
