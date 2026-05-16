@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.8 — Filament Tenant Panel: Bookings + Invoices + Calendar Status
+Sub-task Aktif : 5.9 — E2E Integration Test Phase 5
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : feat: FollowUpService — stale lead, pending DP, overdue, H-7 reminder
+Last Commit    : feat: Filament Tenant — BookingResource, InvoiceResource, Calendar settings
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 7 / 9  sub-task  [▓▓▓▓▓▓▓░░]
+Phase 5 : 8 / 9  sub-task  [▓▓▓▓▓▓▓▓░]
 ─────────────────────────────────
-Total   : 50 / 54 sub-task
+Total   : 51 / 54 sub-task
 ```
 
 ---
@@ -1520,14 +1520,24 @@ Tests Pass    : 12 new (FollowUpServiceTest) + 4 fixed (BookingFlowTest) = 16 to
 Commit        : feat: FollowUpService — stale lead, pending DP, overdue, H-7 reminder
 ```
 
-### Sub-task 5.8 — Production Docker & Deploy Pack
+### Sub-task 5.8 — Filament Tenant Panel: Bookings + Invoices + Calendar Status
 ```
-Status          : [ ] TODO
-Prod Dockerfile : [ ]
-Backup Script   : [ ]
-Health Script   : [ ]
-Deploy Script   : [ ]
-Commit          : -
+Status          : [x] DONE — 2026-05-16
+Files Created   : BookingResource.php, BookingResource/Pages/{List,Create,Edit}Booking.php,
+                  InvoiceResource.php, InvoiceResource/Pages/ListInvoices.php,
+                  CalendarSettingsPage.php, UpcomingBookingsWidget.php,
+                  OverdueInvoicesWidget.php, calendar-settings.blade.php,
+                  migration add_google_calendar_enabled_to_tenant_settings
+Files Modified  : TenantSetting.php (google_calendar_enabled field)
+Tests Created   : FilamentTenantBookingTest (9 tests), FilamentTenantInvoiceTest (8 tests)
+Tests Passing   : 17 / 17
+Commit          : feat: Filament Tenant — BookingResource, InvoiceResource, Calendar settings
+Notes           : BookingResource: Confirm/Cancel/Reschedule/SendInvoice actions
+                  InvoiceResource: Send/Resend/MarkPaid actions, canResend guard
+                  CalendarSettingsPage: google_calendar_enabled + google_oauth_token
+                  UpcomingBookingsWidget: next 14 days, OverdueInvoicesWidget: stats
+                  Action classes use Filament\Actions\* (not Filament\Tables\Actions\*)
+                  CalendarSettingsPage slug = 'calendar-settings' (custom $slug)
 ```
 
 ### Sub-task 5.9 — Production Smoke Test

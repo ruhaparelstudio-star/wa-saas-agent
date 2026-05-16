@@ -932,7 +932,7 @@ Git commit: "feat: FollowUpService — stale lead, pending DP, overdue, H-7 remi
 ---
 
 ### SUB-TASK 5.8 — Filament Tenant Panel: Bookings + Invoices + Calendar Status
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 5.7 selesai
 **Estimated Time:** 2 jam
 
