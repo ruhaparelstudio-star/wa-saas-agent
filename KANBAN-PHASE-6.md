@@ -39,7 +39,7 @@ Yang sudah ada dari Phase 0-5 (JANGAN dibuat ulang):
 ---
 
 ### SUB-TASK 6.1 — AnalyticsService (Lead Funnel, Revenue, Conversion)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** Phase 5 gate OPEN
 **Estimated Time:** 2 jam
 
@@ -187,7 +187,7 @@ Git commit: "feat: AnalyticsService — lead funnel, revenue, conversion metrics
 ---
 
 ### SUB-TASK 6.2 — Filament Analytics Dashboard (Tenant + Superadmin)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 6.1 selesai
 **Estimated Time:** 2 jam
 
@@ -295,7 +295,7 @@ Git commit: "feat: Filament Analytics — tenant dashboard + superadmin cross-te
 ---
 
 ### SUB-TASK 6.3 — Google OAuth 2.0 Real Flow
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 6.2 selesai
 **Estimated Time:** 2 jam
 
@@ -437,7 +437,7 @@ Git commit: "feat: Google OAuth 2.0 real flow — auto token refresh, calendar c
 ---
 
 ### SUB-TASK 6.4 — R2StorageAdapter (StorageProviderInterface)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 6.3 selesai
 **Estimated Time:** 1.5 jam
 
@@ -558,7 +558,7 @@ Git commit: "feat: R2StorageAdapter — StorageProviderInterface impl, Cloudflar
 ---
 
 ### SUB-TASK 6.5 — PDF Invoice Generation + Send via WA
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 6.4 selesai
 **Estimated Time:** 2 jam
 
@@ -688,7 +688,7 @@ Git commit: "feat: PDF invoice generation — DomPDF, R2 storage, send via WA"
 ---
 
 ### SUB-TASK 6.6 — Multi-channel Foundation + Email Channel
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 6.5 selesai
 **Estimated Time:** 2 jam
 
@@ -822,7 +822,7 @@ Git commit: "feat: Multi-channel foundation — ChannelRegistry + Email adapter 
 ---
 
 ### SUB-TASK 6.7 — Export CSV (Bookings, Invoices, Leads)
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 6.6 selesai
 **Estimated Time:** 1.5 jam
 
@@ -943,7 +943,7 @@ Git commit: "feat: CSV export — bookings, invoices, leads with tenant isolatio
 ---
 
 ### SUB-TASK 6.8 — E2E Integration Test Phase 6
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 6.7 selesai
 **Estimated Time:** 1.5 jam
 
@@ -1048,7 +1048,7 @@ Git commit: "test: Phase6IntegrationTest — analytics/pdf/oauth/multichannel/ex
 ---
 
 ### INTEGRATION CHECKPOINT — PHASE 6
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17 — 600/600 tests pass — Gate OPEN
 
 **PROMPT:**
 ```
