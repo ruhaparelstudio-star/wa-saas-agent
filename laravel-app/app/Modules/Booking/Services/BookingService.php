@@ -6,6 +6,8 @@ use App\Modules\Booking\Models\Booking;
 use App\Modules\Booking\Repositories\BookingRepository;
 use App\Modules\Conversation\Repositories\ConversationRepository;
 use App\Modules\Notification\Services\NotificationService;
+use App\Modules\Shared\Contracts\CalendarProviderInterface;
+use App\Modules\Shared\DTOs\CalendarEventDTO;
 use App\Modules\Shared\DTOs\TurnContextDTO;
 use App\Modules\Shared\Enums\BookingStatus;
 use App\Modules\Shared\Enums\ConversationStage;
@@ -23,6 +25,7 @@ class BookingService
         private readonly BookingRepository $bookingRepository,
         private readonly NotificationService $notificationService,
         private readonly ConversationRepository $conversationRepository,
+        private readonly CalendarProviderInterface $calendar,
     ) {}
 
     /**
@@ -148,6 +151,25 @@ class BookingService
             $booking->markConfirmed();
         });
 
+        // Calendar sync — side-effect; failure must NOT roll back confirmation
+        try {
+            $event   = $this->buildCalendarEvent($booking->fresh());
+            $eventId = $this->calendar->createEvent($booking->tenant_id, $event);
+            if ($eventId) {
+                $booking->update(['calendar_event_id' => $eventId]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('BookingService: calendar createEvent failed after confirm.', [
+                'booking_id' => $booking->id,
+                'error'      => $e->getMessage(),
+            ]);
+            $this->notificationService->notifyCalendarError(
+                $booking->tenant_id,
+                'confirmBooking',
+                $e->getMessage()
+            );
+        }
+
         // Update conversation stage
         if ($booking->conversation_id) {
             $this->conversationRepository->updateState($booking->conversation_id, [
@@ -173,6 +195,19 @@ class BookingService
      */
     public function cancel(Booking $booking, string $reason = ''): void
     {
+        // Calendar delete — attempt before marking cancelled so event_id is still set
+        if ($booking->calendar_event_id) {
+            try {
+                $this->calendar->deleteEvent($booking->tenant_id, $booking->calendar_event_id);
+            } catch (\Throwable $e) {
+                Log::warning('BookingService: calendar deleteEvent failed during cancel.', [
+                    'booking_id'       => $booking->id,
+                    'calendar_event_id' => $booking->calendar_event_id,
+                    'error'            => $e->getMessage(),
+                ]);
+            }
+        }
+
         $booking->markCancelled($reason);
 
         $this->sendBookingNotification(
@@ -216,6 +251,101 @@ class BookingService
         usort($alternatives, fn ($a, $b) => $a['distance_days'] <=> $b['distance_days']);
 
         return $alternatives;
+    }
+
+    /**
+     * Reschedule a booking to a new date. Re-checks availability with a pessimistic lock.
+     * Updates the Google Calendar event if one exists.
+     */
+    public function rescheduleBooking(Booking $booking, Carbon $newDate, ?string $newTimeStart = null): bool
+    {
+        $success = DB::transaction(function () use ($booking, $newDate, $newTimeStart) {
+            $conflict = Booking::withoutGlobalScopes()
+                ->where('tenant_id', $booking->tenant_id)
+                ->where('event_date', $newDate->toDateString())
+                ->when($booking->event_type, fn ($q, $e) => $q->where('event_type', $e))
+                ->whereIn('status', [
+                    BookingStatus::CONFIRMED->value,
+                    BookingStatus::AWAITING_DP->value,
+                    BookingStatus::PAID->value,
+                ])
+                ->where('id', '!=', $booking->id)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($conflict) {
+                return false;
+            }
+
+            $updates = ['event_date' => $newDate->toDateString()];
+            if ($newTimeStart !== null) {
+                $updates['event_time_start'] = $newTimeStart;
+            }
+            $booking->update($updates);
+
+            return true;
+        });
+
+        if ($success && $booking->calendar_event_id) {
+            try {
+                $event = $this->buildCalendarEvent($booking->fresh());
+                $this->calendar->updateEvent($booking->tenant_id, $booking->calendar_event_id, $event);
+            } catch (\Throwable $e) {
+                Log::warning('BookingService: calendar updateEvent failed during reschedule.', [
+                    'booking_id' => $booking->id,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+        }
+
+        Log::info('BookingService: booking rescheduled.', [
+            'booking_id' => $booking->id,
+            'new_date'   => $newDate->toDateString(),
+            'success'    => $success,
+        ]);
+
+        return $success;
+    }
+
+    private function buildCalendarEvent(Booking $booking): CalendarEventDTO
+    {
+        $customerName = $booking->customer_name ?? 'Customer';
+        $eventType    = $booking->event_type ?? 'event';
+        $title        = "{$customerName} — {$eventType} — {$booking->booking_code}";
+
+        $timezone = 'Asia/Jakarta';
+        $dateStr  = $booking->event_date->toDateString();
+        $startStr = $booking->event_time_start ?? '08:00';
+
+        $startAt = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$startStr}", $timezone)
+            ->setTimezone('UTC')
+            ->toIso8601String();
+
+        $endAt = $booking->event_time_end
+            ? Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$booking->event_time_end}", $timezone)
+                ->setTimezone('UTC')
+                ->toIso8601String()
+            : Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$startStr}", $timezone)
+                ->addHours(4)
+                ->setTimezone('UTC')
+                ->toIso8601String();
+
+        return CalendarEventDTO::from([
+            'id'          => $booking->calendar_event_id,
+            'tenant_id'   => $booking->tenant_id,
+            'title'       => $title,
+            'description' => sprintf(
+                "Booking: %s\nCustomer: %s\nGuest: %d",
+                $booking->booking_code,
+                $customerName,
+                $booking->guest_count ?? 0
+            ),
+            'start_at'  => $startAt,
+            'end_at'    => $endAt,
+            'location'  => $booking->location,
+            'attendees' => [],
+            'metadata'  => ['booking_id' => $booking->id],
+        ]);
     }
 
     private function sendBookingNotification(

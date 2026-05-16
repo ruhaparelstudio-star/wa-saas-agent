@@ -711,7 +711,7 @@ Git commit: "feat: CalendarProviderInterface + Google/Null adapters — calendar
 ---
 
 ### SUB-TASK 5.6 — Booking ↔ Calendar Sync
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-16
 **Depends On:** 5.5 selesai
 **Estimated Time:** 1.5 jam
 

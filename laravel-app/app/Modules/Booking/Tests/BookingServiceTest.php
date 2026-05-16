@@ -6,6 +6,7 @@ use App\Modules\Auth\Models\User;
 use App\Modules\Booking\Models\Booking;
 use App\Modules\Booking\Repositories\BookingRepository;
 use App\Modules\Booking\Services\BookingService;
+use App\Modules\Calendar\Adapters\NullCalendarAdapter;
 use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Conversation\Repositories\ConversationRepository;
 use App\Modules\Notification\Models\AdminNotification;
@@ -58,6 +59,7 @@ class BookingServiceTest extends TestCase
             $this->repo,
             app(NotificationService::class),
             app(ConversationRepository::class),
+            new NullCalendarAdapter(),
         );
     }
 

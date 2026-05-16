@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 5 — Booking, Invoice, Calendar, Follow-up (in progress)
-Sub-task Aktif : 5.6 — Booking ↔ Calendar Sync
+Sub-task Aktif : 5.7 — Follow-up Automation (FollowUpJob + Scheduler)
 Last Updated   : 2026-05-16
 Git Branch     : dev
-Last Commit    : feat: CalendarProviderInterface + Google/Null adapters — calendar foundation
+Last Commit    : feat: Booking ↔ Calendar sync — create/update/delete via provider
 Last Tag       : v0.5-whatsapp-complete
 ```
 
@@ -25,9 +25,9 @@ Phase 1 : 10 / 10 sub-task  [▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CH
 Phase 2 : 7 / 7  sub-task  [▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 3 : 15 / 15 sub-task  [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
 Phase 4 : 8 / 8  sub-task  [▓▓▓▓▓▓▓▓] ✅ COMPLETE ✅ CHECKPOINT PASSED
-Phase 5 : 5 / 9  sub-task  [▓▓▓▓▓░░░░]
+Phase 5 : 6 / 9  sub-task  [▓▓▓▓▓▓░░░]
 ─────────────────────────────────
-Total   : 48 / 54 sub-task
+Total   : 49 / 54 sub-task
 ```
 
 ---
@@ -1447,13 +1447,31 @@ Notes:
   - NotificationService::notifyCalendarError dipanggil saat Google API error
 ```
 
-### Sub-task 5.6 — Analytics Dashboard
+### Sub-task 5.6 — Booking ↔ Calendar Sync
 ```
-Status       : [ ] TODO
-Tenant Stats : [ ]
-Superadmin   : [ ]
-Token Usage  : [ ]
-Commit       : -
+Status        : [x] DONE — 2026-05-16
+Files Updated :
+  app/Modules/Booking/Services/BookingService.php
+    + inject CalendarProviderInterface
+    + confirm(): createEvent after DB commit; catch + CALENDAR_ERROR on failure
+    + cancel(): deleteEvent if calendar_event_id present
+    + rescheduleBooking(): availability re-check (lockForUpdate) + updateEvent
+    + buildCalendarEvent(): title="{customer} — {event_type} — {code}",
+      start/end in UTC (Asia/Jakarta base), 4h default duration
+  app/Modules/Booking/Tests/BookingServiceTest.php
+    + NullCalendarAdapter injected in setUp()
+Files Created :
+  app/Modules/Booking/Tests/BookingCalendarSyncTest.php
+Calendar Behavior:
+  [x] confirm → createEvent, save event_id to booking
+  [x] confirm + null returned (feature off) → calendar_event_id stays null
+  [x] confirm + adapter throws → booking still CONFIRMED, CALENDAR_ERROR emitted
+  [x] cancel + calendar_event_id → deleteEvent called
+  [x] cancel without calendar_event_id → no deleteEvent call
+  [x] reschedule → availability re-checked (lockForUpdate) + updateEvent if id set
+  [x] reschedule conflict → return false, date unchanged
+Tests Pass    : 10 new (BookingCalendarSyncTest), full suite 22/22 (BookingServiceTest+SyncTest)
+Commit        : feat: Booking ↔ Calendar sync — create/update/delete via provider
 ```
 
 ### Sub-task 5.7 — Security Hardening
