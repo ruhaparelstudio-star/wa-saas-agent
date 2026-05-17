@@ -988,7 +988,7 @@ Git commit: "feat: WeddingDemoSeeder — complete demo data with analytics, invo
 ---
 
 ### SUB-TASK 7.8 — E2E Integration Test Phase 7 + Launch Gate
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 7.7 selesai
 **Estimated Time:** 1.5 jam
 
@@ -1099,7 +1099,7 @@ Git commit: "test: Phase7IntegrationTest — rate limit, PII, analytics, concurr
 ---
 
 ### INTEGRATION CHECKPOINT — PHASE 7
-**Status:** [ ] TODO
+**Status:** [ ] PENDING — awaiting manual QA items (docker ps, /horizon browser, analytics UI)
 
 **PROMPT:**
 ```

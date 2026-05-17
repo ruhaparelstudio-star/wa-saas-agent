@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 7 — Production Hardening, Benchmark, Launch Prep
-Sub-task Aktif : Sub-task 7.8
+Sub-task Aktif : Integration Checkpoint Phase 7
 Last Updated   : 2026-05-17
 Git Branch     : dev
-Last Commit    : feat: WeddingDemoSeeder — complete demo data with analytics, invoice, multi-stage
+Last Commit    : test: Phase7IntegrationTest — rate limit, PII, analytics, concurrent, health
 Last Tag       : v0.7-analytics-complete
 ```
 
@@ -1960,10 +1960,22 @@ Notes           : 2 demo tenants (photography + catering), both on Pro plan (ANA
 
 ### Sub-task 7.8 — E2E Integration Test Phase 7 + Launch Gate
 ```
-Status          : [ ] TODO
-Files Created   : -
-Tests Pass      : - / -
-Commit          : -
+Status          : [x] DONE — 2026-05-17
+Files Created   : tests/Feature/Integration/Phase7IntegrationTest.php
+Tests Pass      : 8 / 8
+Commit          : test: Phase7IntegrationTest — rate limit, PII, analytics, concurrent, health
+Notes           : 8 integration tests:
+                  1. test_full_pipeline_with_rate_limiting — 31st webhook req → 429
+                  2. test_phone_number_not_in_logs — StripPiiProcessor masks +62 phone + redacts api_key
+                  3. test_analytics_with_seeded_data — WeddingDemoSeeder + revenue > 0
+                  4. test_horizon_gate_superadmin_only — superadmin OK, tenant admin blocked
+                  5. test_export_with_real_seeded_data — CSV has booking_code header + data row
+                  6. test_injection_attempt_full_flow — pipeline continues, INJECTION_ATTEMPT_DETECTED emitted
+                  7. test_concurrent_booking_protection — checkAvailability returns false for taken slot
+                  8. test_production_health_check — GET /up → 200 OK
+                  Note: 7 pre-existing storage permission failures (InvoicePdfServiceTest,
+                        StorageAdapterTest) — root-owned testing/disks dir, unrelated to Phase 7.
+                        All 8 Phase7Integration tests PASS.
 ```
 
 ---
