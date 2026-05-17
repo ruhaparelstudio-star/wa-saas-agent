@@ -15,7 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
          ->name('calendar.oauth.callback');
 });
 
-Route::prefix('app/export')->middleware(['auth'])->group(function () {
+Route::prefix('app/export')->middleware(['auth', 'throttle:export'])->group(function () {
     Route::get('/bookings', [ExportController::class, 'bookings'])->name('export.bookings');
     Route::get('/invoices', [ExportController::class, 'invoices'])->name('export.invoices');
     Route::get('/leads',    [ExportController::class, 'leads'])->name('export.leads');

@@ -6,7 +6,7 @@ use App\Modules\Tenancy\Http\Controllers\SuperadminTenantController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api/superadmin/tenants')
-    ->middleware(['auth:sanctum', SuperadminOnly::class])
+    ->middleware(['auth:sanctum', SuperadminOnly::class, 'throttle:30,1'])
     ->group(function () {
         Route::get('/', [SuperadminTenantController::class, 'index']);
         Route::post('/', [SuperadminTenantController::class, 'store']);

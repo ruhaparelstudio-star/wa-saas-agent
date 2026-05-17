@@ -38,7 +38,7 @@ Yang sudah ada dari Phase 0-6 (JANGAN dibuat ulang):
 ---
 
 ### SUB-TASK 7.1 — Laravel Horizon: Queue Monitoring
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** Phase 6 gate OPEN
 **Estimated Time:** 1.5 jam
 
@@ -174,7 +174,7 @@ Git commit: "feat: Laravel Horizon — queue monitoring, SUPERADMIN-only access"
 ---
 
 ### SUB-TASK 7.2 — DB Index Audit + Performance Hardening
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 7.1 selesai
 **Estimated Time:** 1.5 jam
 
@@ -300,7 +300,7 @@ Git commit: "perf: add composite DB indexes for tenant-scoped queries"
 ---
 
 ### SUB-TASK 7.3 — Rate Limiting + API Throttle
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 7.2 selesai
 **Estimated Time:** 1.5 jam
 

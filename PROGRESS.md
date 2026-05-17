@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 7 — Production Hardening, Benchmark, Launch Prep
-Sub-task Aktif : Sub-task 7.1
+Sub-task Aktif : Sub-task 7.4
 Last Updated   : 2026-05-17
 Git Branch     : dev
-Last Commit    : fix: CalendarSettingsPage Blade template — avoid @if inside component attrs
+Last Commit    : perf: add composite DB indexes for tenant-scoped queries
 Last Tag       : v0.7-analytics-complete
 ```
 
@@ -1804,6 +1804,129 @@ Phase6IntegrationTest    : ✅ 8/8 pass
 CalendarSettingsPage     : ✅ 200 (after Blade fix)
 Git Tag                  : v0.7-analytics-complete
 Gate                     : [x] OPEN untuk Phase 7
+```
+
+---
+
+## PHASE 7 — PRODUCTION HARDENING, BENCHMARK, LAUNCH PREP
+
+### Sub-task 7.1 — Laravel Horizon: Queue Monitoring
+```
+Status          : [x] DONE — 2026-05-17
+Files Created   : config/horizon.php (via horizon:install)
+                  app/Providers/HorizonServiceProvider.php (SUPERADMIN gate)
+                  tests/Feature/HorizonTest.php
+Files Updated   : docker-compose.yml (horizon healthcheck)
+                  app/Providers/Filament/SuperadminPanelProvider.php (horizon nav link)
+Queues          : default, notifications, follow-ups
+Auth Gate       : role === 'superadmin' only
+Tests Pass      : 3 / 3
+  [x] GET /horizon superadmin → 200
+  [x] GET /horizon tenant admin → non-200
+  [x] Horizon gate blocks non-superadmin
+Commit          : feat: Laravel Horizon — queue monitoring, SUPERADMIN-only gate
+```
+
+---
+
+### Sub-task 7.2 — DB Index Audit + Performance Hardening
+```
+Status          : [x] DONE — 2026-05-17
+Files Created   : database/migrations/2026_05_17_020929_add_performance_indexes.php
+                  app/Console/Commands/ExplainAnalyticsCommand.php
+                  tests/Feature/DatabaseIndexTest.php
+Indexes Added   : conversations (tenant_id+created_at, tenant_id+stage, tenant_id+stage+created_at, last_message_at)
+                  bookings (tenant_id+event_date, tenant_id+status, tenant_id+created_at, conversation_id)
+                  invoices (tenant_id+status, tenant_id+paid_at, tenant_id+due_date, booking_id)
+                  decision_traces (conversation_id+created_at)
+                  wa_accounts (tenant_id+status)
+                  leads (tenant_id+temperature)
+Tests Pass      : 13 / 13
+  [x] Migration idempotent (try-catch on existing)
+  [x] Index exists on conversations, bookings, invoices
+  [x] EXPLAIN output for key queries
+Commit          : perf: add composite DB indexes for tenant-scoped queries
+```
+
+---
+
+### Sub-task 7.3 — Rate Limiting + API Throttle
+```
+Status          : [x] DONE — 2026-05-17
+Files Created   : app/Http/Middleware/TenantThrottleMiddleware.php
+                  tests/Feature/RateLimitTest.php
+Files Updated   : app/Providers/AppServiceProvider.php (4 named rate limiters in boot)
+                  bootstrap/app.php (tenant-throttle alias)
+                  app/Modules/Shared/routes.php (throttle:webhook + tenant-throttle on webhook)
+                  app/Modules/Auth/routes.php (throttle:api-auth on /api/auth/login)
+                  app/Modules/Tenancy/routes.php (throttle:30,1 on superadmin API)
+                  routes/web.php (throttle:export on export group)
+Rate Limiters   : webhook (30/min per wa_account_id)
+                  api-auth (5/min per IP)
+                  export (10/hr per user)
+                  analytics-api (60/min per user)
+Tenant Throttle : Redis/Cache incr per tenant per minute — plan limit basic=60 pro=300
+Tests Pass      : 7 / 7
+  [x] Login throttle blocks after 5 attempts → 6th is 429
+  [x] Export throttle blocks after 10 requests → 11th is 429
+  [x] Webhook throttle blocks after 30 requests → 31st is 429
+  [x] X-RateLimit-Limit + X-RateLimit-Remaining headers present
+  [x] Throttle is per-account (different accounts independent)
+  [x] Rate limit resets after window cleared (Cache::flush simulation)
+  [x] Export throttle scoped per user (user2 not blocked when user1 exhausted)
+Commit          : feat: rate limiting — per-IP auth, per-user export, per-tenant webhook
+```
+
+---
+
+### Sub-task 7.4 — Security + PII Audit
+```
+Status          : [ ] TODO
+Files Created   : -
+Files Updated   : -
+Tests Pass      : - / -
+Commit          : -
+```
+
+---
+
+### Sub-task 7.5 — Benchmark 30 Skenario
+```
+Status          : [ ] TODO
+Files Created   : -
+Tests Pass      : - / -
+Commit          : -
+```
+
+---
+
+### Sub-task 7.6 — Production .env + Docker Hardening
+```
+Status          : [ ] TODO
+Files Created   : -
+Files Updated   : -
+Tests Pass      : - / -
+Commit          : -
+```
+
+---
+
+### Sub-task 7.7 — Seeder Demo + WeddingDemoSeeder Lengkap
+```
+Status          : [ ] TODO
+Files Updated   : -
+Tests Pass      : - / -
+Commit          : -
+```
+
+---
+
+### Sub-task 7.8 — E2E Integration Test Phase 7 + Launch Gate
+```
+Status          : [ ] TODO
+Files Created   : -
+Tests Pass      : - / -
+Commit          : -
 ```
 
 ---

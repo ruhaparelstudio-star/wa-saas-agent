@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'internal.secret' => \App\Http\Middleware\InternalSecretMiddleware::class,
+            'internal.secret'  => \App\Http\Middleware\InternalSecretMiddleware::class,
+            'tenant-throttle'  => \App\Http\Middleware\TenantThrottleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
