@@ -234,10 +234,11 @@ class BookingFlowTest extends TestCase
                 null,
                 $bookingService,
             ),
-            traceLogger:        new DecisionTraceLogger(),
-            conversations:      $this->convRepo,
-            tokenUsageLogger:   $tokenUsageLogger,
-            configResolver:     app(TenantConfigResolver::class),
+            traceLogger:          new DecisionTraceLogger(),
+            conversations:        $this->convRepo,
+            tokenUsageLogger:     $tokenUsageLogger,
+            configResolver:       app(TenantConfigResolver::class),
+            notificationService:  $this->createMock(\App\Modules\Notification\Services\NotificationService::class),
         );
     }
 

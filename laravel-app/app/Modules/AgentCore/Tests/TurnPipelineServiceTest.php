@@ -15,6 +15,7 @@ use App\Modules\AgentCore\Pipeline\Services\DecisionTraceLogger;
 use App\Modules\AgentCore\Pipeline\Services\TurnPipelineService;
 use App\Modules\AgentCore\Security\Services\InputSanitizerService;
 use App\Modules\AgentCore\Validators\ValidatorChainService;
+use App\Modules\Notification\Services\NotificationService;
 use App\Modules\Auth\Models\User;
 use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Conversation\Models\ConversationMessage;
@@ -312,8 +313,9 @@ class TurnPipelineServiceTest extends TestCase
             dispatcher:         new ActionDispatcher(null, $this->repo),
             traceLogger:        new DecisionTraceLogger(),
             conversations:      $this->repo,
-            tokenUsageLogger:   $tokenUsageLogger,
-            configResolver:     app(TenantConfigResolver::class),
+            tokenUsageLogger:     $tokenUsageLogger,
+            configResolver:       app(TenantConfigResolver::class),
+            notificationService:  $this->createMock(NotificationService::class),
         );
     }
 

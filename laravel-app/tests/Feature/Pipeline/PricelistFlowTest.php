@@ -214,10 +214,11 @@ class PricelistFlowTest extends TestCase
                 null,
                 $pricelistService,
             ),
-            traceLogger:        new DecisionTraceLogger(),
-            conversations:      $this->repo,
-            tokenUsageLogger:   $tokenUsageLogger,
-            configResolver:     app(TenantConfigResolver::class),
+            traceLogger:          new DecisionTraceLogger(),
+            conversations:        $this->repo,
+            tokenUsageLogger:     $tokenUsageLogger,
+            configResolver:       app(TenantConfigResolver::class),
+            notificationService:  $this->createMock(\App\Modules\Notification\Services\NotificationService::class),
         );
     }
 
@@ -238,11 +239,12 @@ class PricelistFlowTest extends TestCase
             ),
             validatorChain:     app(ValidatorChainService::class),
             composer:           new ResponseComposerService($this->mock, $tokenUsageLogger, $pricelistService),
-            dispatcher:         new ActionDispatcher(null, $this->repo, null, $pricelistService),
-            traceLogger:        new DecisionTraceLogger(),
-            conversations:      $this->repo,
-            tokenUsageLogger:   $tokenUsageLogger,
-            configResolver:     app(TenantConfigResolver::class),
+            dispatcher:           new ActionDispatcher(null, $this->repo, null, $pricelistService),
+            traceLogger:          new DecisionTraceLogger(),
+            conversations:        $this->repo,
+            tokenUsageLogger:     $tokenUsageLogger,
+            configResolver:       app(TenantConfigResolver::class),
+            notificationService:  $this->createMock(\App\Modules\Notification\Services\NotificationService::class),
         );
     }
 

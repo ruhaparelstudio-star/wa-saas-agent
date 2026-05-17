@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 7 — Production Hardening, Benchmark, Launch Prep
-Sub-task Aktif : Sub-task 7.4
+Sub-task Aktif : Sub-task 7.5
 Last Updated   : 2026-05-17
 Git Branch     : dev
-Last Commit    : perf: add composite DB indexes for tenant-scoped queries
+Last Commit    : feat: security hardening — PII masking, log processor, injection audit
 Last Tag       : v0.7-analytics-complete
 ```
 
@@ -1881,11 +1881,21 @@ Commit          : feat: rate limiting — per-IP auth, per-user export, per-tena
 
 ### Sub-task 7.4 — Security + PII Audit
 ```
-Status          : [ ] TODO
-Files Created   : -
-Files Updated   : -
-Tests Pass      : - / -
-Commit          : -
+Status          : [x] DONE — 2026-05-17
+Files Created   : app/Modules/Shared/Helpers/PhoneNumberMasker.php,
+                  app/Logging/StripPiiProcessor.php,
+                  app/Modules/Audit/Services/AuditService.php,
+                  app/Modules/Shared/Tests/PhoneNumberMaskerTest.php,
+                  tests/Feature/SecurityAuditTest.php
+Files Updated   : config/logging.php (StripPiiProcessor on single+daily channels),
+                  app/Modules/AgentCore/Pipeline/Services/TurnPipelineService.php
+                    (inject NotificationService, call notifyInjectionAttempt on detection)
+Tests Pass      : 648 / 648
+Commit          : feat: security hardening — PII masking, log processor, injection audit
+Notes           : InputSanitizerService already had 15 patterns (12 from CLAUDE.md + 3 extra).
+                  All DB::table queries verified to have tenant_id filter.
+                  WebhookController does not log raw_payload — safe.
+                  notifyInjectionAttempt now wired into TurnPipelineService.
 ```
 
 ---

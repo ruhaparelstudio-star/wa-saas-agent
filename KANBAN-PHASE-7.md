@@ -424,7 +424,7 @@ Git commit: "feat: rate limiting — per-IP auth, per-user export, per-tenant we
 ---
 
 ### SUB-TASK 7.4 — Security + PII Audit
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 7.3 selesai
 **Estimated Time:** 1.5 jam
 

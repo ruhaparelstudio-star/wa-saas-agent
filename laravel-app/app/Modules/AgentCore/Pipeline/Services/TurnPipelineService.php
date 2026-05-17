@@ -11,6 +11,7 @@ use App\Modules\AgentCore\Security\Services\InputSanitizerService;
 use App\Modules\AgentCore\Validators\ValidatorChainService;
 use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Conversation\Repositories\ConversationRepository;
+use App\Modules\Notification\Services\NotificationService;
 use App\Modules\Shared\Contracts\KnowledgeRetrieverInterface;
 use App\Modules\Shared\DTOs\ConversationDTO;
 use App\Modules\Shared\DTOs\ConversationStateDTO;
@@ -53,6 +54,7 @@ class TurnPipelineService
         private readonly ConversationRepository      $conversations,
         private readonly TokenUsageLogger            $tokenUsageLogger,
         private readonly TenantConfigResolver        $configResolver,
+        private readonly NotificationService         $notificationService,
     ) {}
 
     /**
@@ -125,6 +127,10 @@ class TurnPipelineService
                 $tenantId,
                 $conversation->id,
             );
+
+            if ($sanitized->injection_detected) {
+                $this->notificationService->notifyInjectionAttempt($tenantId, $conversation->id);
+            }
 
             // ── Step 5: Load tenant + config ──────────────────────────────
             $tenant    = Tenant::find($tenantId);

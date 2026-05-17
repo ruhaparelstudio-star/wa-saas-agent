@@ -568,10 +568,11 @@ class PipelineAccuracyTest extends TestCase
             validatorChain:     app(ValidatorChainService::class),
             composer:           new ResponseComposerService($this->mock, $tokenUsageLogger),
             dispatcher:         new ActionDispatcher(null, $this->repo),
-            traceLogger:        new DecisionTraceLogger(),
-            conversations:      $this->repo,
-            tokenUsageLogger:   $tokenUsageLogger,
-            configResolver:     app(TenantConfigResolver::class),
+            traceLogger:          new DecisionTraceLogger(),
+            conversations:        $this->repo,
+            tokenUsageLogger:     $tokenUsageLogger,
+            configResolver:       app(TenantConfigResolver::class),
+            notificationService:  $this->createMock(\App\Modules\Notification\Services\NotificationService::class),
         );
     }
 
