@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 7 — Production Hardening, Benchmark, Launch Prep
-Sub-task Aktif : Sub-task 7.5
+Sub-task Aktif : Sub-task 7.6
 Last Updated   : 2026-05-17
 Git Branch     : dev
-Last Commit    : feat: security hardening — PII masking, log processor, injection audit
+Last Commit    : feat: 30 benchmark scenarios — happy path, objection, security, handoff
 Last Tag       : v0.7-analytics-complete
 ```
 
@@ -1902,10 +1902,22 @@ Notes           : InputSanitizerService already had 15 patterns (12 from CLAUDE.
 
 ### Sub-task 7.5 — Benchmark 30 Skenario
 ```
-Status          : [ ] TODO
-Files Created   : -
-Tests Pass      : - / -
-Commit          : -
+Status          : [x] DONE — 2026-05-17
+Files Created   : BENCHMARK.md (root project, 30 scenarios documented),
+                  tests/Feature/Benchmark/BenchmarkTestCase.php (shared base),
+                  tests/Feature/Benchmark/BenchmarkHappyPathTest.php (S001-005),
+                  tests/Feature/Benchmark/BenchmarkObjectionTest.php (S006-010),
+                  tests/Feature/Benchmark/BenchmarkEdgeCasesTest.php (S011-015),
+                  tests/Feature/Benchmark/BenchmarkConcurrencyTest.php (S016-020),
+                  tests/Feature/Benchmark/BenchmarkSecurityTest.php (S021-025),
+                  tests/Feature/Benchmark/BenchmarkHandoffTest.php (S026-030),
+                  app/Console/Commands/RunBenchmarkCommand.php
+Tests Pass      : 30 / 30 (all benchmark scenarios pass)
+Total Tests     : 678 / 678 (no regressions)
+Commit          : feat: 30 benchmark scenarios — happy path, objection, security, handoff
+Notes           : All scenarios use MockLlmAdapter (PRINSIP 9 — no real API).
+                  Fixed: frozen time to Friday 03:00 UTC (business hours), customer_phone NOT NULL,
+                  FollowUpService lead_temperature WARM/HOT filter, updated_at backdating via DB::table.
 ```
 
 ---

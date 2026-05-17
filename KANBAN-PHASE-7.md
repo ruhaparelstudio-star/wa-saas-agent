@@ -559,7 +559,7 @@ Git commit: "feat: security hardening — PII masking, log processor, injection 
 ---
 
 ### SUB-TASK 7.5 — Benchmark 30 Skenario
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 7.4 selesai
 **Estimated Time:** 2 jam
 
