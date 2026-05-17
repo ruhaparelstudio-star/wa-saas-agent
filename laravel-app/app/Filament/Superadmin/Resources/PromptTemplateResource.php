@@ -23,7 +23,7 @@ class PromptTemplateResource extends Resource
 
     protected static ?string $navigationLabel = 'Prompt Templates';
 
-    protected static ?int $navigationSort = 11;
+    protected static ?int $navigationSort = 2;
 
     public static function getNavigationGroup(): string
     {

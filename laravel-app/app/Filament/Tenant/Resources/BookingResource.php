@@ -21,6 +21,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Filters\Filter;
@@ -53,55 +54,84 @@ class BookingResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            DatePicker::make('event_date')
-                ->label('Tanggal Event')
-                ->required(),
-            TimePicker::make('event_time_start')
-                ->label('Waktu Mulai')
-                ->seconds(false),
-            TimePicker::make('event_time_end')
-                ->label('Waktu Selesai')
-                ->seconds(false),
-            Select::make('event_type')
-                ->label('Tipe Event')
-                ->options([
-                    'akad'      => 'Akad',
-                    'resepsi'   => 'Resepsi',
-                    'keduanya'  => 'Akad + Resepsi',
+            Section::make('Informasi Event')
+                ->columns(2)
+                ->schema([
+                    DatePicker::make('event_date')
+                        ->label('Tanggal Event')
+                        ->required()
+                        ->columnSpan(2),
+                    TimePicker::make('event_time_start')
+                        ->label('Waktu Mulai')
+                        ->seconds(false),
+                    TimePicker::make('event_time_end')
+                        ->label('Waktu Selesai')
+                        ->seconds(false),
+                    Select::make('event_type')
+                        ->label('Tipe Event')
+                        ->options([
+                            'akad'     => 'Akad',
+                            'resepsi'  => 'Resepsi',
+                            'keduanya' => 'Akad + Resepsi',
+                        ])
+                        ->native(false),
+                    TextInput::make('location')
+                        ->label('Lokasi / Venue')
+                        ->maxLength(255),
+                    TextInput::make('guest_count')
+                        ->label('Jumlah Tamu (perkiraan)')
+                        ->numeric()
+                        ->suffix('orang')
+                        ->minValue(1),
                 ]),
-            TextInput::make('location')
-                ->label('Lokasi')
-                ->maxLength(255),
-            TextInput::make('guest_count')
-                ->label('Jumlah Tamu')
-                ->numeric()
-                ->minValue(1),
-            TextInput::make('customer_name')
-                ->label('Nama Customer')
-                ->maxLength(255),
-            TextInput::make('customer_phone')
-                ->label('Nomor HP Customer')
-                ->tel()
-                ->maxLength(20),
-            Select::make('package_id')
-                ->label('Paket')
-                ->options(fn () => Package::withoutGlobalScopes()
-                    ->where('tenant_id', auth()->user()->tenant_id)
-                    ->where('is_active', true)
-                    ->pluck('name', 'id')
-                )
-                ->searchable(),
-            TextInput::make('total_amount')
-                ->label('Total Harga (IDR)')
-                ->numeric()
-                ->prefix('Rp'),
-            TextInput::make('dp_amount')
-                ->label('DP Amount (IDR)')
-                ->numeric()
-                ->prefix('Rp'),
-            Textarea::make('notes')
-                ->label('Catatan')
-                ->rows(3),
+
+            Section::make('Informasi Customer')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('customer_name')
+                        ->label('Nama Customer')
+                        ->maxLength(255),
+                    TextInput::make('customer_phone')
+                        ->label('Nomor WhatsApp')
+                        ->tel()
+                        ->prefix('+62')
+                        ->maxLength(20),
+                    Select::make('package_id')
+                        ->label('Paket yang Dipilih')
+                        ->options(fn () => Package::withoutGlobalScopes()
+                            ->where('tenant_id', auth()->user()->tenant_id)
+                            ->where('is_active', true)
+                            ->pluck('name', 'id')
+                        )
+                        ->searchable()
+                        ->native(false)
+                        ->placeholder('Pilih paket...')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Informasi Keuangan')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('total_amount')
+                        ->label('Total Harga')
+                        ->numeric()
+                        ->prefix('Rp')
+                        ->helperText('Total nilai kontrak booking ini.'),
+                    TextInput::make('dp_amount')
+                        ->label('Uang Muka / DP')
+                        ->numeric()
+                        ->prefix('Rp')
+                        ->helperText('Jumlah down payment yang disepakati.'),
+                ]),
+
+            Section::make('Catatan')
+                ->schema([
+                    Textarea::make('notes')
+                        ->label('Catatan Internal')
+                        ->rows(3)
+                        ->placeholder('Catatan khusus untuk tim internal...')
+                        ->helperText('Tidak ditampilkan ke customer.'),
+                ]),
         ]);
     }
 
@@ -123,6 +153,8 @@ class BookingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('event_type')
                     ->label('Tipe')
+                    ->badge()
+                    ->color('gray')
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
@@ -235,7 +267,8 @@ class BookingResource extends Resource
                                 InvoiceType::DP->value        => InvoiceType::DP->label(),
                                 InvoiceType::PELUNASAN->value => InvoiceType::PELUNASAN->label(),
                             ])
-                            ->required(),
+                            ->required()
+                            ->native(false),
                         TextInput::make('amount')
                             ->label('Nominal (IDR)')
                             ->numeric()

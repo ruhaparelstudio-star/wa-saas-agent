@@ -28,9 +28,11 @@ class SuperadminPanelProvider extends PanelProvider
             ->id('superadmin')
             ->path('superadmin')
             ->login()
+            ->brandName('WA SaaS — Admin')
             ->colors([
-                'primary' => Color::Slate,
+                'primary' => Color::Indigo,
             ])
+            ->profile(isSimple: false)
             ->discoverResources(
                 in: app_path('Filament/Superadmin/Resources'),
                 for: 'App\\Filament\\Superadmin\\Resources'
@@ -52,8 +54,8 @@ class SuperadminPanelProvider extends PanelProvider
                     ->url('/horizon')
                     ->openUrlInNewTab()
                     ->icon('heroicon-o-queue-list')
-                    ->group('System')
-                    ->sort(99),
+                    ->group('System Settings')
+                    ->sort(90),
             ])
             ->middleware([
                 EncryptCookies::class,

@@ -5,8 +5,8 @@ namespace App\Filament\Superadmin\Pages;
 use App\Modules\Shared\Models\SystemSetting;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
@@ -23,7 +23,7 @@ class GoogleOAuthSettingsPage extends Page
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Pengaturan Sistem';
+        return 'System Settings';
     }
 
     public function getView(): string
@@ -38,7 +38,7 @@ class GoogleOAuthSettingsPage extends Page
         $this->form->fill([
             'google_client_id'     => SystemSetting::get('google_client_id'),
             'google_client_secret' => SystemSetting::get('google_client_secret'),
-            'google_redirect_uri'  => SystemSetting::get('google_redirect_uri', url('/auth/google/callback')),
+            'google_redirect_uri'  => SystemSetting::get('google_redirect_uri', url('/app/calendar/oauth/callback')),
         ]);
     }
 
@@ -83,11 +83,12 @@ class GoogleOAuthSettingsPage extends Page
         ])->statePath('data');
     }
 
-    protected function getFormActions(): array
+    protected function getHeaderActions(): array
     {
         return [
             Action::make('save')
-                ->label('Simpan Konfigurasi OAuth')
+                ->label('Simpan Konfigurasi')
+                ->icon('heroicon-o-check')
                 ->action('save'),
         ];
     }

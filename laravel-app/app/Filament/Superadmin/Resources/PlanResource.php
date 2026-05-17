@@ -6,6 +6,7 @@ use App\Filament\Superadmin\Resources\PlanResource\Pages;
 use App\Filament\Superadmin\Resources\PlanResource\RelationManagers;
 use App\Modules\Plans\Models\Plan;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -23,25 +24,41 @@ class PlanResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    public static function getNavigationGroup(): string
+    {
+        return 'Management';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('code')
-                ->required()
-                ->unique(ignoreRecord: true)
-                ->maxLength(50)
-                ->helperText('Unique identifier: starter, growth, pro'),
-            TextInput::make('name')
-                ->required()
-                ->maxLength(100),
-            Textarea::make('description')
-                ->nullable()
-                ->rows(3),
-            TextInput::make('sort_order')
-                ->numeric()
-                ->default(0),
-            Toggle::make('is_active')
-                ->default(true),
+            Section::make('Plan Details')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('code')
+                        ->required()
+                        ->unique(ignoreRecord: true)
+                        ->maxLength(50)
+                        ->helperText('Unique slug: starter, growth, pro'),
+                    TextInput::make('name')
+                        ->required()
+                        ->maxLength(100),
+                    Textarea::make('description')
+                        ->nullable()
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ]),
+            Section::make('Settings')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('sort_order')
+                        ->label('Display Order')
+                        ->numeric()
+                        ->default(0),
+                    Toggle::make('is_active')
+                        ->label('Active')
+                        ->default(true),
+                ]),
         ]);
     }
 

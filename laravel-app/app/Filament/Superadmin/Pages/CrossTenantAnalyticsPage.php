@@ -12,7 +12,7 @@ class CrossTenantAnalyticsPage extends Page
 {
     protected static ?string $slug = 'analytics';
 
-    protected static ?string $navigationLabel = 'Analytics';
+    protected static ?string $navigationLabel = 'Cross-Tenant Analytics';
 
     protected static ?int $navigationSort = 10;
 

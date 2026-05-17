@@ -3,6 +3,7 @@
 namespace App\Modules\Calendar\Services;
 
 use App\Modules\Notification\Services\NotificationService;
+use App\Modules\Shared\Models\SystemSetting;
 use App\Modules\TenantConfig\Models\TenantSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -21,13 +22,12 @@ class GoogleOAuthService
 
     public function getAuthorizationUrl(string $tenantId): string
     {
-        $config = config('services.google_oauth');
         $state  = base64_encode($tenantId);
-        $scopes = implode(' ', $config['scopes']);
+        $scopes = 'https://www.googleapis.com/auth/calendar.events';
 
         return self::AUTH_URL . '?' . http_build_query([
-            'client_id'     => $config['client_id'],
-            'redirect_uri'  => $config['redirect_uri'],
+            'client_id'     => $this->getClientId(),
+            'redirect_uri'  => $this->getRedirectUri(),
             'response_type' => 'code',
             'scope'         => $scopes,
             'access_type'   => 'offline',
@@ -39,13 +39,12 @@ class GoogleOAuthService
     public function exchangeCode(string $code, string $state): ?array
     {
         $tenantId = base64_decode($state);
-        $config   = config('services.google_oauth');
 
         $response = Http::post(self::TOKEN_URL, [
             'code'          => $code,
-            'client_id'     => $config['client_id'],
-            'client_secret' => $config['client_secret'],
-            'redirect_uri'  => $config['redirect_uri'],
+            'client_id'     => $this->getClientId(),
+            'client_secret' => $this->getClientSecret(),
+            'redirect_uri'  => $this->getRedirectUri(),
             'grant_type'    => 'authorization_code',
         ]);
 
@@ -73,7 +72,6 @@ class GoogleOAuthService
 
     public function refreshAccessToken(string $tenantId): ?string
     {
-        $config       = config('services.google_oauth');
         $tokenData    = $this->loadTokenData($tenantId);
         $refreshToken = $tokenData['refresh_token'] ?? null;
 
@@ -84,8 +82,8 @@ class GoogleOAuthService
 
         $response = Http::post(self::TOKEN_URL, [
             'refresh_token' => $refreshToken,
-            'client_id'     => $config['client_id'],
-            'client_secret' => $config['client_secret'],
+            'client_id'     => $this->getClientId(),
+            'client_secret' => $this->getClientSecret(),
             'grant_type'    => 'refresh_token',
         ]);
 
@@ -159,5 +157,23 @@ class GoogleOAuthService
             'error'     => $error,
         ]);
         $this->notificationService->notifyCalendarError($tenantId, $method, $error);
+    }
+
+    private function getClientId(): string
+    {
+        return SystemSetting::get('google_client_id')
+            ?? config('services.google_oauth.client_id', '');
+    }
+
+    private function getClientSecret(): string
+    {
+        return SystemSetting::get('google_client_secret')
+            ?? config('services.google_oauth.client_secret', '');
+    }
+
+    private function getRedirectUri(): string
+    {
+        return SystemSetting::get('google_redirect_uri')
+            ?? config('services.google_oauth.redirect_uri', '');
     }
 }

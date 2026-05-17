@@ -95,7 +95,8 @@ class InvoiceResource extends Resource
                     })
                     ->formatStateUsing(fn (InvoiceStatus $state) => $state->label()),
                 Tables\Columns\TextColumn::make('sent_count')
-                    ->label('Kirim'),
+                    ->label('Jml Kirim')
+                    ->alignCenter(),
             ])
             ->filters([
                 SelectFilter::make('status')

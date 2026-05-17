@@ -13,10 +13,12 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class PackageResource extends Resource
@@ -37,83 +39,110 @@ class PackageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('name')
-                ->label('Nama Paket')
-                ->required()
-                ->maxLength(255),
-            TextInput::make('slug')
-                ->label('Slug')
-                ->required()
-                ->maxLength(255)
-                ->rules(fn ($record) => [
-                    Rule::unique('packages', 'slug')
-                        ->where('tenant_id', auth()->user()->tenant_id)
-                        ->ignore($record?->id),
-                ]),
-            Textarea::make('description')
-                ->label('Deskripsi')
-                ->nullable()
-                ->rows(3),
-            Select::make('category')
-                ->label('Kategori')
-                ->options([
-                    'wedding' => 'Wedding',
-                    'corporate' => 'Corporate',
-                    'birthday' => 'Birthday',
-                ])
-                ->default('wedding')
-                ->required(),
-            Toggle::make('is_active')
-                ->label('Aktif')
-                ->default(true),
-            TextInput::make('sort_order')
-                ->label('Urutan')
-                ->numeric()
-                ->default(0),
-            Repeater::make('prices')
-                ->label('Daftar Harga')
-                ->relationship('prices')
+            Section::make('Informasi Paket')
+                ->description('Isi detail paket yang akan ditawarkan oleh AI kepada calon customer.')
+                ->columns(2)
                 ->schema([
-                    TextInput::make('label')
-                        ->label('Label')
+                    TextInput::make('name')
+                        ->label('Nama Paket')
                         ->required()
-                        ->maxLength(100)
-                        ->placeholder('Contoh: Weekday, Weekend, Peak Season')
-                        ->columnSpan(2),
-                    TextInput::make('price_idr')
-                        ->label('Harga (IDR)')
+                        ->maxLength(255)
+                        ->live(debounce: 400)
+                        ->afterStateUpdated(function (?string $state, callable $set, $record) {
+                            if ($record === null || $record->slug === null) {
+                                $set('slug', Str::slug($state ?? ''));
+                            }
+                        })
+                        ->columnSpanFull(),
+                    TextInput::make('slug')
+                        ->label('Kode Paket (Slug)')
                         ->required()
-                        ->numeric()
-                        ->prefix('Rp')
-                        ->columnSpan(2),
-                    DatePicker::make('valid_from')
-                        ->label('Berlaku Dari')
+                        ->maxLength(255)
+                        ->helperText('Diisi otomatis dari nama. Gunakan huruf kecil dan tanda hubung. Contoh: paket-silver-2025.')
+                        ->rules(fn ($record) => [
+                            Rule::unique('packages', 'slug')
+                                ->where('tenant_id', auth()->user()->tenant_id)
+                                ->ignore($record?->id),
+                        ]),
+                    Select::make('category')
+                        ->label('Kategori')
+                        ->options([
+                            'wedding'   => 'Wedding',
+                            'corporate' => 'Corporate',
+                            'birthday'  => 'Birthday',
+                        ])
+                        ->default('wedding')
                         ->required()
-                        ->columnSpan(1),
-                    DatePicker::make('valid_until')
-                        ->label('Berlaku Sampai')
+                        ->native(false),
+                    Textarea::make('description')
+                        ->label('Deskripsi')
                         ->nullable()
-                        ->helperText('Kosongkan jika berlaku selamanya')
-                        ->columnSpan(1),
-                    Textarea::make('notes')
-                        ->label('Catatan')
-                        ->nullable()
-                        ->rows(2)
-                        ->columnSpan(2),
+                        ->rows(3)
+                        ->placeholder('Jelaskan keunggulan paket ini secara singkat...')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Pengaturan')
+                ->columns(2)
+                ->schema([
                     Toggle::make('is_active')
                         ->label('Aktif')
                         ->default(true)
-                        ->columnSpan(2),
-                ])
-                ->columns(2)
-                ->addActionLabel('+ Tambah Variasi Harga')
-                ->collapsible()
-                ->defaultItems(1)
-                ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
-                    $data['tenant_id'] = auth()->user()->tenant_id;
-                    return $data;
-                })
-                ->columnSpanFull(),
+                        ->helperText('Paket yang tidak aktif tidak ditawarkan oleh AI.'),
+                    TextInput::make('sort_order')
+                        ->label('Urutan Tampilan')
+                        ->numeric()
+                        ->default(0)
+                        ->helperText('Angka kecil = tampil lebih dulu. 0 = default.'),
+                ]),
+
+            Section::make('Daftar Harga')
+                ->description('Tambahkan variasi harga untuk paket ini. Bisa weekday, weekend, atau musim ramai.')
+                ->schema([
+                    Repeater::make('prices')
+                        ->label('')
+                        ->relationship('prices')
+                        ->schema([
+                            TextInput::make('label')
+                                ->label('Label Harga')
+                                ->required()
+                                ->maxLength(100)
+                                ->placeholder('Contoh: Weekday, Weekend, Peak Season')
+                                ->columnSpan(2),
+                            TextInput::make('price_idr')
+                                ->label('Harga (IDR)')
+                                ->required()
+                                ->numeric()
+                                ->prefix('Rp')
+                                ->columnSpan(2),
+                            DatePicker::make('valid_from')
+                                ->label('Berlaku Dari')
+                                ->required()
+                                ->columnSpan(1),
+                            DatePicker::make('valid_until')
+                                ->label('Berlaku Sampai')
+                                ->nullable()
+                                ->helperText('Kosongkan jika berlaku selamanya')
+                                ->columnSpan(1),
+                            Textarea::make('notes')
+                                ->label('Catatan Tambahan')
+                                ->nullable()
+                                ->rows(2)
+                                ->columnSpan(2),
+                            Toggle::make('is_active')
+                                ->label('Aktif')
+                                ->default(true)
+                                ->columnSpan(2),
+                        ])
+                        ->columns(2)
+                        ->addActionLabel('+ Tambah Variasi Harga')
+                        ->collapsible()
+                        ->defaultItems(1)
+                        ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                            $data['tenant_id'] = auth()->user()->tenant_id;
+                            return $data;
+                        }),
+                ]),
         ]);
     }
 
@@ -126,7 +155,7 @@ class PackageResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price_range')
-                    ->label('Harga')
+                    ->label('Rentang Harga')
                     ->getStateUsing(function (Package $record): string {
                         $prices = $record->activePrices()->orderBy('price_idr')->pluck('price_idr');
                         if ($prices->isEmpty()) {
@@ -143,16 +172,17 @@ class PackageResource extends Resource
                     ->counts('prices')
                     ->badge()
                     ->color('gray')
-                    ->label('Variasi'),
+                    ->label('Variasi Harga'),
+                Tables\Columns\TextColumn::make('category')
+                    ->label('Kategori')
+                    ->badge()
+                    ->color('info'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->label('Aktif')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->label('Urutan')
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->date('d M Y')
                     ->sortable()
                     ->label('Diupdate'),
             ])
@@ -177,9 +207,9 @@ class PackageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPackages::route('/'),
+            'index'  => Pages\ListPackages::route('/'),
             'create' => Pages\CreatePackage::route('/create'),
-            'edit' => Pages\EditPackage::route('/{record}/edit'),
+            'edit'   => Pages\EditPackage::route('/{record}/edit'),
         ];
     }
 }

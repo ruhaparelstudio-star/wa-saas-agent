@@ -24,7 +24,7 @@ class DecisionTraceResource extends Resource
 
     protected static ?string $navigationLabel = 'Decision Traces';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 1;
 
     public static function getNavigationGroup(): string
     {

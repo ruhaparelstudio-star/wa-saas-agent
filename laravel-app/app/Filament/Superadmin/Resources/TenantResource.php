@@ -13,6 +13,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Select as FormSelect;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput as FormTextInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -31,22 +32,36 @@ class TenantResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationGroup(): string
+    {
+        return 'Management';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('name')
-                ->required()
-                ->maxLength(255),
-            TextInput::make('contact_email')
-                ->email()
-                ->required()
-                ->maxLength(255),
-            TextInput::make('contact_phone')
-                ->tel()
-                ->maxLength(20),
-            TextInput::make('industry')
-                ->default('wedding')
-                ->maxLength(100),
+            Section::make('Business Info')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->required()
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+                    TextInput::make('industry')
+                        ->default('wedding')
+                        ->maxLength(100),
+                ]),
+            Section::make('Contact')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('contact_email')
+                        ->email()
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('contact_phone')
+                        ->tel()
+                        ->maxLength(20),
+                ]),
         ]);
     }
 
@@ -68,20 +83,22 @@ class TenantResource extends Resource
                     ->color('primary'),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn ($state): string => match (true) {
-                        $state === TenantStatus::TRIAL || $state === TenantStatus::TRIAL->value => 'warning',
-                        $state === TenantStatus::ACTIVE || $state === TenantStatus::ACTIVE->value => 'success',
-                        $state === TenantStatus::EXPIRED || $state === TenantStatus::EXPIRED->value => 'danger',
-                        $state === TenantStatus::SUSPENDED || $state === TenantStatus::SUSPENDED->value => 'danger',
-                        default => 'gray',
+                    ->color(fn (TenantStatus $state): string => match ($state) {
+                        TenantStatus::ACTIVE    => 'success',
+                        TenantStatus::TRIAL     => 'warning',
+                        TenantStatus::EXPIRED   => 'danger',
+                        TenantStatus::SUSPENDED => 'danger',
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('contact_email')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('industry'),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Joined')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->since()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->recordUrl(fn (Tenant $record): string => static::getUrl('edit', ['record' => $record]))
             ->actions([

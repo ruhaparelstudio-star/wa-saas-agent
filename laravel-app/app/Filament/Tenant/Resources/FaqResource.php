@@ -50,9 +50,10 @@ class FaqResource extends Resource
                 ->label('Aktif')
                 ->default(true),
             TextInput::make('sort_order')
-                ->label('Urutan')
+                ->label('Urutan Tampilan')
                 ->numeric()
-                ->default(0),
+                ->default(0)
+                ->helperText('Angka kecil tampil lebih dulu. 0 = default.'),
         ]);
     }
 

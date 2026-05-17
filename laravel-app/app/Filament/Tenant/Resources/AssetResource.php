@@ -5,8 +5,10 @@ namespace App\Filament\Tenant\Resources;
 use App\Filament\Tenant\Resources\AssetResource\Pages;
 use App\Modules\Knowledge\Models\Asset;
 use App\Modules\Shared\Enums\AssetType;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -15,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 
 class AssetResource extends Resource
 {
@@ -34,36 +37,34 @@ class AssetResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('name')
-                ->label('Nama')
-                ->required()
-                ->maxLength(255),
             Select::make('type')
-                ->label('Tipe')
+                ->label('Tipe Aset')
                 ->options(collect(AssetType::cases())->mapWithKeys(fn ($t) => [$t->value => $t->label()]))
-                ->required(),
-            TextInput::make('file_path')
-                ->label('Path File')
                 ->required()
-                ->maxLength(500)
-                ->helperText('Path di storage, contoh: tenants/abc/pricelist.pdf'),
-            TextInput::make('file_url')
-                ->label('URL Publik')
-                ->nullable()
-                ->maxLength(500)
-                ->url(),
-            TextInput::make('mime_type')
-                ->label('MIME Type')
+                ->native(false)
+                ->helperText('Pilih kategori aset ini — digunakan AI untuk mengenali jenis file.'),
+
+            TextInput::make('name')
+                ->label('Nama Aset')
+                ->maxLength(255)
+                ->placeholder('Opsional — diisi otomatis dari nama file')
+                ->helperText('Kosongkan untuk menggunakan nama file secara otomatis.'),
+
+            FileUpload::make('file_path')
+                ->label('Upload File')
+                ->disk('public')
+                ->directory(fn () => 'tenants/' . auth()->user()->tenant_id . '/assets')
+                ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'])
+                ->maxSize(10240)
                 ->required()
-                ->maxLength(100)
-                ->placeholder('Contoh: application/pdf'),
-            TextInput::make('file_size_kb')
-                ->label('Ukuran (KB)')
-                ->numeric()
-                ->default(0),
+                ->downloadable()
+                ->openable()
+                ->helperText('Format yang didukung: PDF, JPG, PNG, WebP. Maksimal 10 MB.'),
+
             Toggle::make('is_active')
                 ->label('Aktif')
-                ->default(true),
+                ->default(true)
+                ->helperText('Nonaktifkan agar file tidak digunakan oleh AI.'),
         ]);
     }
 
@@ -79,6 +80,17 @@ class AssetResource extends Resource
                     ->label('Tipe')
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state instanceof AssetType ? $state->label() : $state),
+                Tables\Columns\TextColumn::make('mime_type')
+                    ->label('Format')
+                    ->formatStateUsing(fn ($state) => match (true) {
+                        str_contains($state, 'pdf') => 'PDF',
+                        str_contains($state, 'png') => 'PNG',
+                        str_contains($state, 'webp') => 'WebP',
+                        str_contains($state, 'jpeg') || str_contains($state, 'jpg') => 'JPG',
+                        default => strtoupper(last(explode('/', $state))),
+                    })
+                    ->badge()
+                    ->color('gray'),
                 Tables\Columns\TextColumn::make('human_file_size')
                     ->label('Ukuran')
                     ->getStateUsing(fn ($record) => $record->human_file_size),
@@ -87,12 +99,19 @@ class AssetResource extends Resource
                     ->label('Aktif')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->dateTime('d M Y')
                     ->sortable()
-                    ->label('Dibuat'),
+                    ->label('Diunggah'),
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
+                Action::make('open')
+                    ->label('Buka')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('gray')
+                    ->url(fn ($record) => $record->file_url ?: Storage::disk('public')->url($record->file_path))
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => filled($record->file_path)),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
