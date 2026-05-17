@@ -703,7 +703,7 @@ Git commit: "feat: 30 benchmark scenarios — happy path, objection, security, h
 ---
 
 ### SUB-TASK 7.6 — Production .env + Docker Hardening
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 7.5 selesai
 **Estimated Time:** 1 jam
 

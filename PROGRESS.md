@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 7 — Production Hardening, Benchmark, Launch Prep
-Sub-task Aktif : Sub-task 7.6
+Sub-task Aktif : Sub-task 7.7
 Last Updated   : 2026-05-17
 Git Branch     : dev
-Last Commit    : feat: 30 benchmark scenarios — happy path, objection, security, handoff
+Last Commit    : ops: production hardening — Docker healthchecks, Redis AOF, .env.example complete
 Last Tag       : v0.7-analytics-complete
 ```
 
@@ -1924,11 +1924,18 @@ Notes           : All scenarios use MockLlmAdapter (PRINSIP 9 — no real API).
 
 ### Sub-task 7.6 — Production .env + Docker Hardening
 ```
-Status          : [ ] TODO
-Files Created   : -
-Files Updated   : -
-Tests Pass      : - / -
-Commit          : -
+Status          : [x] DONE — 2026-05-17
+Files Created   : PRODUCTION_CHECKLIST.md,
+                  tests/Feature/HealthCheckTest.php
+Files Updated   : laravel-app/.env.example (RESEND_*, DOMPDF_CHROOT, HORIZON_PREFIX),
+                  docker-compose.yml (healthchecks for app+nginx+wa-gateway, restart policies for all services),
+                  laravel-app/routes/web.php (/up health endpoint)
+Tests Pass      : 2 / 2 (HealthCheckTest) + 680 / 680 total
+Commit          : ops: production hardening — Docker healthchecks, Redis AOF, .env.example complete
+Notes           : /up endpoint publicly accessible (no auth required), used by Docker healthcheck.
+                  All 7 services now have restart:unless-stopped.
+                  app + nginx + wa-gateway have curl-based healthchecks.
+                  postgres + redis + horizon healthchecks were already in place.
 ```
 
 ---

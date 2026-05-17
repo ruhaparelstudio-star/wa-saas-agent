@@ -12,6 +12,13 @@ services:
         condition: service_healthy
     env_file:
       - ./laravel-app/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   nginx:
     image: nginx:alpine
@@ -24,6 +31,13 @@ services:
       - app
     networks:
       - saas_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   postgres:
     image: postgres:16-alpine
@@ -69,6 +83,7 @@ services:
       - ./laravel-app/.env
     networks:
       - saas_network
+    restart: unless-stopped
 
   scheduler:
     build: ./docker/php
@@ -81,6 +96,7 @@ services:
       - ./laravel-app/.env
     networks:
       - saas_network
+    restart: unless-stopped
 
   horizon:
     build: ./docker/php
@@ -118,6 +134,13 @@ services:
       - app
     networks:
       - saas_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   mailpit:
     image: axllent/mailpit

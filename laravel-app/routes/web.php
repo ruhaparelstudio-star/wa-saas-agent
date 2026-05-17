@@ -8,6 +8,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/up', fn () => response('OK', 200))->name('health');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/app/calendar/oauth/redirect', [GoogleOAuthController::class, 'redirect'])
          ->name('calendar.oauth.redirect');
