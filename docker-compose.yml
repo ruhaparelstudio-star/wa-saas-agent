@@ -72,7 +72,7 @@ services:
 
   queue:
     build: ./docker/php
-    command: php artisan queue:work --tries=3 --timeout=120 --sleep=3
+    command: php artisan queue:work --queue=inbound,default,notifications,follow-ups --tries=3 --timeout=120 --sleep=3
     volumes:
       - ./laravel-app:/var/www/html
     depends_on:
@@ -127,7 +127,7 @@ services:
       - wa_gateway_modules:/app/node_modules
       - wa_sessions:/app/sessions
     environment:
-      LARAVEL_URL: http://app
+      LARAVEL_URL: http://nginx
       INTERNAL_SECRET: "${WA_INTERNAL_SECRET:-change_this_to_random_32_chars}"
       PORT: 3001
     depends_on:

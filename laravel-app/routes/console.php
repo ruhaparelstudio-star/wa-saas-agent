@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('followups:schedule')->hourly();
+Schedule::command('wa:reconnect-sessions')->everyMinute();

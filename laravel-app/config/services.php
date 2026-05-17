@@ -38,6 +38,10 @@ return [
         ],
     ],
 
+    'openai' => [
+        'key' => env('LLM_API_KEY', env('OPENAI_API_KEY', '')),
+    ],
+
     'wa_gateway' => [
         'url'             => env('WA_GATEWAY_URL', 'http://wa-gateway:3001'),
         'secret'          => env('WA_INTERNAL_SECRET', ''),

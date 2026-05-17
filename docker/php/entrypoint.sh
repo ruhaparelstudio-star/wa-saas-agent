@@ -15,4 +15,9 @@ php artisan migrate --force --no-interaction
 
 php artisan storage:link --no-interaction 2>/dev/null || true
 
-exec php-fpm
+# Ensure storage and cache dirs are writable by www-data (FPM process user).
+# Volume mounts from the host preserve host ownership (UID 1000), so we chmod
+# instead of chown to avoid altering host filesystem ownership.
+chmod -R 777 storage/ bootstrap/cache/
+
+exec "${@:-php-fpm}"
