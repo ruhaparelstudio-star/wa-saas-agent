@@ -6,6 +6,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use App\Filament\Superadmin\Widgets\PlatformStatsWidget;
 use App\Filament\Superadmin\Widgets\TenantStatsWidget;
@@ -45,6 +46,14 @@ class SuperadminPanelProvider extends PanelProvider
             ->widgets([
                 TenantStatsWidget::class,
                 PlatformStatsWidget::class,
+            ])
+            ->navigationItems([
+                NavigationItem::make('Queue Monitor')
+                    ->url('/horizon')
+                    ->openUrlInNewTab()
+                    ->icon('heroicon-o-queue-list')
+                    ->group('System')
+                    ->sort(99),
             ])
             ->middleware([
                 EncryptCookies::class,
