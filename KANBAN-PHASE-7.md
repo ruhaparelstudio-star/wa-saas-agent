@@ -881,7 +881,7 @@ Git commit: "ops: production hardening — Docker healthchecks, Redis AOF, .env.
 ---
 
 ### SUB-TASK 7.7 — Seeder Demo + WeddingDemoSeeder Lengkap
-**Status:** [ ] TODO
+**Status:** [x] DONE — 2026-05-17
 **Depends On:** 7.6 selesai
 **Estimated Time:** 1 jam
 

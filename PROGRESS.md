@@ -8,10 +8,10 @@
 
 ```
 Phase Aktif    : Phase 7 — Production Hardening, Benchmark, Launch Prep
-Sub-task Aktif : Sub-task 7.7
+Sub-task Aktif : Sub-task 7.8
 Last Updated   : 2026-05-17
 Git Branch     : dev
-Last Commit    : ops: production hardening — Docker healthchecks, Redis AOF, .env.example complete
+Last Commit    : feat: WeddingDemoSeeder — complete demo data with analytics, invoice, multi-stage
 Last Tag       : v0.7-analytics-complete
 ```
 
@@ -1942,10 +1942,18 @@ Notes           : /up endpoint publicly accessible (no auth required), used by D
 
 ### Sub-task 7.7 — Seeder Demo + WeddingDemoSeeder Lengkap
 ```
-Status          : [ ] TODO
-Files Updated   : -
-Tests Pass      : - / -
-Commit          : -
+Status          : [x] DONE — 2026-05-17
+Files Created   : app/Console/Commands/SeedDemoCommand.php,
+                  tests/Feature/DemoSeederTest.php
+Files Updated   : database/seeders/WeddingDemoSeeder.php (2 tenants, 20 conversations,
+                  3 bookings, 2 invoices, CONNECTED WA accounts, pro plan)
+Tests Pass      : 7 / 7 (DemoSeederTest) | Total suite: 687 / 687
+Commit          : feat: WeddingDemoSeeder — complete demo data with analytics, invoice, multi-stage
+Notes           : 2 demo tenants (photography + catering), both on Pro plan (ANALYTICS_ADVANCED=true).
+                  10 conversations per tenant spanning all stages. 3 bookings per tenant with
+                  distinct event dates (unique constraint safe). 1 PAID DP invoice + 1 ISSUED
+                  pelunasan per invoice-phase conversation. WaAccount CONNECTED per tenant.
+                  php artisan demo:seed command + php artisan migrate:fresh --seed both work.
 ```
 
 ---
