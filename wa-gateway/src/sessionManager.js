@@ -21,6 +21,9 @@ class SessionManager {
     constructor() {
         // accountId → { socket, status, phone, connectedAt, callbackUrl, internalSecret, reconnectAttempts }
         this.sessions = new Map();
+        // accountId → Map<normalizedPhone, originalJid>
+        // Needed because @lid JIDs (WhatsApp privacy) cannot be replied via @s.whatsapp.net
+        this.jidMap = new Map();
     }
 
     async startSession(accountId, callbackUrl, internalSecret) {
@@ -132,6 +135,11 @@ class SessionManager {
                 const from = jid.split('@')[0];
                 if (!from) continue;
 
+                // Store original JID so replies use the correct JID type.
+                // @lid JIDs (privacy mode) cannot be reached via @s.whatsapp.net.
+                if (!this.jidMap.has(accountId)) this.jidMap.set(accountId, new Map());
+                this.jidMap.get(accountId).set(from, jid);
+
                 try {
                     await axios.post(`${laravelUrl}/webhook/inbound`, {
                         wa_account_id: accountId,
@@ -184,7 +192,10 @@ class SessionManager {
             return { success: false, error: 'Session not found' };
         }
         try {
-            const jid = toPhone.replace('+', '') + '@s.whatsapp.net';
+            const normalized = toPhone.replace('+', '');
+            // Use stored original JID if available (handles @lid privacy JIDs).
+            const jid = this.jidMap.get(accountId)?.get(normalized)
+                ?? (normalized + '@s.whatsapp.net');
             const result = await session.socket.sendMessage(jid, { text });
             return { success: true, provider_message_id: result?.key?.id || null };
         } catch (err) {
@@ -199,7 +210,9 @@ class SessionManager {
             return { success: false, error: 'Session not found' };
         }
         try {
-            const jid = toPhone.replace('+', '') + '@s.whatsapp.net';
+            const normalized = toPhone.replace('+', '');
+            const jid = this.jidMap.get(accountId)?.get(normalized)
+                ?? (normalized + '@s.whatsapp.net');
             const payload = {
                 document: { url: fileUrl },
                 mimetype,
