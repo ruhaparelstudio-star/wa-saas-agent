@@ -11,6 +11,7 @@ enum NotificationType: string
     case INVOICE_ACTION = 'invoice_action';
     case BOOKING_ACTION = 'booking_action';
     case INJECTION_ATTEMPT_DETECTED = 'injection_attempt_detected';
+    case QUALITY_ISSUE_DETECTED = 'quality_issue_detected';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum NotificationType: string
             self::INVOICE_ACTION => 'Invoice Action',
             self::BOOKING_ACTION => 'Booking Action',
             self::INJECTION_ATTEMPT_DETECTED => 'Injection Attempt Detected',
+            self::QUALITY_ISSUE_DETECTED => 'Quality Issue Detected',
         };
     }
 }

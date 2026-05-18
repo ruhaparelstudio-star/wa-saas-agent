@@ -50,16 +50,24 @@ class GroundingValidator
             'send_package_detail'                      => $this->checkPackages($structuredData),
             'send_package_list'                        => $this->checkPackages($structuredData),
             'retrieve_invoice'                         => $this->checkInvoices($structuredData),
+            'check_availability', 'send_availability'  => $this->checkAvailability($structuredData),
             'send_general_reply', 'send_greeting',
             'send_handoff_message', 'send_after_hours_reply',
             'clarify_request', 'send_booking_flow',
             'send_process_info', 'send_location_info',
             'send_payment_info', 'send_booking_info',
             'handle_objection', 'ask_package_clarification',
-            'flag_handoff', 'cancel_booking_flow',
-            'check_availability', 'send_availability'  => 'passed',
+            'flag_handoff', 'cancel_booking_flow'       => 'passed',
             default                                    => 'passed',
         };
+    }
+
+    private function checkAvailability(array $structuredData): string
+    {
+        if (empty($structuredData['availability'])) {
+            return 'failed';
+        }
+        return 'passed';
     }
 
     private function checkPrices(array $structuredData): string

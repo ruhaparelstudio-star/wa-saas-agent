@@ -77,7 +77,9 @@ class KnowledgeRetrieverService implements KnowledgeRetrieverInterface
 
         // Availability check — direct DB query so LLM gets a definitive answer
         // before composing the reply (avoids "kami akan cek" non-answers).
-        if ($intent === 'ask_availability' && !empty($entities['event_date'])) {
+        // Triggered for any intent that could lead the composer to claim availability.
+        $availabilityIntents = ['ask_availability', 'request_booking', 'confirm_booking', 'ask_booking'];
+        if (in_array($intent, $availabilityIntents, true) && !empty($entities['event_date'])) {
             try {
                 $dateStr   = Carbon::parse($entities['event_date'])->toDateString();
                 $eventType = $entities['event_type'] ?? null;

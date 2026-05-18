@@ -7,6 +7,7 @@ use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Handoff\Models\HandoffRecord;
 use App\Modules\Notification\Jobs\SendHandoffEmailJob;
 use App\Modules\Notification\Models\AdminNotification;
+use App\Modules\QualityGuard\DTOs\QualityViolationDTO;
 use App\Modules\Shared\Enums\NotificationType;
 use App\Modules\Shared\Enums\UserRole;
 use App\Modules\WhatsApp\Models\WaAccount;
@@ -141,6 +142,43 @@ class NotificationService
             'context'     => $context,
             'error'       => $error,
             'admin_count' => $admins->count(),
+        ]);
+    }
+
+    public function notifyQualityIssue(Conversation $conversation, QualityViolationDTO $violation): void
+    {
+        $admins = $this->getTenantAdmins($conversation->tenant_id);
+
+        $title = sprintf('Quality issue (%s): %s',
+            strtoupper($violation->severity->value),
+            $violation->code->label(),
+        );
+
+        $body = $violation->message;
+        if (!empty($violation->suggested_action)) {
+            $body .= ' Suggested: ' . $violation->suggested_action;
+        }
+
+        foreach ($admins as $admin) {
+            AdminNotification::create([
+                'tenant_id' => $conversation->tenant_id,
+                'user_id'   => $admin->id,
+                'type'      => NotificationType::QUALITY_ISSUE_DETECTED->value,
+                'title'     => $title,
+                'body'      => $body,
+                'data'      => [
+                    'conversation_id' => $conversation->id,
+                    'code'            => $violation->code->value,
+                    'severity'        => $violation->severity->value,
+                    'evidence'        => $violation->evidence,
+                ],
+            ]);
+        }
+
+        Log::info('NotificationService: quality_issue notification sent.', [
+            'conversation_id' => $conversation->id,
+            'code'            => $violation->code->value,
+            'severity'        => $violation->severity->value,
         ]);
     }
 

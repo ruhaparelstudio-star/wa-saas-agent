@@ -10,3 +10,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('followups:schedule')->hourly();
 Schedule::command('wa:reconnect-sessions')->everyMinute();
+Schedule::command('quality:patrol --since=15m')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();

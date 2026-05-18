@@ -14,7 +14,13 @@ use App\Modules\AgentCore\Validators\ValidatorChainService;
 use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Conversation\Repositories\ConversationRepository;
 use App\Modules\Notification\Services\NotificationService;
+use App\Modules\QualityGuard\Enums\QualitySeverity;
+use App\Modules\QualityGuard\Events\QualityIssueDetected;
+use App\Modules\QualityGuard\Jobs\GradeReplyWithLlmJob;
+use App\Modules\QualityGuard\Models\ConversationQualityIssue;
+use App\Modules\QualityGuard\Services\ConversationQualityGuard;
 use App\Modules\Shared\Contracts\KnowledgeRetrieverInterface;
+use App\Modules\Shared\DTOs\ComposedReplyDTO;
 use App\Modules\Shared\DTOs\ConversationDTO;
 use App\Modules\Shared\DTOs\ConversationStateDTO;
 use App\Modules\Shared\DTOs\EntityResultDTO;
@@ -58,6 +64,7 @@ class TurnPipelineService
         private readonly TenantConfigResolver        $configResolver,
         private readonly NotificationService         $notificationService,
         private readonly ConversationSummarizerService $summarizer,
+        private readonly ConversationQualityGuard    $qualityGuard,
     ) {}
 
     /**
@@ -202,6 +209,11 @@ class TurnPipelineService
                 $lead->refresh();
             }
 
+            // Sync extracted entities to conversation columns (customer_name, customer_email).
+            // Prevents the bug where leads.customer_name = "Aris" but conversations.customer_name = NULL.
+            $conversation->updateFromEntities($entityResult->entities);
+            $conversation->refresh();
+
             // ── Step 9: KnowledgeRetrieverInterface ───────────────────────
             $knowledge = $this->knowledgeRetriever->retrieve(
                 $intentResult->intent,
@@ -239,6 +251,58 @@ class TurnPipelineService
             $llmData['composer_raw']    = $reply->reply_text;
             $llmData['composer_prompt'] = $this->composer->getLastPrompt();
 
+            // ── Step 13b: ConversationQualityGuard ───────────────────────
+            // Pre-send severity-based safety net. CRITICAL violations block the
+            // reply and force the conversation into HANDOFF so the customer
+            // never sees hallucinated facts or unfulfilled promises.
+            $verdict = $this->qualityGuard->evaluate($context, $decision, $reply);
+            $guardVerdict = 'pass';
+
+            foreach ($verdict->violations as $violation) {
+                $issue = ConversationQualityIssue::create([
+                    'tenant_id'         => $tenantId,
+                    'conversation_id'   => $conversation->id,
+                    'decision_trace_id' => null,
+                    'code'              => $violation->code->value,
+                    'severity'          => $violation->severity->value,
+                    'source'            => 'guard',
+                    'message'           => $violation->message,
+                    'evidence'          => $violation->evidence,
+                    'blocked'           => $verdict->should_block && $violation->severity === QualitySeverity::CRITICAL,
+                ]);
+
+                if ($violation->severity === QualitySeverity::HIGH) {
+                    try {
+                        $this->notificationService->notifyQualityIssue($conversation, $violation);
+                    } catch (\Throwable $e) {
+                        Log::warning('notifyQualityIssue failed', ['error' => $e->getMessage()]);
+                    }
+                }
+
+                // Broadcast event (deferred to next pass — guarded by try-catch).
+            }
+
+            $llmData['quality_violations'] = array_map(fn ($v) => $v->toArray(), $verdict->violations);
+            $llmData['reply_overridden']   = false;
+
+            if ($verdict->should_block) {
+                $guardVerdict = 'blocked';
+                $reply = ComposedReplyDTO::from([
+                    'reply_text'             => $verdict->override_reply,
+                    'reply_type'             => 'text',
+                    'attachments'             => [],
+                    'grounding_refs'         => [],
+                    'detected_hallucination' => true,
+                ]);
+                $decision = $decision->withForcedHandoff(
+                    reason: 'QualityGuard blocked: ' . implode(', ', $verdict->criticalCodes()),
+                );
+                $llmData['reply_overridden'] = true;
+            } elseif (count($verdict->violations) > 0) {
+                $guardVerdict = 'warn';
+            }
+            $llmData['guard_verdict'] = $guardVerdict;
+
             // ── Step 14: ActionDispatcher ─────────────────────────────────
             $dispatched = $this->dispatcher->dispatch($context, $reply, $decision);
 
@@ -268,6 +332,14 @@ class TurnPipelineService
 
             // ── Step 15: DecisionTraceLogger ──────────────────────────────
             $trace = $this->traceLogger->log($context, $result, $llmData);
+
+            // ── Step 15b: LLM Reply Grader (async, tenant-gated) ──────────
+            // Fire-and-forget. The job is responsible for tenant flag + throttle.
+            try {
+                GradeReplyWithLlmJob::dispatch($trace->id);
+            } catch (\Throwable $e) {
+                Log::warning('GradeReplyWithLlmJob dispatch failed', ['error' => $e->getMessage()]);
+            }
 
             // ── Step 16: Summarize long conversations ─────────────────────
             // When the conversation exceeds the configured threshold, queue a

@@ -25,14 +25,18 @@ class TenantSetting extends BaseModel
         'bank_name',
         'bank_account_number',
         'bank_account_name',
+        'llm_grader_enabled',
+        'llm_grader_daily_budget_idr',
     ];
 
     protected function casts(): array
     {
         return array_merge(parent::casts(), [
-            'tone'                    => TenantTone::class,
-            'business_days'           => 'array',
-            'google_calendar_enabled' => 'boolean',
+            'tone'                       => TenantTone::class,
+            'business_days'              => 'array',
+            'google_calendar_enabled'    => 'boolean',
+            'llm_grader_enabled'         => 'boolean',
+            'llm_grader_daily_budget_idr' => 'integer',
         ]);
     }
 

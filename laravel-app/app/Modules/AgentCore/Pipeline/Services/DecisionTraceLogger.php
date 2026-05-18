@@ -3,12 +3,16 @@
 namespace App\Modules\AgentCore\Pipeline\Services;
 
 use App\Modules\AgentCore\Pipeline\Models\DecisionTrace;
+use App\Modules\QualityGuard\Models\ConversationQualityIssue;
+use App\Modules\QualityGuard\Models\DecisionTraceViolation;
 use App\Modules\Shared\DTOs\ComposedReplyDTO;
 use App\Modules\Shared\DTOs\DecisionDTO;
 use App\Modules\Shared\DTOs\TurnContextDTO;
 use App\Modules\Shared\DTOs\TurnResultDTO;
 use App\Modules\Shared\DTOs\ValidatorResultDTO;
+use App\Modules\Shared\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class DecisionTraceLogger
 {
@@ -110,9 +114,59 @@ class DecisionTraceLogger
 
             'processing_time_ms'      => $result->processing_time_ms,
             'error_message'           => $llmData['error_message'] ?? null,
+
+            'guard_verdict'           => $llmData['guard_verdict'] ?? null,
+            'reply_overridden'        => (bool) ($llmData['reply_overridden'] ?? false),
         ]);
 
+        try {
+            $this->persistViolations($trace, $llmData['quality_violations'] ?? []);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('persistViolations failed', ['error' => $e->getMessage()]);
+        }
+
         return $trace;
+    }
+
+    /**
+     * Persist guard violations to decision_trace_violations + link to issues.
+     */
+    private function persistViolations(DecisionTrace $trace, array $violationData): void
+    {
+        if (empty($violationData)) {
+            return;
+        }
+
+        foreach ($violationData as $v) {
+            DecisionTraceViolation::create([
+                'id'                => (string) Str::uuid(),
+                'tenant_id'         => $trace->tenant_id,
+                'decision_trace_id' => $trace->id,
+                'code'              => $v['code'] ?? '',
+                'severity'          => $v['severity'] ?? '',
+                'source'            => 'guard',
+                'message'           => $v['message'] ?? '',
+                'evidence'          => $v['evidence'] ?? [],
+                'created_at'        => now(),
+            ]);
+        }
+
+        // Link issues (created earlier in pipeline with decision_trace_id=NULL)
+        // back to this trace, plus link the violation rows to those issues.
+        $issues = ConversationQualityIssue::withoutGlobalScope(TenantScope::class)
+            ->where('conversation_id', $trace->conversation_id)
+            ->whereNull('decision_trace_id')
+            ->where('created_at', '>=', $trace->created_at->copy()->subSeconds(60))
+            ->get();
+
+        foreach ($issues as $issue) {
+            $issue->update(['decision_trace_id' => $trace->id]);
+            DecisionTraceViolation::withoutGlobalScope(TenantScope::class)
+                ->where('decision_trace_id', $trace->id)
+                ->where('code', $issue->code->value)
+                ->whereNull('quality_issue_id')
+                ->update(['quality_issue_id' => $issue->id]);
+        }
     }
 
     public function getTracesByConversation(string $conversationId, int $limit = 20): Collection

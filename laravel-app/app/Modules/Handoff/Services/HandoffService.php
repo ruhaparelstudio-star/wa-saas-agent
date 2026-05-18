@@ -3,6 +3,7 @@
 namespace App\Modules\Handoff\Services;
 
 use App\Modules\Conversation\Models\Conversation;
+use App\Modules\Handoff\Events\HandoffRequiredBroadcasted;
 use App\Modules\Handoff\Models\HandoffRecord;
 use App\Modules\Handoff\Repositories\HandoffRepository;
 use App\Modules\Notification\Services\NotificationService;
@@ -53,6 +54,12 @@ class HandoffService
         ]);
 
         $this->notificationService->notifyHandoffRequired($conversation, $record);
+
+        try {
+            event(HandoffRequiredBroadcasted::fromRecord($record));
+        } catch (\Throwable $e) {
+            Log::debug('HandoffRequiredBroadcasted dispatch failed', ['error' => $e->getMessage()]);
+        }
 
         return $record;
     }

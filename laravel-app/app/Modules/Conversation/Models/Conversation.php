@@ -121,6 +121,27 @@ class Conversation extends TenantBaseModel
         $this->update(['entity_cache' => $merged]);
     }
 
+    public function updateFromEntities(array $entities): void
+    {
+        $fieldMap = [
+            'customer_name'  => 'customer_name',
+            'customer_email' => 'customer_email',
+        ];
+
+        $updates = [];
+        foreach ($fieldMap as $entityKey => $modelField) {
+            if (isset($entities[$entityKey]) && $entities[$entityKey] !== null && $entities[$entityKey] !== '') {
+                if (empty($this->{$modelField})) {
+                    $updates[$modelField] = $entities[$entityKey];
+                }
+            }
+        }
+
+        if (!empty($updates)) {
+            $this->update($updates);
+        }
+    }
+
     public function getRecentMessages(int $limit = 10): Collection
     {
         return $this->messages()

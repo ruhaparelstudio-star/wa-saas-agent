@@ -438,6 +438,14 @@ PROMPT;
             $lines[] = 'BOOKING_READY_TO_OFFER: false';
         }
 
+        // Availability-unchecked guard: when the customer mentioned a date but
+        // the knowledge layer did not load an availability lookup, the composer
+        // MUST NOT claim "tanggal X tersedia". Tell it explicitly.
+        if (!empty($merged['event_date']) && empty($availability)) {
+            $lines[] = 'AVAILABILITY_UNCHECKED: true — DO NOT claim the date "tersedia/available/kosong". '
+                . 'Say "boleh saya cek ketersediaannya dulu ya Kak" instead.';
+        }
+
         return implode("\n", $lines);
     }
 
@@ -558,15 +566,38 @@ PROMPT;
     }
 
     /**
-     * Heuristic: if reply mentions a price (Rp pattern) but no price/package data
-     * exists in grounding, treat it as a potential hallucination.
+     * Heuristic: catch composed replies that mention facts not in grounded data.
+     * Currently checks: price mentions without price data, availability claims
+     * for SPECIFIC DATES without availability data.
      */
     private function detectHallucination(string $replyText, array $structuredData): bool
     {
-        $hasPriceData     = !empty($structuredData['packages']) || !empty($structuredData['prices']);
+        $hasPriceData       = !empty($structuredData['packages']) || !empty($structuredData['prices']);
         $replyMentionsPrice = (bool) preg_match('/Rp[\s.]?[\d,.]+/i', $replyText);
 
-        return $replyMentionsPrice && !$hasPriceData;
+        if ($replyMentionsPrice && !$hasPriceData) {
+            return true;
+        }
+
+        // Availability hallucination: reply claims a SPECIFIC DATE is available
+        // (tersedia/kosong/free) but no availability lookup was done.
+        // Detection requires BOTH a date marker AND an availability claim — this
+        // avoids flagging "Paket Standard tersedia" (package-availability talk).
+        $hasAvailability     = !empty($structuredData['availability']);
+        $mentionsDateContext = (bool) preg_match(
+            '/\b(tanggal|tgl|hari|date|\d{1,2}[\/\-\s][a-zA-Z\d]{2,9}[\/\-\s]?\d{0,4})\b/i',
+            $replyText,
+        );
+        $claimsAvailable = (bool) preg_match(
+            '/\b(tersedia|available|kosong|bisa di(?:reserve|book|booking)|free|open)\b/i',
+            $replyText,
+        );
+
+        if ($mentionsDateContext && $claimsAvailable && !$hasAvailability) {
+            return true;
+        }
+
+        return false;
     }
 
     private function presetReply(string $message, array $groundingRefs): ComposedReplyDTO

@@ -347,6 +347,7 @@ class ConversationFlowAlignmentTest extends TestCase
             configResolver:     app(TenantConfigResolver::class),
             notificationService:$this->createMock(\App\Modules\Notification\Services\NotificationService::class),
             summarizer:         app(\App\Modules\AgentCore\Summarization\Services\ConversationSummarizerService::class),
+            qualityGuard:        app(\App\Modules\QualityGuard\Services\ConversationQualityGuard::class),
         );
     }
 

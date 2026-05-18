@@ -107,13 +107,27 @@ class DecisionEngineService implements DecisionEngineInterface
 
         $replyStrategy = $this->determineReplyStrategy($context, $effectiveStage, $blockedActions);
 
-        // If the reply strategy is acknowledge_and_close, transition the conversation
-        // to CLOSED so subsequent messages won't be auto-replied by the LLM and the
-        // handoff path can take over cleanly.
-        if ($replyStrategy === 'acknowledge_and_close'
-            && $stageTransition === null
-        ) {
-            $stageTransition = ConversationStage::CLOSED->value;
+        // acknowledge_and_close: customer confirmed after draft booking.
+        // CLOSED is reserved for FULLY-PAID leads (per CLAUDE.md). Instead,
+        // STAY in WAITING_BOOKING and trigger the human-handoff machinery so
+        // sales picks it up. The reply text "tim sales akan follow up" is
+        // honored end-to-end (record + notification + agent_mode=HANDOFF).
+        $handoffRequired      = false;
+        $handoffReason        = null;
+        $handoffPriority      = HandoffPriority::LOW->value;
+        $notificationRequired = false;
+
+        if ($replyStrategy === 'acknowledge_and_close') {
+            if (!in_array('flag_handoff', $desiredActions, true)) {
+                $desiredActions[] = 'flag_handoff';
+            }
+            if (!in_array('flag_handoff', $allowedActions, true)) {
+                $allowedActions[] = 'flag_handoff';
+            }
+            $handoffRequired      = true;
+            $handoffReason        = 'Customer mengkonfirmasi setelah draft booking — sales follow-up untuk DP/konfirmasi';
+            $handoffPriority      = HandoffPriority::MEDIUM->value;
+            $notificationRequired = true;
         }
 
         return DecisionDTO::from([
@@ -121,10 +135,10 @@ class DecisionEngineService implements DecisionEngineInterface
             'desired_actions'      => $desiredActions,
             'allowed_actions'      => $allowedActions,
             'blocked_actions'      => $blockedActions,
-            'handoff_required'     => false,
-            'handoff_reason'       => null,
-            'handoff_priority'     => HandoffPriority::LOW->value,
-            'notification_required' => false,
+            'handoff_required'     => $handoffRequired,
+            'handoff_reason'       => $handoffReason,
+            'handoff_priority'     => $handoffPriority,
+            'notification_required' => $notificationRequired,
             'reply_strategy'       => $replyStrategy,
             'active_goal'          => $this->buildActiveGoal($context->intent->intent, $desiredActions),
             'stage_transition'     => $stageTransition,

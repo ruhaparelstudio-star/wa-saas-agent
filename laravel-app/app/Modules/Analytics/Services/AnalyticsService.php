@@ -203,6 +203,68 @@ class AnalyticsService
             ->all();
     }
 
+    /**
+     * Quality metrics for the QualityGuard dashboard widget.
+     *
+     * @return array{
+     *   total_turns:int,
+     *   total_violations:int,
+     *   critical:int, high:int, low:int,
+     *   blocked_replies:int,
+     *   avg_quality_score:?float,
+     *   top_codes:array<int, array{code:string,count:int}>
+     * }
+     */
+    public function getQualityMetrics(string $tenantId, AnalyticsPeriodDTO $period): array
+    {
+        $turns = DB::table('decision_traces')
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$period->start_date, $period->end_date])
+            ->count();
+
+        $byCount = DB::table('decision_trace_violations')
+            ->select('severity', DB::raw('COUNT(*) as c'))
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$period->start_date, $period->end_date])
+            ->groupBy('severity')
+            ->pluck('c', 'severity')
+            ->toArray();
+
+        $blocked = DB::table('decision_traces')
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$period->start_date, $period->end_date])
+            ->where('reply_overridden', true)
+            ->count();
+
+        $avgScore = DB::table('decision_traces')
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$period->start_date, $period->end_date])
+            ->whereNotNull('quality_score')
+            ->avg('quality_score');
+
+        $topCodes = DB::table('decision_trace_violations')
+            ->select('code', DB::raw('COUNT(*) as c'))
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$period->start_date, $period->end_date])
+            ->groupBy('code')
+            ->orderByDesc('c')
+            ->limit(5)
+            ->get()
+            ->map(fn ($r) => ['code' => $r->code, 'count' => (int) $r->c])
+            ->all();
+
+        return [
+            'total_turns'      => (int) $turns,
+            'total_violations' => array_sum($byCount),
+            'critical'         => (int) ($byCount['critical'] ?? 0),
+            'high'             => (int) ($byCount['high'] ?? 0),
+            'low'              => (int) ($byCount['low'] ?? 0),
+            'blocked_replies'  => (int) $blocked,
+            'avg_quality_score' => $avgScore !== null ? round((float) $avgScore, 2) : null,
+            'top_codes'        => $topCodes,
+        ];
+    }
+
     public function makePeriod(string $label = 'last_30_days'): AnalyticsPeriodDTO
     {
         $now = Carbon::now();

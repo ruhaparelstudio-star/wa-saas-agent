@@ -53,6 +53,11 @@ class DecisionTrace extends TenantBaseModel
         'actions_dispatched',
         'processing_time_ms',
         'error_message',
+        'quality_score',
+        'llm_grade',
+        'llm_graded_at',
+        'guard_verdict',
+        'reply_overridden',
     ];
 
     public function tenant(): BelongsTo
@@ -80,6 +85,10 @@ class DecisionTrace extends TenantBaseModel
             'prompt_tokens_total'   => 'integer',
             'completion_tokens_total' => 'integer',
             'processing_time_ms'    => 'integer',
+            'quality_score'         => 'float',
+            'llm_grade'             => 'array',
+            'llm_graded_at'         => 'datetime',
+            'reply_overridden'      => 'boolean',
         ]);
     }
 }

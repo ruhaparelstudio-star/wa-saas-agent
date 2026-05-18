@@ -58,4 +58,29 @@ readonly class DecisionDTO
             'stage_transition' => $this->stage_transition,
         ];
     }
+
+    public function withForcedHandoff(string $reason, ?HandoffPriority $priority = null): self
+    {
+        $desired = $this->desired_actions;
+        $allowed = $this->allowed_actions;
+        if (!in_array('flag_handoff', $desired, true)) {
+            $desired[] = 'flag_handoff';
+        }
+        if (!in_array('flag_handoff', $allowed, true)) {
+            $allowed[] = 'flag_handoff';
+        }
+        return new self(
+            decision: 'handoff',
+            desired_actions: $desired,
+            allowed_actions: $allowed,
+            blocked_actions: $this->blocked_actions,
+            handoff_required: true,
+            handoff_reason: $reason,
+            handoff_priority: $priority ?? HandoffPriority::HIGH,
+            notification_required: true,
+            reply_strategy: 'send_handoff_message',
+            active_goal: $this->active_goal,
+            stage_transition: $this->stage_transition,
+        );
+    }
 }
