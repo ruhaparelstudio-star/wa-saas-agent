@@ -98,6 +98,16 @@ class KnowledgeRetrieverService implements KnowledgeRetrieverInterface
                     'is_available' => $isAvailable,
                     'event_type'   => $eventType,
                 ];
+
+                // Surface the availability lookup as an explicit grounding ref so
+                // DecisionTrace can show what the composer actually saw. Without this
+                // an availability reply looks like an ungrounded LLM hallucination.
+                $groundingRefs[] = new GroundingRefDTO(
+                    type: 'structured',
+                    source: 'bookings',
+                    id: 'avail:' . $dateStr . ($eventType ? ':' . $eventType : ''),
+                    key_data: $dateStr . ' = ' . ($isAvailable ? 'available' : 'taken'),
+                );
             } catch (Throwable) {
                 // Non-fatal — LLM will respond without availability data
             }

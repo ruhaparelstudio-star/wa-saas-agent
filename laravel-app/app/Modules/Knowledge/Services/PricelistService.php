@@ -17,6 +17,18 @@ class PricelistService
     public const MODE_HYBRID   = 'hybrid';
     public const MODE_DISABLED = 'disabled';
 
+    public const REQUIREMENT_NONE                  = 'none';
+    public const REQUIREMENT_REQUIRE_CUSTOMER_NAME = 'require_customer_name';
+    public const REQUIREMENT_AFTER_QUALIFICATION   = 'after_qualification';
+    public const REQUIREMENT_AFTER_EVENT_DATE      = 'after_event_date';
+
+    private const VALID_REQUIREMENTS = [
+        self::REQUIREMENT_NONE,
+        self::REQUIREMENT_REQUIRE_CUSTOMER_NAME,
+        self::REQUIREMENT_AFTER_QUALIFICATION,
+        self::REQUIREMENT_AFTER_EVENT_DATE,
+    ];
+
     private const STAGE_RANK = [
         'new_lead'              => 0,
         'exploration'           => 1,
@@ -57,7 +69,33 @@ class PricelistService
             PolicyKey::PRICELIST_MIN_REQUIREMENT
         );
 
-        if ($requirement === 'after_qualification') {
+        // Fail-safe: unknown / empty / legacy values default to require_customer_name
+        // so misconfigured tenants cannot leak pricelist before basic profiling.
+        if (!in_array($requirement, self::VALID_REQUIREMENTS, true)) {
+            $requirement = self::REQUIREMENT_REQUIRE_CUSTOMER_NAME;
+        }
+
+        if ($requirement === self::REQUIREMENT_NONE) {
+            return ['allowed' => true, 'reason' => null, 'fallback' => null];
+        }
+
+        if ($requirement === self::REQUIREMENT_REQUIRE_CUSTOMER_NAME) {
+            $mergedEntities = array_merge(
+                $context->state->entities ?? [],
+                $context->entities->entities ?? [],
+            );
+            $existingName = $context->lead->name ?? null;
+
+            if (empty($mergedEntities['customer_name']) && empty($existingName)) {
+                return [
+                    'allowed'  => false,
+                    'reason'   => 'Pricelist requires customer name first',
+                    'fallback' => 'ask_customer_name',
+                ];
+            }
+        }
+
+        if ($requirement === self::REQUIREMENT_AFTER_QUALIFICATION) {
             $stageValue = $context->state->stage->value;
             $rank       = self::STAGE_RANK[$stageValue] ?? 0;
             $minRank    = self::STAGE_RANK[ConversationStage::QUALIFICATION->value];
@@ -83,7 +121,7 @@ class PricelistService
             }
         }
 
-        if ($requirement === 'after_event_date') {
+        if ($requirement === self::REQUIREMENT_AFTER_EVENT_DATE) {
             $entities      = $context->entities->entities ?? [];
             $stateEntities = $context->state->entities ?? [];
             $eventDate     = $entities['event_date'] ?? $stateEntities['event_date'] ?? null;
@@ -160,5 +198,29 @@ class PricelistService
             self::MODE_TEXT                                        => self::MODE_TEXT,
             default                                                => self::MODE_TEXT,
         };
+    }
+
+    /**
+     * Detect whether a prior agent message in this conversation already contained
+     * a multi-package pricelist. Used to suppress re-listing and switch the
+     * composer to a "refer back" reply.
+     *
+     * @param  array<int,array{direction?:string,role?:string,body?:string}>  $recentMessages
+     */
+    public function pricelistAlreadySent(array $recentMessages): bool
+    {
+        foreach ($recentMessages as $msg) {
+            $direction = $msg['direction'] ?? $msg['role'] ?? 'inbound';
+            if ($direction !== 'outbound') {
+                continue;
+            }
+            $body = (string) ($msg['body'] ?? '');
+            // 2+ Rp amounts → likely a multi-package pricelist
+            if (preg_match_all('/Rp[\s.]?\d[\d.,]*/i', $body) >= 2) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

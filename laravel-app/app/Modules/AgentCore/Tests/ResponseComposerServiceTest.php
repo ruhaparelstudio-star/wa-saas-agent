@@ -248,6 +248,68 @@ class ResponseComposerServiceTest extends TestCase
     }
 
     // ──────────────────────────────────────────────────────────────────────
+    // Availability grounding
+    // ──────────────────────────────────────────────────────────────────────
+
+    public function test_prompt_contains_availability_when_date_is_available(): void
+    {
+        $this->mock->setNextResponse('Tanggal 2026-08-10 masih tersedia Kak!');
+
+        $this->composer->compose(
+            $this->makeContext(knowledgeData: [
+                'availability' => [
+                    'date'         => '2026-08-10',
+                    'is_available' => true,
+                    'event_type'   => null,
+                ],
+            ]),
+            $this->makeDecision(),
+            $this->makeValidatorResult(),
+        );
+
+        $prompt = $this->mock->getLastPrompt();
+        $this->assertStringContainsString('KETERSEDIAAN TANGGAL', $prompt);
+        $this->assertStringContainsString('2026-08-10', $prompt);
+        $this->assertStringContainsString('TERSEDIA', $prompt);
+    }
+
+    public function test_prompt_contains_availability_when_date_is_not_available(): void
+    {
+        $this->mock->setNextResponse('Maaf Kak, tanggal 2026-08-10 sudah dipesan.');
+
+        $this->composer->compose(
+            $this->makeContext(knowledgeData: [
+                'availability' => [
+                    'date'         => '2026-08-10',
+                    'is_available' => false,
+                    'event_type'   => 'resepsi',
+                ],
+            ]),
+            $this->makeDecision(),
+            $this->makeValidatorResult(),
+        );
+
+        $prompt = $this->mock->getLastPrompt();
+        $this->assertStringContainsString('KETERSEDIAAN TANGGAL', $prompt);
+        $this->assertStringContainsString('TIDAK TERSEDIA', $prompt);
+        $this->assertStringContainsString('resepsi', $prompt);
+    }
+
+    public function test_prompt_always_contains_definitive_availability_instruction(): void
+    {
+        $this->mock->setNextResponse('Baik Kak!');
+
+        $this->composer->compose(
+            $this->makeContext(),
+            $this->makeDecision(),
+            $this->makeValidatorResult(),
+        );
+
+        // The PROMPT_TEMPLATE must always instruct the LLM to give definitive availability answers
+        $this->assertStringContainsString('DEFINITIVE', $this->mock->getLastPrompt());
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
     // Grounding refs passed through
     // ──────────────────────────────────────────────────────────────────────
 

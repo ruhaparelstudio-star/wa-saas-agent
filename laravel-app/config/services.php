@@ -50,6 +50,10 @@ return [
         // cannot resolve APP_URL (e.g. http://localhost:8080); it must hit nginx on the
         // docker network instead.
         'callback_base'   => env('WA_GATEWAY_CALLBACK_BASE', 'http://nginx'),
+        // Base URL the gateway uses to fetch asset files (PDF pricelist, etc.).
+        // Asset URLs are stored using APP_URL (e.g. http://localhost:8080), which is
+        // unreachable from inside the gateway container. Rewrite to docker-network host.
+        'asset_internal_base' => env('WA_GATEWAY_ASSET_BASE', 'http://nginx'),
     ],
 
     'calendar' => [

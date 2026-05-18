@@ -3,17 +3,22 @@
 namespace App\Filament\Tenant\Pages;
 
 use App\Modules\Shared\Enums\TenantTone;
+use App\Modules\TenantConfig\Models\TenantBankAccount;
 use App\Modules\TenantConfig\Models\TenantSetting;
 use App\Modules\TenantConfig\Services\TenantConfigResolver;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 
 class TenantSettings extends Page
 {
@@ -43,6 +48,19 @@ class TenantSettings extends Page
         $tenantId = auth()->user()->tenant_id;
         $setting = TenantSetting::where('tenant_id', $tenantId)->first();
 
+        $bankAccounts = TenantBankAccount::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->ordered()
+            ->get()
+            ->map(fn ($acc) => [
+                'id'             => $acc->id,
+                'bank_name'      => $acc->bank_name,
+                'account_number' => $acc->account_number,
+                'account_holder' => $acc->account_holder,
+                'is_default'     => (bool) $acc->is_default,
+                'is_active'      => (bool) $acc->is_active,
+            ])->all();
+
         $this->form->fill([
             'tone'                 => $setting?->tone?->value ?? TenantTone::SEMI_FORMAL->value,
             'timezone'             => $setting?->timezone ?? 'Asia/Jakarta',
@@ -50,6 +68,7 @@ class TenantSettings extends Page
             'business_hours_end'   => $setting?->business_hours_end ?? '21:00',
             'business_days'        => $setting?->business_days ?? [1, 2, 3, 4, 5, 6],
             'after_hours_message'  => $setting?->after_hours_message,
+            'bank_accounts'        => $bankAccounts,
         ]);
     }
 
@@ -119,6 +138,42 @@ class TenantSettings extends Page
                         ->placeholder('Contoh: Halo Kak! Terima kasih sudah menghubungi kami. Kami sedang offline dan akan segera balas pesan Kakak saat jam operasional (08.00–21.00). 🙏')
                         ->helperText('Kosongkan jika tidak ingin kirim pesan otomatis.'),
                 ]),
+
+            Section::make('Rekening Pembayaran')
+                ->description('Rekening yang ditampilkan di pesan invoice WhatsApp dan PDF. Bisa lebih dari satu — tandai SATU sebagai default (⭐).')
+                ->schema([
+                    Repeater::make('bank_accounts')
+                        ->label('')
+                        ->schema([
+                            TextInput::make('bank_name')
+                                ->label('Bank / Channel')
+                                ->placeholder('BCA, Mandiri, BRI, QRIS, dll')
+                                ->required()
+                                ->maxLength(100),
+                            TextInput::make('account_number')
+                                ->label('No. Rekening / QR ID')
+                                ->required()
+                                ->maxLength(50),
+                            TextInput::make('account_holder')
+                                ->label('Atas Nama')
+                                ->required()
+                                ->maxLength(150),
+                            Toggle::make('is_default')
+                                ->label('Default')
+                                ->helperText('Hanya satu yang boleh default.'),
+                            Toggle::make('is_active')
+                                ->label('Aktif')
+                                ->default(true),
+                        ])
+                        ->columns(2)
+                        ->addActionLabel('+ Tambah Rekening')
+                        ->reorderable()
+                        ->collapsible()
+                        ->itemLabel(fn (array $state): ?string =>
+                            ($state['bank_name'] ?? '') . ' — ' . ($state['account_number'] ?? '')
+                            . ($state['is_default'] ?? false ? ' ⭐' : '')
+                        ),
+                ]),
         ])->statePath('data');
     }
 
@@ -139,12 +194,72 @@ class TenantSettings extends Page
             ]
         );
 
+        $this->syncBankAccounts($tenantId, $data['bank_accounts'] ?? []);
+
         app(TenantConfigResolver::class)->invalidateCache($tenantId);
 
         Notification::make()
             ->title('Pengaturan berhasil disimpan.')
             ->success()
             ->send();
+    }
+
+    private function syncBankAccounts(string $tenantId, array $rows): void
+    {
+        // Normalize: at most one default.
+        $defaultSeen = false;
+        foreach ($rows as &$r) {
+            if (!empty($r['is_default'])) {
+                $r['is_default'] = !$defaultSeen;
+                $defaultSeen = $defaultSeen || (bool) $r['is_default'];
+            } else {
+                $r['is_default'] = false;
+            }
+        }
+        unset($r);
+
+        // If no default chosen but at least one row exists, mark the first one default.
+        if (!$defaultSeen && !empty($rows)) {
+            $rows[0]['is_default'] = true;
+        }
+
+        $existingIds = TenantBankAccount::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->pluck('id')
+            ->all();
+        $keptIds = [];
+
+        foreach ($rows as $i => $row) {
+            $payload = [
+                'bank_name'      => trim((string) ($row['bank_name'] ?? '')),
+                'account_number' => trim((string) ($row['account_number'] ?? '')),
+                'account_holder' => trim((string) ($row['account_holder'] ?? '')),
+                'is_default'     => (bool) $row['is_default'],
+                'is_active'      => (bool) ($row['is_active'] ?? true),
+                'sort_order'     => $i,
+            ];
+
+            if ($payload['bank_name'] === '' || $payload['account_number'] === '') {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            if ($id && in_array($id, $existingIds, true)) {
+                TenantBankAccount::withoutGlobalScopes()->where('id', $id)->update($payload);
+                $keptIds[] = $id;
+            } else {
+                $new = TenantBankAccount::create(array_merge($payload, [
+                    'id'        => (string) Str::uuid(),
+                    'tenant_id' => $tenantId,
+                ]));
+                $keptIds[] = $new->id;
+            }
+        }
+
+        $toDelete = array_diff($existingIds, $keptIds);
+        if (!empty($toDelete)) {
+            TenantBankAccount::withoutGlobalScopes()->whereIn('id', $toDelete)->delete();
+        }
     }
 
     protected function getHeaderActions(): array

@@ -5,6 +5,7 @@ namespace App\Modules\Booking\Services;
 use App\Modules\Booking\Models\Booking;
 use App\Modules\Booking\Repositories\BookingRepository;
 use App\Modules\Conversation\Repositories\ConversationRepository;
+use App\Modules\Knowledge\Services\PackageResolver;
 use App\Modules\Notification\Services\NotificationService;
 use App\Modules\Shared\Contracts\CalendarProviderInterface;
 use App\Modules\Shared\DTOs\CalendarEventDTO;
@@ -21,11 +22,16 @@ use Illuminate\Support\Facades\Log;
 
 class BookingService
 {
+    // Default DP percentage when tenant has no explicit policy. 30% is the
+    // Indonesian-wedding industry norm.
+    private const DEFAULT_DP_PERCENTAGE = 30;
+
     public function __construct(
         private readonly BookingRepository $bookingRepository,
         private readonly NotificationService $notificationService,
         private readonly ConversationRepository $conversationRepository,
         private readonly CalendarProviderInterface $calendar,
+        private readonly ?PackageResolver $packageResolver = null,
     ) {}
 
     /**
@@ -81,9 +87,35 @@ class BookingService
                 return null;
             }
 
+            // Resolve package + price (best-effort — booking can still be created
+            // without these, e.g. if the customer hasn't picked a package yet).
+            $packageId   = null;
+            $totalAmount = 0;
+            $dpAmount    = 0;
+            $packageSlug = $entities['package_slug'] ?? null;
+
+            if (!empty($packageSlug) && $this->packageResolver !== null) {
+                $package = $this->packageResolver->getPackageDetail($context->tenant->id, $packageSlug);
+                if ($package !== null) {
+                    $packageId    = $package->id;
+                    $firstPrice   = $package->activePrices->sortBy('price_idr')->first();
+                    $totalAmount  = $firstPrice?->price_idr ?? 0;
+                    $dpAmount     = (int) round($totalAmount * self::DEFAULT_DP_PERCENTAGE / 100);
+                }
+            }
+
+            $leadId = $context->lead->id ?? null;
+            if (empty($leadId) && !empty($context->conversation->id)) {
+                $leadId = DB::table('leads')
+                    ->where('conversation_id', $context->conversation->id)
+                    ->value('id');
+            }
+
             $booking = $this->bookingRepository->create([
                 'tenant_id'       => $context->tenant->id,
                 'conversation_id' => $context->conversation->id,
+                'lead_id'         => $leadId,
+                'package_id'      => $packageId,
                 'event_date'      => $eventDate->toDateString(),
                 'event_time_start' => $entities['event_time_start'] ?? null,
                 'event_time_end'   => $entities['event_time_end'] ?? null,
@@ -92,6 +124,8 @@ class BookingService
                 'guest_count'     => isset($entities['guest_count']) ? (int) $entities['guest_count'] : null,
                 'customer_name'   => $entities['customer_name'] ?? null,
                 'customer_phone'  => $context->conversation->from_phone,
+                'total_amount'    => $totalAmount,
+                'dp_amount'       => $dpAmount,
                 'status'          => BookingStatus::DRAFT->value,
             ]);
 
@@ -120,6 +154,52 @@ class BookingService
 
             return $booking;
         });
+    }
+
+    /**
+     * Patch an existing DRAFT booking with newly-collected entities from later
+     * turns (e.g. customer answered event_type after the draft was created).
+     *
+     * Only fills fields that are still NULL — never overwrites a value the customer
+     * already gave, and never touches non-draft bookings.
+     *
+     * @param  array<string,mixed>  $entities
+     */
+    public function updateDraftFromEntities(Booking $booking, array $entities): Booking
+    {
+        if ($booking->status !== BookingStatus::DRAFT) {
+            return $booking;
+        }
+
+        $patch = [];
+
+        $fillable = [
+            'event_type'       => $entities['event_type']       ?? null,
+            'event_time_start' => $entities['event_time_start'] ?? null,
+            'event_time_end'   => $entities['event_time_end']   ?? null,
+            'location'         => $entities['location']         ?? null,
+            'guest_count'      => isset($entities['guest_count']) ? (int) $entities['guest_count'] : null,
+            'customer_name'    => $entities['customer_name']    ?? null,
+        ];
+
+        foreach ($fillable as $field => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            if (empty($booking->{$field})) {
+                $patch[$field] = $value;
+            }
+        }
+
+        if ($patch !== []) {
+            $booking->update($patch);
+            Log::info('BookingService: draft patched from later turn.', [
+                'booking_id'    => $booking->id,
+                'fields'        => array_keys($patch),
+            ]);
+        }
+
+        return $booking->fresh();
     }
 
     /**

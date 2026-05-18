@@ -16,6 +16,7 @@ readonly class TurnContextDTO
         public InboundMessageDTO $inbound_message,
         public bool $is_sanitized,
         public bool $injection_detected,
+        public array $recent_messages = [],
     ) {}
 
     public static function from(array $data): static
@@ -50,6 +51,7 @@ readonly class TurnContextDTO
                 : InboundMessageDTO::from($data['inbound_message'] ?? []),
             is_sanitized: (bool) ($data['is_sanitized'] ?? false),
             injection_detected: (bool) ($data['injection_detected'] ?? false),
+            recent_messages: (array) ($data['recent_messages'] ?? []),
         );
     }
 
@@ -67,6 +69,7 @@ readonly class TurnContextDTO
             'inbound_message' => $this->inbound_message->toArray(),
             'is_sanitized' => $this->is_sanitized,
             'injection_detected' => $this->injection_detected,
+            'recent_messages' => $this->recent_messages,
         ];
     }
 }

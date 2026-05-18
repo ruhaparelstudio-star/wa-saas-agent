@@ -8,6 +8,8 @@ use App\Modules\AgentCore\Decision\Services\DecisionEngineService;
 use App\Modules\AgentCore\Extraction\Services\EntityExtractionService;
 use App\Modules\AgentCore\LLM\Services\TokenUsageLogger;
 use App\Modules\AgentCore\Security\Services\InputSanitizerService;
+use App\Modules\AgentCore\Summarization\Jobs\SummarizeConversationJob;
+use App\Modules\AgentCore\Summarization\Services\ConversationSummarizerService;
 use App\Modules\AgentCore\Validators\ValidatorChainService;
 use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Conversation\Repositories\ConversationRepository;
@@ -55,6 +57,7 @@ class TurnPipelineService
         private readonly TokenUsageLogger            $tokenUsageLogger,
         private readonly TenantConfigResolver        $configResolver,
         private readonly NotificationService         $notificationService,
+        private readonly ConversationSummarizerService $summarizer,
     ) {}
 
     /**
@@ -150,18 +153,32 @@ class TurnPipelineService
             $configDto = $config;
 
             // ── Step 6: Build conversation context ────────────────────────
-            $recentMessages = $conversation->getRecentMessages(5)
-                ->map(fn ($m) => ['role' => $m->direction, 'body' => $m->body])
+            // Composer needs the wider window for continuity/repetition checks.
+            // Classifier/extractor use a smaller window — they don't need deep
+            // history, just enough for pronoun + correction resolution.
+            $composerWindow   = $this->resolveContextWindow($tenantId, 'composer_context_window', 20);
+            $classifierWindow = $this->resolveContextWindow($tenantId, 'classifier_context_window', 10);
+
+            $recentMessages = $conversation->getRecentMessages($composerWindow)
+                ->map(fn ($m) => ['role' => $m->direction, 'direction' => $m->direction, 'body' => $m->body])
                 ->values()
                 ->toArray();
+
+            $classifierContext = $classifierWindow >= count($recentMessages)
+                ? $recentMessages
+                : array_slice($recentMessages, -$classifierWindow);
+
+            $contextSummary = $conversation->context_summary;
 
             // ── Step 7: IntentClassifierService ───────────────────────────
             $intentResult = $this->classifier->classify(
                 $sanitized->sanitized_text,
                 $tenantId,
-                $recentMessages,
+                $classifierContext,
+                $contextSummary,
             );
-            $llmData['intent_raw'] = $intentResult->raw_response;
+            $llmData['intent_raw']    = $intentResult->raw_response;
+            $llmData['intent_prompt'] = $this->classifier->getLastPrompt();
 
             // ── Step 8: EntityExtractionService ───────────────────────────
             $existingEntities = $conversation->entity_cache ?? [];
@@ -169,9 +186,11 @@ class TurnPipelineService
                 $sanitized->sanitized_text,
                 $tenantId,
                 $existingEntities,
-                $recentMessages,
+                $classifierContext,
+                $contextSummary,
             );
-            $llmData['entity_raw'] = json_encode($entityResult->entities);
+            $llmData['entity_raw']    = json_encode($entityResult->entities);
+            $llmData['entity_prompt'] = $this->extractor->getLastPrompt();
 
             // Merge new entities into conversation cache
             $conversation->updateEntityCache($entityResult->entities);
@@ -202,6 +221,7 @@ class TurnPipelineService
                 configDto: $configDto,
                 isSanitized: true,
                 injectionDetected: $sanitized->injection_detected,
+                recentMessages: $recentMessages,
             );
 
             // ── Step 11: DecisionEngineService (PHP ONLY) ─────────────────
@@ -216,7 +236,8 @@ class TurnPipelineService
 
             // ── Step 13: ResponseComposerService ─────────────────────────
             $reply = $this->composer->compose($context, $decision, $validatorResult);
-            $llmData['composer_raw'] = $reply->reply_text;
+            $llmData['composer_raw']    = $reply->reply_text;
+            $llmData['composer_prompt'] = $this->composer->getLastPrompt();
 
             // ── Step 14: ActionDispatcher ─────────────────────────────────
             $dispatched = $this->dispatcher->dispatch($context, $reply, $decision);
@@ -247,6 +268,16 @@ class TurnPipelineService
 
             // ── Step 15: DecisionTraceLogger ──────────────────────────────
             $trace = $this->traceLogger->log($context, $result, $llmData);
+
+            // ── Step 16: Summarize long conversations ─────────────────────
+            // When the conversation exceeds the configured threshold, queue a
+            // background summary refresh so subsequent turns can read it from
+            // conversation.context_summary. Dispatched after the reply is sent
+            // so it never blocks the customer-facing latency path.
+            $fresh = $this->conversations->findById($conversation->id) ?? $conversation;
+            if ($this->summarizer->shouldSummarize($fresh)) {
+                SummarizeConversationJob::dispatch($fresh->id);
+            }
 
             // Set idempotency key after successful processing
             Cache::put($idempotencyKey, true, self::IDEMPOTENCY_TTL);
@@ -391,6 +422,7 @@ class TurnPipelineService
         TenantConfigDTO $configDto,
         bool $isSanitized,
         bool $injectionDetected,
+        array $recentMessages = [],
     ): TurnContextDTO {
         $convDto = ConversationDTO::from([
             'id'              => $conversation->id,
@@ -421,6 +453,7 @@ class TurnPipelineService
             'inbound_message'    => $message,
             'is_sanitized'       => $isSanitized,
             'injection_detected' => $injectionDetected,
+            'recent_messages'    => $recentMessages,
         ]);
     }
 
@@ -466,6 +499,20 @@ class TurnPipelineService
             'is_sanitized'       => false,
             'injection_detected' => false,
         ]);
+    }
+
+    /**
+     * Resolve a numeric context-window policy with a safe floor/ceiling.
+     * Stored as string in tenant_policies; cast to int and clamp to [1, 100].
+     */
+    private function resolveContextWindow(string $tenantId, string $policyKey, int $default): int
+    {
+        $raw = $this->configResolver->get($tenantId, $policyKey, (string) $default);
+        $value = (int) $raw;
+        if ($value < 1) {
+            return $default;
+        }
+        return min(100, $value);
     }
 
     private function buildState(Conversation $conversation): ConversationStateDTO

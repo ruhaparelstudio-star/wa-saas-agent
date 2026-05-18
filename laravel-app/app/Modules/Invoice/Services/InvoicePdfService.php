@@ -4,6 +4,7 @@ namespace App\Modules\Invoice\Services;
 
 use App\Modules\Invoice\Models\Invoice;
 use App\Modules\Shared\Contracts\StorageProviderInterface;
+use App\Modules\TenantConfig\Models\TenantBankAccount;
 use App\Modules\TenantConfig\Models\TenantSetting;
 use App\Modules\Tenancy\Models\Tenant;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -24,6 +25,16 @@ class InvoicePdfService
         $tenant     = Tenant::find($tenantId);
         $setting    = TenantSetting::where('tenant_id', $tenantId)->first();
 
+        // New table — supports multiple bank accounts per tenant.
+        $bankAccounts = TenantBankAccount::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->active()
+            ->ordered()
+            ->get();
+
+        // Legacy fallback — keep blade backward compatible with single-bank fields.
+        $primary = $bankAccounts->first();
+
         $data = [
             'invoice'         => $invoice,
             'tenantName'      => $tenant?->name ?? 'Wedding Vendor',
@@ -36,9 +47,10 @@ class InvoicePdfService
             'eventType'       => $booking?->event_type ?? '-',
             'location'        => $booking?->location ?? null,
             'packageName'     => $booking?->package?->name ?? null,
-            'bankName'        => $setting?->bank_name ?? null,
-            'bankAccount'     => $setting?->bank_account_number ?? null,
-            'bankAccountName' => $setting?->bank_account_name ?? null,
+            'bankAccounts'    => $bankAccounts,
+            'bankName'        => $primary?->bank_name ?? $setting?->bank_name,
+            'bankAccount'     => $primary?->account_number ?? $setting?->bank_account_number,
+            'bankAccountName' => $primary?->account_holder ?? $setting?->bank_account_name,
         ];
 
         $pdf  = Pdf::loadView('pdf.invoice', $data)->setPaper('a4');

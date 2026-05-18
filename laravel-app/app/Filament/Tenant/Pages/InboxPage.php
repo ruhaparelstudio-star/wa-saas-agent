@@ -37,6 +37,12 @@ class InboxPage extends Page
     public ?string $filterMode = null;
     public bool $filterHasHandoff = false;
 
+    // How many of the LATEST messages to fetch for the selected conversation.
+    // Order is DESC at the SQL level (newest first) then reversed in PHP for
+    // chat-style ASC rendering. "Muat 50 pesan lebih lama" button bumps this.
+    public int $messageLimit = 50;
+    private const MESSAGE_PAGE_SIZE = 50;
+
     public function getView(): string
     {
         return 'filament.tenant.pages.inbox';
@@ -104,10 +110,35 @@ class InboxPage extends Page
             return new Collection();
         }
 
-        return $conversation->messages()
-            ->orderBy('created_at', 'asc')
-            ->limit(20)
+        // Fetch the NEWEST $messageLimit rows (DESC) so the latest chat is
+        // always visible. Reverse in PHP so the blade still renders ASC
+        // (oldest-on-top, newest-at-bottom) like a normal chat UI.
+        $rows = $conversation->messages()
+            ->orderBy('created_at', 'desc')
+            ->limit($this->messageLimit)
             ->get();
+
+        return $rows->reverse()->values();
+    }
+
+    public function hasMoreMessages(): bool
+    {
+        $conversation = $this->getSelectedConversation();
+        if (!$conversation) {
+            return false;
+        }
+        return $conversation->messages()->count() > $this->messageLimit;
+    }
+
+    public function loadMoreMessages(): void
+    {
+        $this->messageLimit += self::MESSAGE_PAGE_SIZE;
+    }
+
+    public function updatedSelectedConversationId(): void
+    {
+        // Reset paging window whenever the admin switches conversations.
+        $this->messageLimit = self::MESSAGE_PAGE_SIZE;
     }
 
     public function getLead(): ?Lead

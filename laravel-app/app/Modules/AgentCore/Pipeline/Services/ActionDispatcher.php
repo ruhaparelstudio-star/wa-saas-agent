@@ -95,10 +95,56 @@ class ActionDispatcher
             }
         }
 
+        // Backfill an existing DRAFT booking with any new entities the customer
+        // provided this turn (e.g. event_type came in after the draft was created).
+        // Only runs when the conversation already has a booking on file — never
+        // creates a new one and never overwrites filled fields.
+        if ($this->maybePatchDraftBooking($context)) {
+            $dispatched[] = 'update_booking';
+        }
+
         $this->conversations->findById($context->conversation->id)
             ?->update(['last_message_at' => now()]);
 
         return array_values(array_unique($dispatched));
+    }
+
+    private function maybePatchDraftBooking(TurnContextDTO $context): bool
+    {
+        if ($this->bookingService === null) {
+            return false;
+        }
+
+        $conversation = $this->conversations->findById($context->conversation->id);
+        if ($conversation === null) {
+            return false;
+        }
+
+        $entityCache = $conversation->entity_cache ?? [];
+        $bookingCode = $entityCache['last_booking_code'] ?? null;
+        if (empty($bookingCode)) {
+            return false;
+        }
+
+        $booking = \App\Modules\Booking\Models\Booking::withoutGlobalScopes()
+            ->where('tenant_id', $context->tenant->id)
+            ->where('booking_code', $bookingCode)
+            ->first();
+
+        if ($booking === null) {
+            return false;
+        }
+
+        $turnEntities = $context->entities->entities ?? [];
+        if ($turnEntities === []) {
+            return false;
+        }
+
+        $beforeFields = $booking->only(['event_type', 'event_time_start', 'event_time_end', 'location', 'guest_count']);
+        $patched      = $this->bookingService->updateDraftFromEntities($booking, $turnEntities);
+        $afterFields  = $patched->only(['event_type', 'event_time_start', 'event_time_end', 'location', 'guest_count']);
+
+        return $beforeFields !== $afterFields;
     }
 
     public function sendTextDirect(string $waAccountId, string $toPhone, string $body): bool
@@ -228,13 +274,14 @@ class ActionDispatcher
             return false;
         }
 
-        $caption = $mode === PricelistService::MODE_PDF ? $reply->reply_text : '';
+        $caption  = $mode === PricelistService::MODE_PDF ? $reply->reply_text : '';
+        $fileUrl  = $this->rewriteAssetUrlForGateway($asset->file_url);
 
         try {
             $sent = $this->gateway->sendFile(
                 $context->conversation->wa_account_id,
                 $context->conversation->from_phone,
-                $asset->file_url,
+                $fileUrl,
                 $caption,
             );
         } catch (\Throwable $e) {
@@ -293,6 +340,44 @@ class ActionDispatcher
         Log::info('ActionDispatcher: booking draft created.', [
             'booking_code' => $booking->booking_code,
         ]);
+    }
+
+    /**
+     * Asset URLs are stored with the public APP_URL (e.g. http://localhost:8080),
+     * which is unreachable from inside the wa-gateway container. Rewrite to the
+     * docker-network internal base so Baileys can fetch the file.
+     *
+     * If wa_gateway.asset_internal_base is unset or the URL host already matches
+     * an external CDN (R2/S3), the URL is returned untouched.
+     */
+    private function rewriteAssetUrlForGateway(string $url): string
+    {
+        if ($url === '') {
+            return $url;
+        }
+
+        $internalBase = (string) config('services.wa_gateway.asset_internal_base', '');
+        if ($internalBase === '') {
+            return $url;
+        }
+
+        $appUrl = (string) config('app.url', '');
+        if ($appUrl === '') {
+            return $url;
+        }
+
+        $appHost = parse_url($appUrl, PHP_URL_HOST);
+        $urlHost = parse_url($url, PHP_URL_HOST);
+
+        // Only rewrite URLs that point at our own app — leave CDN/R2 URLs alone.
+        if ($appHost === null || $urlHost === null || $appHost !== $urlHost) {
+            return $url;
+        }
+
+        $path  = (string) parse_url($url, PHP_URL_PATH);
+        $query = parse_url($url, PHP_URL_QUERY);
+
+        return rtrim($internalBase, '/') . $path . ($query ? '?' . $query : '');
     }
 
     private function flagHandoff(TurnContextDTO $context, DecisionDTO $decision): void

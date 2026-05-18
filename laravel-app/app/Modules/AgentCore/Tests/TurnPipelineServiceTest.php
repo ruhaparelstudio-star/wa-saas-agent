@@ -316,6 +316,7 @@ class TurnPipelineServiceTest extends TestCase
             tokenUsageLogger:     $tokenUsageLogger,
             configResolver:       app(TenantConfigResolver::class),
             notificationService:  $this->createMock(NotificationService::class),
+            summarizer:          app(\App\Modules\AgentCore\Summarization\Services\ConversationSummarizerService::class),
         );
     }
 

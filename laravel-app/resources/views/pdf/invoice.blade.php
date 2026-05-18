@@ -88,7 +88,19 @@
     Jumlah: Rp {{ number_format($invoice->amount, 0, ',', '.') }}
 </div>
 
-@if($bankName || $bankAccount)
+@if(!empty($bankAccounts) && count($bankAccounts) > 0)
+<div class="section">
+    <div class="section-title">Informasi Pembayaran</div>
+    <table>
+        @foreach($bankAccounts as $acc)
+        <tr>
+            <td class="label">{{ $acc->bank_name }}{{ $acc->is_default ? ' (default)' : '' }}</td>
+            <td>{{ $acc->account_number }} &nbsp;—&nbsp; a.n. {{ $acc->account_holder }}</td>
+        </tr>
+        @endforeach
+    </table>
+</div>
+@elseif($bankName || $bankAccount)
 <div class="section">
     <div class="section-title">Informasi Pembayaran</div>
     <table>

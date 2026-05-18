@@ -124,7 +124,6 @@ class Conversation extends TenantBaseModel
     public function getRecentMessages(int $limit = 10): Collection
     {
         return $this->messages()
-            ->orderBy('created_at', 'asc')
             ->latest('created_at')
             ->limit($limit)
             ->get()

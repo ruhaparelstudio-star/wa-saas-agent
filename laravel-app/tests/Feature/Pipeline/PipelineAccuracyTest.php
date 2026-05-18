@@ -573,6 +573,7 @@ class PipelineAccuracyTest extends TestCase
             tokenUsageLogger:     $tokenUsageLogger,
             configResolver:       app(TenantConfigResolver::class),
             notificationService:  $this->createMock(\App\Modules\Notification\Services\NotificationService::class),
+            summarizer:           app(\App\Modules\AgentCore\Summarization\Services\ConversationSummarizerService::class),
         );
     }
 

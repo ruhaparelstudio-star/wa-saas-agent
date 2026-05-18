@@ -81,6 +81,8 @@ class PricelistFlowTest extends TestCase
     public function test_pdf_mode_dispatches_document_to_gateway(): void
     {
         $this->policyService->setPolicy($this->tenantId, PolicyKey::PRICELIST_MODE, 'pdf');
+        // Disable name-gate explicitly for this dispatch-mode test — name-gate has its own coverage.
+        $this->policyService->setPolicy($this->tenantId, PolicyKey::PRICELIST_MIN_REQUIREMENT, 'none');
 
         $asset = $this->makePricelistAsset();
 
@@ -134,6 +136,9 @@ class PricelistFlowTest extends TestCase
     public function test_text_mode_injects_pricelist_into_composer_grounding(): void
     {
         $this->policyService->setPolicy($this->tenantId, PolicyKey::PRICELIST_MODE, 'text');
+        // Bypass name-gate explicitly — this test verifies text-mode grounding injection
+        // itself, not the gate. Use the canonical "none" value (legacy '0' now fails safe).
+        $this->policyService->setPolicy($this->tenantId, PolicyKey::PRICELIST_MIN_REQUIREMENT, 'none');
 
         $this->pipeline = $this->makePipelineWithNullDispatcher();
 
@@ -219,6 +224,7 @@ class PricelistFlowTest extends TestCase
             tokenUsageLogger:     $tokenUsageLogger,
             configResolver:       app(TenantConfigResolver::class),
             notificationService:  $this->createMock(\App\Modules\Notification\Services\NotificationService::class),
+            summarizer:           app(\App\Modules\AgentCore\Summarization\Services\ConversationSummarizerService::class),
         );
     }
 
@@ -245,6 +251,7 @@ class PricelistFlowTest extends TestCase
             tokenUsageLogger:     $tokenUsageLogger,
             configResolver:       app(TenantConfigResolver::class),
             notificationService:  $this->createMock(\App\Modules\Notification\Services\NotificationService::class),
+            summarizer:           app(\App\Modules\AgentCore\Summarization\Services\ConversationSummarizerService::class),
         );
     }
 

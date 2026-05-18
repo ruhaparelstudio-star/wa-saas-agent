@@ -66,6 +66,13 @@ Budget → IDR integer:
   "Rp 15.000.000" → 15000000
 Guest count:
   "sekitar 200", "200an orang" → 200
+Event time → HH:MM (24-hour):
+  "jam 10 pagi" / "pukul 10.00" → event_time_start: "10:00"
+  "jam 2 siang" / "jam 14" → event_time_start: "14:00"
+  "jam 4 sore" / "jam 16.00" → event_time_start: "16:00"
+  "jam 7 malam" → event_time_start: "19:00"
+  "acara mulai jam 10 sampai jam 1 siang" → event_time_start: "10:00", event_time_end: "13:00"
+  "selesai sebelum maghrib" → event_time_end: null, add "event_time_end" to needs_clarification
 
 Correction rules:
   If customer corrects an entity ("bukan X, tapi Y"), add entity name to corrections[].
@@ -93,6 +100,8 @@ Few-shot examples:
 "mau booking" → booking_intent_signal: true
 "sudah DP, mau pelunasan" → payment_topic: "pelunasan"
 "akad dan resepsi" → event_type: "keduanya"
+"acara jam 10 pagi" → event_time_start: "10:00"
+"akad jam 8, resepsi sampai jam 4 sore" → event_time_start: "08:00", event_time_end: "16:00"
 "bukan juni, juli maksud saya" → corrections: ["event_date"], event_date: "2026-07-XX" + needs_clarification
 
 Customer message: "%MESSAGE%"
@@ -100,6 +109,8 @@ Customer message: "%MESSAGE%"
 Output JSON (include ALL existing entities plus new extractions):
 {"entities":{...},"corrections":[...],"needs_clarification":[...],"detected_language":"id","confidence":0.0}
 PROMPT;
+
+    private ?string $lastPrompt = null;
 
     public function __construct(
         private readonly LlmClientInterface      $llm,
@@ -110,9 +121,15 @@ PROMPT;
         $this->promptVersioning->registerFallback('entity_extractor', self::PROMPT_TEMPLATE);
     }
 
-    public function extract(string $message, string $tenantId, array $existingEntities = [], array $context = []): EntityResultDTO
+    public function getLastPrompt(): ?string
     {
-        $prompt = $this->buildPrompt($message, $existingEntities, $context);
+        return $this->lastPrompt;
+    }
+
+    public function extract(string $message, string $tenantId, array $existingEntities = [], array $context = [], ?string $contextSummary = null): EntityResultDTO
+    {
+        $prompt           = $this->buildPrompt($message, $existingEntities, $context, $contextSummary);
+        $this->lastPrompt = $prompt;
 
         try {
             $response = $this->llm->complete($prompt, ['model' => config('llm.classifier_model')]);
@@ -153,12 +170,28 @@ PROMPT;
 
             $this->tokenUsageLogger->log($tenantId, 'entity_extract', $response);
 
+            // Flag past event_date for clarification — wedding is a future event,
+            // so a past date almost certainly means the customer was ambiguous or
+            // typed the wrong year. We preserve the value so the composer can ask
+            // confirmation rather than dropping the entity entirely.
+            $needsClarification = $parsed['needs_clarification'] ?? [];
+            if (!empty($mergedEntities['event_date']) && is_string($mergedEntities['event_date'])) {
+                try {
+                    $eventDate = Carbon::parse($mergedEntities['event_date']);
+                    if ($eventDate->isPast() && !in_array('event_date', $needsClarification, true)) {
+                        $needsClarification[] = 'event_date';
+                    }
+                } catch (\Exception) {
+                    // ignore — date already validated by normalizeDate()
+                }
+            }
+
             return EntityResultDTO::from([
                 'entities'            => $mergedEntities,
                 'corrections'         => $parsed['corrections'] ?? [],
                 'previous_references' => [],
                 'confidence'          => (float) ($parsed['confidence'] ?? 0.0),
-                'needs_clarification' => $parsed['needs_clarification'] ?? [],
+                'needs_clarification' => $needsClarification,
                 'detected_language'   => $parsed['detected_language'] ?? 'id',
             ]);
         } catch (LlmJsonParseException $e) {
@@ -251,6 +284,17 @@ PROMPT;
             $entities['event_date'] = $this->normalizeDate($entities['event_date']);
         }
 
+        // Title-case customer name so "aris egi" → "Aris Egi" before it lands on
+        // the Lead row. Composer was already auto-capitalising in replies; this
+        // keeps DB + Filament UI consistent. Preserves multi-byte names.
+        if (!empty($entities['customer_name']) && is_string($entities['customer_name'])) {
+            $entities['customer_name'] = mb_convert_case(
+                mb_strtolower(trim($entities['customer_name']), 'UTF-8'),
+                MB_CASE_TITLE,
+                'UTF-8',
+            );
+        }
+
         // Ensure budget fields are integers
         foreach (['budget_min', 'budget_max'] as $field) {
             if (isset($entities[$field]) && is_string($entities[$field])) {
@@ -268,24 +312,28 @@ PROMPT;
         return $entities;
     }
 
-    private function buildPrompt(string $message, array $existingEntities, array $context): string
+    private function buildPrompt(string $message, array $existingEntities, array $context, ?string $contextSummary = null): string
     {
         $existingJson = empty($existingEntities)
             ? '(none yet)'
             : json_encode($existingEntities, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
-        $contextLines = '';
-        if (! empty($context)) {
-            $recent       = array_slice($context, -5);
-            $contextLines = implode("\n", array_map(
-                fn($msg) => sprintf('[%s] %s', $msg['direction'] ?? 'in', $msg['body'] ?? ''),
-                $recent
-            ));
+        $sections = [];
+
+        if (!empty($contextSummary)) {
+            $sections[] = "Earlier conversation summary (older messages, condensed):\n" . trim($contextSummary);
         }
 
-        if (empty($contextLines)) {
-            $contextLines = '(no prior context)';
+        if (!empty($context)) {
+            $lines = implode("\n", array_map(
+                fn($msg) => sprintf('[%s] %s', $msg['direction'] ?? 'in', $msg['body'] ?? ''),
+                $context
+            ));
+            $count   = count($context);
+            $sections[] = "Recent messages (last {$count}):\n" . $lines;
         }
+
+        $contextLines = $sections === [] ? '(no prior context)' : implode("\n\n", $sections);
 
         $template = $this->promptVersioning->getActiveTemplate('entity_extractor') ?: self::PROMPT_TEMPLATE;
 

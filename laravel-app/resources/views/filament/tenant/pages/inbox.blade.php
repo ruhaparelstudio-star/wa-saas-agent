@@ -195,6 +195,19 @@
                 {{-- ── TAB: Chat ─────────────────────────────────────────────── --}}
                 @if($activeTab === 'chat')
                     <div class="flex-1 overflow-y-auto p-4 space-y-2.5 bg-gray-50 dark:bg-gray-900/30">
+                        @if($this->hasMoreMessages())
+                            <div class="flex justify-center pb-2">
+                                <button
+                                    type="button"
+                                    wire:click="loadMoreMessages"
+                                    wire:loading.attr="disabled"
+                                    class="px-3 py-1.5 text-xs font-medium rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50"
+                                >
+                                    <span wire:loading.remove wire:target="loadMoreMessages">⬆ Muat 50 pesan lebih lama</span>
+                                    <span wire:loading wire:target="loadMoreMessages">Memuat…</span>
+                                </button>
+                            </div>
+                        @endif
                         @forelse($this->getMessages() as $msg)
                             @php
                                 $isOut   = $msg->direction === 'outbound';

@@ -95,12 +95,18 @@
             @else
                 <div class="space-y-2">
                     @foreach($topPkgs as $i => $pkg)
+                        @php
+                            // AnalyticsService::getTopPackages() returns an array of
+                            // assoc arrays — support either shape defensively.
+                            $pkgName  = is_array($pkg) ? ($pkg['package_name']  ?? '-') : ($pkg->package_name  ?? '-');
+                            $pkgCount = is_array($pkg) ? ($pkg['booking_count'] ?? 0)   : ($pkg->booking_count ?? 0);
+                        @endphp
                         <div class="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold text-gray-400 w-4">{{ $i + 1 }}</span>
-                                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $pkg->package_name }}</span>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $pkgName }}</span>
                             </div>
-                            <span class="text-xs font-medium text-primary-600 dark:text-primary-400">{{ $pkg->booking_count }} booking</span>
+                            <span class="text-xs font-medium text-primary-600 dark:text-primary-400">{{ $pkgCount }} booking</span>
                         </div>
                     @endforeach
                 </div>

@@ -44,12 +44,16 @@ class PolicySettings extends Page
         $policies = $policyService->getPolicies($tenantId);
 
         $this->form->fill([
-            PolicyKey::PRICELIST_MODE->value            => $policies[PolicyKey::PRICELIST_MODE->value] ?? PolicyDefaults::getDefault(PolicyKey::PRICELIST_MODE),
-            PolicyKey::PRICELIST_MIN_REQUIREMENT->value => $policies[PolicyKey::PRICELIST_MIN_REQUIREMENT->value] ?? PolicyDefaults::getDefault(PolicyKey::PRICELIST_MIN_REQUIREMENT),
-            PolicyKey::LEAD_LIMIT_FALLBACK->value       => $policies[PolicyKey::LEAD_LIMIT_FALLBACK->value] ?? PolicyDefaults::getDefault(PolicyKey::LEAD_LIMIT_FALLBACK),
-            PolicyKey::AFTER_HOURS_BEHAVIOR->value      => $policies[PolicyKey::AFTER_HOURS_BEHAVIOR->value] ?? PolicyDefaults::getDefault(PolicyKey::AFTER_HOURS_BEHAVIOR),
-            PolicyKey::INVOICE_MAX_RESEND->value        => $policies[PolicyKey::INVOICE_MAX_RESEND->value] ?? PolicyDefaults::getDefault(PolicyKey::INVOICE_MAX_RESEND),
-            PolicyKey::CONCURRENT_BOOKING_LOCK->value   => ($policies[PolicyKey::CONCURRENT_BOOKING_LOCK->value] ?? 'true') === 'true',
+            PolicyKey::PRICELIST_MODE->value             => $policies[PolicyKey::PRICELIST_MODE->value] ?? PolicyDefaults::getDefault(PolicyKey::PRICELIST_MODE),
+            PolicyKey::PRICELIST_MIN_REQUIREMENT->value  => $policies[PolicyKey::PRICELIST_MIN_REQUIREMENT->value] ?? PolicyDefaults::getDefault(PolicyKey::PRICELIST_MIN_REQUIREMENT),
+            PolicyKey::LEAD_LIMIT_FALLBACK->value        => $policies[PolicyKey::LEAD_LIMIT_FALLBACK->value] ?? PolicyDefaults::getDefault(PolicyKey::LEAD_LIMIT_FALLBACK),
+            PolicyKey::AFTER_HOURS_BEHAVIOR->value       => $policies[PolicyKey::AFTER_HOURS_BEHAVIOR->value] ?? PolicyDefaults::getDefault(PolicyKey::AFTER_HOURS_BEHAVIOR),
+            PolicyKey::INVOICE_MAX_RESEND->value         => $policies[PolicyKey::INVOICE_MAX_RESEND->value] ?? PolicyDefaults::getDefault(PolicyKey::INVOICE_MAX_RESEND),
+            PolicyKey::CONCURRENT_BOOKING_LOCK->value    => ($policies[PolicyKey::CONCURRENT_BOOKING_LOCK->value] ?? 'true') === 'true',
+            PolicyKey::CLASSIFIER_CONTEXT_WINDOW->value  => (int) ($policies[PolicyKey::CLASSIFIER_CONTEXT_WINDOW->value] ?? PolicyDefaults::getDefault(PolicyKey::CLASSIFIER_CONTEXT_WINDOW)),
+            PolicyKey::COMPOSER_CONTEXT_WINDOW->value    => (int) ($policies[PolicyKey::COMPOSER_CONTEXT_WINDOW->value] ?? PolicyDefaults::getDefault(PolicyKey::COMPOSER_CONTEXT_WINDOW)),
+            PolicyKey::CONTEXT_SUMMARY_THRESHOLD->value  => (int) ($policies[PolicyKey::CONTEXT_SUMMARY_THRESHOLD->value] ?? PolicyDefaults::getDefault(PolicyKey::CONTEXT_SUMMARY_THRESHOLD)),
+            PolicyKey::CONTEXT_SUMMARY_KEEP_RECENT->value => (int) ($policies[PolicyKey::CONTEXT_SUMMARY_KEEP_RECENT->value] ?? PolicyDefaults::getDefault(PolicyKey::CONTEXT_SUMMARY_KEEP_RECENT)),
         ]);
     }
 
@@ -61,19 +65,27 @@ class PolicySettings extends Page
                 ->columns(2)
                 ->schema([
                     Select::make(PolicyKey::PRICELIST_MODE->value)
-                        ->label('Mode Pricelist')
+                        ->label('Mode Pengiriman Pricelist')
                         ->options([
-                            'public'     => 'Publik — Siapa saja bisa minta pricelist',
-                            'on_request' => 'Atas Permintaan — AI bertanya dulu sebelum kirim',
+                            'text'     => 'Teks — Daftar paket dikirim sebagai pesan chat',
+                            'pdf'      => 'PDF — Lampirkan file pricelist (perlu upload PDF di Aset)',
+                            'hybrid'   => 'Teks + PDF — Kirim ringkasan teks lalu file PDF',
+                            'disabled' => 'Nonaktif — AI tidak pernah kirim pricelist (handoff ke sales)',
                         ])
                         ->required()
                         ->native(false)
-                        ->helperText('Rekomendasi: "Atas Permintaan" untuk lead qualification lebih baik.'),
-                    TextInput::make(PolicyKey::PRICELIST_MIN_REQUIREMENT->value)
-                        ->label('Minimal Budget untuk Lihat Pricelist (IDR)')
-                        ->numeric()
-                        ->prefix('Rp')
-                        ->helperText('Isi 0 jika tidak ada batasan minimum budget.'),
+                        ->helperText('Default: Teks. Pilih PDF jika punya file pricelist resmi yang ingin dipakai.'),
+                    Select::make(PolicyKey::PRICELIST_MIN_REQUIREMENT->value)
+                        ->label('Syarat Minimum sebelum Pricelist Dikirim')
+                        ->options([
+                            'none'                  => 'Tanpa Syarat — Langsung kirim ke siapa saja yang minta',
+                            'require_customer_name' => 'Wajib Nama — AI tanya nama customer dulu',
+                            'after_qualification'   => 'Setelah Kualifikasi — Tunggu nama + tanggal event terkumpul',
+                            'after_event_date'      => 'Setelah Tanggal Event — Tunggu customer kasih tanggal acara',
+                        ])
+                        ->required()
+                        ->native(false)
+                        ->helperText('Rekomendasi: "Wajib Nama" untuk personalisasi minimum. Pakai "Setelah Kualifikasi" untuk lead yang lebih qualified.'),
                 ]),
 
             Section::make('Kebijakan Lead & Jam Operasional')
@@ -116,6 +128,44 @@ class PolicySettings extends Page
                         ->label('Cegah Double Booking')
                         ->helperText('Aktifkan untuk mencegah dua customer memesan tanggal yang sama secara bersamaan. Sangat direkomendasikan.'),
                 ]),
+
+            Section::make('Konteks Percakapan AI')
+                ->description('Atur seberapa banyak riwayat percakapan yang dilihat AI setiap kali membalas, dan kapan ringkasan otomatis dibuat untuk percakapan panjang.')
+                ->columns(2)
+                ->schema([
+                    TextInput::make(PolicyKey::CLASSIFIER_CONTEXT_WINDOW->value)
+                        ->label('Window Pesan untuk Intent/Entity (Classifier)')
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(50)
+                        ->suffix('pesan')
+                        ->required()
+                        ->helperText('Jumlah pesan terakhir yang dilihat AI saat mengklasifikasi intent dan ekstrak entitas. Rekomendasi: 10. Lebih besar = konteks lebih kaya tapi biaya token naik.'),
+                    TextInput::make(PolicyKey::COMPOSER_CONTEXT_WINDOW->value)
+                        ->label('Window Pesan untuk Komposer Balasan')
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(100)
+                        ->suffix('pesan')
+                        ->required()
+                        ->helperText('Jumlah pesan terakhir yang dilihat AI saat menyusun balasan. Rekomendasi: 20. AI pakai ini untuk hindari pengulangan & jaga gaya bahasa.'),
+                    TextInput::make(PolicyKey::CONTEXT_SUMMARY_THRESHOLD->value)
+                        ->label('Threshold Aktivasi Ringkasan Otomatis')
+                        ->numeric()
+                        ->minValue(10)
+                        ->maxValue(200)
+                        ->suffix('pesan')
+                        ->required()
+                        ->helperText('Saat total pesan dalam satu percakapan mencapai angka ini, AI otomatis membuat ringkasan pesan-pesan lama agar konteks tidak hilang. Rekomendasi: 40.'),
+                    TextInput::make(PolicyKey::CONTEXT_SUMMARY_KEEP_RECENT->value)
+                        ->label('Pesan Terakhir yang Tidak Diringkas')
+                        ->numeric()
+                        ->minValue(5)
+                        ->maxValue(100)
+                        ->suffix('pesan')
+                        ->required()
+                        ->helperText('Berapa pesan terakhir yang TETAP dibaca utuh (tidak diringkas). Rekomendasi: 20 (sama dengan composer window).'),
+                ]),
         ])->statePath('data');
     }
 
@@ -131,6 +181,10 @@ class PolicySettings extends Page
         $policyService->setPolicy($tenantId, PolicyKey::AFTER_HOURS_BEHAVIOR, $data[PolicyKey::AFTER_HOURS_BEHAVIOR->value]);
         $policyService->setPolicy($tenantId, PolicyKey::INVOICE_MAX_RESEND, (string) $data[PolicyKey::INVOICE_MAX_RESEND->value]);
         $policyService->setPolicy($tenantId, PolicyKey::CONCURRENT_BOOKING_LOCK, $data[PolicyKey::CONCURRENT_BOOKING_LOCK->value] ? 'true' : 'false');
+        $policyService->setPolicy($tenantId, PolicyKey::CLASSIFIER_CONTEXT_WINDOW, (string) $data[PolicyKey::CLASSIFIER_CONTEXT_WINDOW->value]);
+        $policyService->setPolicy($tenantId, PolicyKey::COMPOSER_CONTEXT_WINDOW, (string) $data[PolicyKey::COMPOSER_CONTEXT_WINDOW->value]);
+        $policyService->setPolicy($tenantId, PolicyKey::CONTEXT_SUMMARY_THRESHOLD, (string) $data[PolicyKey::CONTEXT_SUMMARY_THRESHOLD->value]);
+        $policyService->setPolicy($tenantId, PolicyKey::CONTEXT_SUMMARY_KEEP_RECENT, (string) $data[PolicyKey::CONTEXT_SUMMARY_KEEP_RECENT->value]);
 
         Notification::make()
             ->title('Kebijakan berhasil disimpan.')

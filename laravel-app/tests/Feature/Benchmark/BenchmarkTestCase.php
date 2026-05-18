@@ -168,6 +168,7 @@ abstract class BenchmarkTestCase extends TestCase
             tokenUsageLogger:     $tokenUsageLogger,
             configResolver:       app(TenantConfigResolver::class),
             notificationService:  $this->notificationMock,
+            summarizer:           app(\App\Modules\AgentCore\Summarization\Services\ConversationSummarizerService::class),
         );
     }
 

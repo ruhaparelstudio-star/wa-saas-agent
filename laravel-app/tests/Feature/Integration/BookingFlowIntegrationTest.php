@@ -118,6 +118,8 @@ class BookingFlowIntegrationTest extends TestCase
     public function test_full_pricelist_flow_pdf_mode(): void
     {
         app(TenantPolicyService::class)->setPolicy($this->tenantId, PolicyKey::PRICELIST_MODE, 'pdf');
+        // Bypass name-gate explicitly — this test verifies PDF dispatch end-to-end; name-gate has dedicated coverage.
+        app(TenantPolicyService::class)->setPolicy($this->tenantId, PolicyKey::PRICELIST_MIN_REQUIREMENT, 'none');
         $asset = $this->makePricelistAsset();
 
         Http::fake([

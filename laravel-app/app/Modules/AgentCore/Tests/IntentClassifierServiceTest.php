@@ -197,8 +197,10 @@ class IntentClassifierServiceTest extends TestCase
         $classifier->classify('halo', 'tenant-1');
     }
 
-    public function test_context_limited_to_last_five_messages(): void
+    public function test_classifier_includes_all_passed_context(): void
     {
+        // Sizing is now decided upstream (pipeline reads tenant policy).
+        // The classifier must faithfully include every message it receives.
         $this->mock->setNextResponse(json_encode([
             'intent'     => 'greeting',
             'confidence' => 0.9,
@@ -213,22 +215,52 @@ class IntentClassifierServiceTest extends TestCase
         $this->classifier->classify('halo', 'tenant-1', $context);
 
         $prompt = $this->mock->getLastPrompt();
-        // Only last 5 should appear (6–10)
+        $this->assertStringContainsString('message 1', $prompt);
         $this->assertStringContainsString('message 10', $prompt);
-        $this->assertStringContainsString('message 6', $prompt);
-        // message 1–5 should NOT appear (using word boundary via unique suffixes)
-        $this->assertStringNotContainsString('message 5', $prompt);
-        $this->assertStringNotContainsString('message 4', $prompt);
-        $this->assertStringNotContainsString('message 3', $prompt);
-        $this->assertStringNotContainsString('message 2', $prompt);
+        $this->assertStringContainsString('last 10 messages', $prompt);
+    }
+
+    public function test_classifier_injects_context_summary_when_provided(): void
+    {
+        $this->mock->setNextResponse(json_encode([
+            'intent'     => 'ask_price',
+            'confidence' => 0.9,
+            'reason'     => '',
+        ]));
+
+        $summary = 'Customer Budi, akad+resepsi 15 Juni 2026 Jakarta, budget 30jt, pricelist sudah dikirim.';
+
+        $this->classifier->classify('paket silver gimana?', 'tenant-1', [], $summary);
+
+        $prompt = $this->mock->getLastPrompt();
+        $this->assertStringContainsString('Earlier conversation summary', $prompt);
+        $this->assertStringContainsString('Customer Budi', $prompt);
     }
 
     public function test_all_valid_intents_are_defined(): void
     {
-        $this->assertCount(21, IntentClassifierService::VALID_INTENTS);
+        $this->assertCount(22, IntentClassifierService::VALID_INTENTS);
         $this->assertContains('greeting', IntentClassifierService::VALID_INTENTS);
         $this->assertContains('request_booking', IntentClassifierService::VALID_INTENTS);
         $this->assertContains('handoff_request', IntentClassifierService::VALID_INTENTS);
         $this->assertContains('invoice_inquiry', IntentClassifierService::VALID_INTENTS);
+        $this->assertContains('acknowledge', IntentClassifierService::VALID_INTENTS);
+    }
+
+    public function test_classifies_acknowledge_short_reply(): void
+    {
+        $this->mock->setNextResponse(json_encode([
+            'intent'     => 'acknowledge',
+            'confidence' => 0.9,
+            'reason'     => 'short ack',
+        ]));
+
+        $result = $this->classifier->classify('siap ka', 'tenant-1');
+
+        $this->assertSame('acknowledge', $result->intent);
+
+        $prompt = $this->mock->getLastPrompt();
+        $this->assertStringContainsString('acknowledge', $prompt);
+        $this->assertStringContainsString('"siap ka" → acknowledge', $prompt);
     }
 }

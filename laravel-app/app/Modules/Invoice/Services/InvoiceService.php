@@ -4,11 +4,15 @@ namespace App\Modules\Invoice\Services;
 
 use App\Modules\Auth\Models\User;
 use App\Modules\Booking\Models\Booking;
+use App\Modules\Conversation\Models\Conversation;
 use App\Modules\Conversation\Repositories\ConversationRepository;
+use App\Modules\Handoff\Services\HandoffService;
 use App\Modules\Invoice\Jobs\GenerateInvoicePdfJob;
 use App\Modules\Invoice\Models\Invoice;
 use App\Modules\Invoice\Repositories\InvoiceRepository;
 use App\Modules\Notification\Models\AdminNotification;
+use App\Modules\Shared\DTOs\DecisionDTO;
+use App\Modules\Shared\Enums\HandoffPriority;
 use App\Modules\Shared\Services\ChannelRegistry;
 use App\Modules\Shared\Enums\BookingStatus;
 use App\Modules\Shared\Enums\ConversationStage;
@@ -16,6 +20,7 @@ use App\Modules\Shared\Enums\InvoiceStatus;
 use App\Modules\Shared\Enums\InvoiceType;
 use App\Modules\Shared\Enums\NotificationType;
 use App\Modules\Shared\Enums\UserRole;
+use App\Modules\TenantConfig\Models\TenantBankAccount;
 use App\Modules\TenantConfig\Services\TenantPolicyService;
 use App\Modules\Shared\Enums\PolicyKey;
 use App\Modules\WhatsApp\Repositories\WaAccountRepository;
@@ -31,6 +36,7 @@ class InvoiceService
         private readonly ChannelRegistry $channelRegistry,
         private readonly WaAccountRepository $waAccountRepository,
         private readonly ConversationRepository $conversationRepository,
+        private readonly ?HandoffService $handoffService = null,
     ) {}
 
     /**
@@ -201,6 +207,43 @@ class InvoiceService
             ['invoice_id' => $invoice->id, 'proof_url' => $proofUrl]
         );
 
+        // Escalate to sales — booking has now reached the "DP paid" milestone
+        // which sales reps want to follow up on personally. HandoffService is
+        // idempotent (reuses an existing active record) so this is safe to call
+        // even when markPaid is invoked multiple times for the same invoice.
+        if ($this->handoffService !== null && $booking !== null && $booking->conversation_id) {
+            $conversation = Conversation::withoutGlobalScopes()->find($booking->conversation_id);
+            if ($conversation !== null) {
+                $decision = DecisionDTO::from([
+                    'decision'             => 'handoff',
+                    'desired_actions'      => ['flag_handoff'],
+                    'allowed_actions'      => ['flag_handoff'],
+                    'blocked_actions'      => [],
+                    'handoff_required'     => true,
+                    'handoff_reason'       => sprintf(
+                        'Invoice %s paid — escalate to sales for follow-up',
+                        $invoice->invoice_number,
+                    ),
+                    'handoff_priority'     => HandoffPriority::MEDIUM->value,
+                    'notification_required' => true,
+                    'reply_strategy'       => 'send_handoff_message',
+                    'active_goal'          => 'sales_follow_up_on_paid_invoice',
+                    'stage_transition'     => null,
+                ]);
+
+                try {
+                    $this->handoffService->triggerHandoff($conversation, $decision);
+                } catch (\Throwable $e) {
+                    // Non-fatal — invoice payment must remain recorded even if
+                    // handoff side-effect fails.
+                    Log::warning('InvoiceService: handoff trigger failed after markPaid', [
+                        'invoice_id' => $invoice->id,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
         Log::info('InvoiceService: invoice marked paid.', ['invoice_id' => $invoice->id]);
     }
 
@@ -235,17 +278,54 @@ class InvoiceService
         $dueDate     = $invoice->due_date?->format('d M Y') ?? '-';
         $amount      = 'Rp' . number_format($invoice->amount, 0, ',', '.');
 
-        return implode("\n", [
+        $lines = [
             '🧾 *INVOICE ' . $invoice->invoice_number . '*',
             '',
             'Booking   : ' . $bookingCode,
             'Tipe      : ' . $invoice->type->label(),
             'Nominal   : ' . $amount,
             'Jatuh Tempo: ' . $dueDate,
-            '',
-            'Mohon segera lakukan pembayaran sebelum jatuh tempo.',
-            'Konfirmasi pembayaran ke admin kami. Terima kasih 🙏',
-        ]);
+        ];
+
+        $bankAccounts = TenantBankAccount::withoutGlobalScopes()
+            ->where('tenant_id', $invoice->tenant_id)
+            ->active()
+            ->ordered()
+            ->get();
+
+        if ($bankAccounts->isNotEmpty()) {
+            $lines[] = '';
+            $lines[] = '💳 *Pilihan Pembayaran:*';
+            $i = 1;
+            foreach ($bankAccounts as $acc) {
+                $star = $acc->is_default ? ' ⭐' : '';
+                $lines[] = sprintf(
+                    '%d. %s — %s (a.n. %s)%s',
+                    $i++,
+                    $acc->bank_name,
+                    $acc->account_number,
+                    $acc->account_holder,
+                    $star,
+                );
+            }
+            $lines[] = '';
+            $lines[] = 'Setelah transfer, kirim bukti pembayaran ke chat ini. Terima kasih 🙏';
+        } else {
+            $lines[] = '';
+            $lines[] = 'Mohon segera lakukan pembayaran sebelum jatuh tempo.';
+            $lines[] = 'Tim kami akan kirim detail rekening segera. Terima kasih 🙏';
+
+            // Nudge admin to configure bank accounts so future invoices include them.
+            $this->notifyAdmins(
+                $invoice->tenant_id,
+                NotificationType::INVOICE_ACTION,
+                'Rekening Pembayaran Belum Diatur',
+                'Invoice ' . $invoice->invoice_number . ' dikirim tanpa info rekening — silakan tambahkan rekening di Pengaturan → Rekening Pembayaran agar invoice berikutnya otomatis memuat instruksi transfer.',
+                ['invoice_id' => $invoice->id, 'reason' => 'no_bank_account_configured']
+            );
+        }
+
+        return implode("\n", $lines);
     }
 
     private function notifyAdmins(

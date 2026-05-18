@@ -151,6 +151,22 @@ class BookingResource extends Resource
                     ->label('Tanggal Event')
                     ->date('d M Y')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('event_time_start')
+                    ->label('Jam')
+                    ->formatStateUsing(function ($state, Booking $record): string {
+                        if (empty($state) || $state === '00:00:00') {
+                            return '-';
+                        }
+                        $start = substr((string) $state, 0, 5);
+                        $end   = $record->event_time_end ? substr((string) $record->event_time_end, 0, 5) : null;
+                        return $end ? "{$start} – {$end}" : $start;
+                    })
+                    ->placeholder('-'),
+                Tables\Columns\TextColumn::make('package.name')
+                    ->label('Paket')
+                    ->placeholder('-')
+                    ->toggleable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('event_type')
                     ->label('Tipe')
                     ->badge()
@@ -213,7 +229,12 @@ class BookingResource extends Resource
                     ->label('Batalkan')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn (Booking $record): bool => $record->isActive())
+                    ->visible(fn (Booking $record): bool => $record->isActive()
+                        && !in_array($record->status, [
+                            BookingStatus::PAID,
+                            BookingStatus::AWAITING_DP,
+                        ], true)
+                    )
                     ->requiresConfirmation()
                     ->form([
                         Textarea::make('reason')

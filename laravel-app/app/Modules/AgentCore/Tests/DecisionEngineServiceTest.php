@@ -90,14 +90,26 @@ class DecisionEngineServiceTest extends TestCase
         $this->assertContains('ask_package_clarification', $result->desired_actions);
     }
 
-    public function test_ask_availability_returns_check_and_send(): void
+    public function test_ask_availability_with_event_date_returns_check_and_send(): void
     {
-        $context = $this->makeContext('ask_availability');
+        $context = $this->makeContext('ask_availability', entities: ['event_date' => '2026-08-10']);
 
         $result = $this->engine->decide($context);
 
         $this->assertContains('check_availability', $result->desired_actions);
         $this->assertContains('send_availability', $result->desired_actions);
+        $this->assertSame('send_availability_result', $result->reply_strategy);
+    }
+
+    public function test_ask_availability_without_event_date_asks_for_date(): void
+    {
+        $context = $this->makeContext('ask_availability');
+
+        $result = $this->engine->decide($context);
+
+        $this->assertContains('ask_event_date', $result->desired_actions);
+        $this->assertNotContains('check_availability', $result->desired_actions);
+        $this->assertSame('ask_event_date', $result->reply_strategy);
     }
 
     // ──────────────────────────────────────────────────────────────

@@ -210,8 +210,8 @@ class TenantConfigTest extends TestCase
 
     public function test_get_policy_returns_default_for_all_keys(): void
     {
-        $this->assertSame('public', $this->policyService->getPolicy($this->tenant->id, PolicyKey::PRICELIST_MODE));
-        $this->assertSame('0', $this->policyService->getPolicy($this->tenant->id, PolicyKey::PRICELIST_MIN_REQUIREMENT));
+        $this->assertSame('text', $this->policyService->getPolicy($this->tenant->id, PolicyKey::PRICELIST_MODE));
+        $this->assertSame('require_customer_name', $this->policyService->getPolicy($this->tenant->id, PolicyKey::PRICELIST_MIN_REQUIREMENT));
         $this->assertSame('queue', $this->policyService->getPolicy($this->tenant->id, PolicyKey::LEAD_LIMIT_FALLBACK));
         $this->assertSame('queue', $this->policyService->getPolicy($this->tenant->id, PolicyKey::AFTER_HOURS_BEHAVIOR));
         $this->assertSame('3', $this->policyService->getPolicy($this->tenant->id, PolicyKey::INVOICE_MAX_RESEND));

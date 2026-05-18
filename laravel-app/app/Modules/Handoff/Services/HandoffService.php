@@ -20,6 +20,20 @@ class HandoffService
 
     public function triggerHandoff(Conversation $conversation, DecisionDTO $decision): HandoffRecord
     {
+        // Idempotency — if there is already an active (pending / in_progress)
+        // handoff for this conversation, reuse it instead of creating a duplicate.
+        // The decision engine can legitimately re-emit a handoff trigger on every
+        // turn while the customer is still in BOOKING stage — we should not spam
+        // sales with duplicate alerts.
+        $existing = $this->repository->findActiveByConversation($conversation->id);
+        if ($existing !== null) {
+            Log::info('HandoffService: handoff already active, reusing.', [
+                'handoff_record_id' => $existing->id,
+                'conversation_id'   => $conversation->id,
+            ]);
+            return $existing;
+        }
+
         $record = HandoffRecord::create([
             'tenant_id'       => $conversation->tenant_id,
             'conversation_id' => $conversation->id,

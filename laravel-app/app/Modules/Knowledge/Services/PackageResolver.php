@@ -10,15 +10,28 @@ class PackageResolver
 {
     public function getActivePackages(string $tenantId): Collection
     {
-        return Cache::remember(
-            "packages:active:{$tenantId}",
-            600,
-            fn () => Package::withoutGlobalScopes()
-                ->where('tenant_id', $tenantId)
-                ->active()
-                ->with('activePrices')
-                ->get()
-        );
+        $cacheKey = "packages:active:{$tenantId}";
+
+        $fresh = fn () => Package::withoutGlobalScopes()
+            ->where('tenant_id', $tenantId)
+            ->active()
+            ->with('activePrices')
+            ->get();
+
+        // Defensive: stale Redis entries from a previous deploy can deserialize as
+        // __PHP_Incomplete_Class when a Package class moves namespace or property
+        // shape changes. Detect that and rebuild rather than crashing the pipeline.
+        $cached = Cache::get($cacheKey);
+        if ($cached instanceof Collection && $cached->every(fn ($p) => $p instanceof Package)) {
+            return $cached;
+        }
+        if ($cached !== null) {
+            Cache::forget($cacheKey);
+        }
+
+        $packages = $fresh();
+        Cache::put($cacheKey, $packages, 600);
+        return $packages;
     }
 
     public function getPackageDetail(string $tenantId, string $slug): ?Package
