@@ -63,11 +63,23 @@ class PricelistService
             $minRank    = self::STAGE_RANK[ConversationStage::QUALIFICATION->value];
 
             if ($rank < $minRank) {
-                return [
-                    'allowed'  => false,
-                    'reason'   => 'Pricelist requires conversation to reach qualification stage first',
-                    'fallback' => 'ask_qualifying_questions',
-                ];
+                // Stage hasn't transitioned yet — but if the customer just provided
+                // their name (or event date) this very turn, they qualify now.
+                // Stage transition happens after the decision, so we check entities directly.
+                $mergedEntities = array_merge(
+                    $context->state->entities ?? [],
+                    $context->entities->entities ?? [],
+                );
+                $isQualifyingNow = !empty($mergedEntities['customer_name'])
+                    || !empty($mergedEntities['event_date']);
+
+                if (!$isQualifyingNow) {
+                    return [
+                        'allowed'  => false,
+                        'reason'   => 'Pricelist requires conversation to reach qualification stage first',
+                        'fallback' => 'ask_qualifying_questions',
+                    ];
+                }
             }
         }
 

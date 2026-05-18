@@ -113,8 +113,18 @@ class TurnPipelineService
 
         try {
             // ── Step 2: Find/create conversation ──────────────────────────
-            $conversation = $this->conversations->findOrCreateByPhone($tenantId, $message->from_phone);
+            $conversation = $this->conversations->findOrCreateByPhone($tenantId, $message->from_phone, $message->wa_account_id);
             $lead         = $conversation->lead;
+
+            // ── Save inbound message ───────────────────────────────────────
+            $inboundRecord = $conversation->addMessage([
+                'direction'            => 'inbound',
+                'message_type'         => $message->message_type,
+                'body'                 => $message->body,
+                'media_url'            => $message->media_url,
+                'provider_message_id'  => $message->provider_message_id,
+                'is_injection_attempt' => false,
+            ]);
 
             // ── Step 3: Handle media messages ─────────────────────────────
             if (in_array($message->message_type, ['audio', 'image', 'document', 'video'], true)) {
@@ -129,6 +139,7 @@ class TurnPipelineService
             );
 
             if ($sanitized->injection_detected) {
+                $inboundRecord->update(['is_injection_attempt' => true]);
                 $this->notificationService->notifyInjectionAttempt($tenantId, $conversation->id);
             }
 
@@ -309,11 +320,14 @@ class TurnPipelineService
         float $startTime,
         string $idempotencyKey,
     ): TurnResultDTO {
-        $presetText = match ($message->message_type) {
+        $presetText  = match ($message->message_type) {
             'audio'                       => ResponseComposerService::VOICE_NOTE,
             'image', 'document', 'video'  => ResponseComposerService::IMAGE_ACK,
             default                       => ResponseComposerService::ERROR_FALLBACK,
         };
+        $waAccountId = $conversation->wa_account_id ?? $message->wa_account_id;
+
+        $this->dispatcher->sendTextDirect($waAccountId, $message->from_phone, $presetText);
 
         $conversation->addMessage([
             'direction'    => 'outbound',
@@ -340,10 +354,15 @@ class TurnPipelineService
         string $tenantId,
         Conversation $conversation,
     ): void {
+        $body        = ResponseComposerService::ERROR_FALLBACK;
+        $waAccountId = $conversation->wa_account_id ?? $message->wa_account_id;
+
+        $this->dispatcher->sendTextDirect($waAccountId, $message->from_phone, $body);
+
         $conversation->addMessage([
             'direction'    => 'outbound',
             'message_type' => 'text',
-            'body'         => ResponseComposerService::ERROR_FALLBACK,
+            'body'         => $body,
         ]);
     }
 

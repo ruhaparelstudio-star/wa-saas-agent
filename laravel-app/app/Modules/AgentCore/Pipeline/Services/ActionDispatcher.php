@@ -101,6 +101,27 @@ class ActionDispatcher
         return array_values(array_unique($dispatched));
     }
 
+    public function sendTextDirect(string $waAccountId, string $toPhone, string $body): bool
+    {
+        if ($this->gateway === null) {
+            Log::info('ActionDispatcher: gateway not configured, skipping sendTextDirect.', [
+                'wa_account_id' => $waAccountId,
+                'to_phone'      => $toPhone,
+            ]);
+            return false;
+        }
+
+        try {
+            return $this->gateway->sendText($waAccountId, $toPhone, $body);
+        } catch (\Throwable $e) {
+            Log::warning('ActionDispatcher: sendTextDirect failed.', [
+                'error'         => $e->getMessage(),
+                'wa_account_id' => $waAccountId,
+            ]);
+            return false;
+        }
+    }
+
     public function sendReply(TurnContextDTO $context, ComposedReplyDTO $reply): bool
     {
         $payload = [
